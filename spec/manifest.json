@@ -2,10 +2,10 @@
   "$schema": "../packages/schemas/style-manifest.schema.json",
   "name": "Style Constitution",
   "version": "0.1.0",
-  "status": "candidate",
+  "status": "released",
   "schemaVersion": "1.0",
   "updatedAt": "2026-09-18",
-  "releaseCommit": "",
+  "releaseCommit": "95024fff6891312d736e0e2040c471bfe803e9c7",
   "principles": [
     "clarity",
     "accessibility",
