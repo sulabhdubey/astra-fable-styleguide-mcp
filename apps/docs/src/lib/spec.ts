@@ -1,8 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-const repoRoot = fileURLToPath(new URL('../../../../', import.meta.url));
+const repoRoot = resolve(process.cwd(), '../..');
 const specRoot = resolve(repoRoot, 'spec');
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
 

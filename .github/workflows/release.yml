@@ -9,6 +9,8 @@ on:
     branches: [main]
     paths:
       - package.json
+      - apps/docs/src/lib/spec.ts
+      - .github/workflows/release.yml
 permissions: { contents: read }
 jobs:
   verify-release:
