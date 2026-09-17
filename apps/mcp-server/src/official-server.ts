@@ -53,7 +53,8 @@ function buildServer(){
 const handler=createMcpHandler(buildServer,{responseMode:'json'}); const nodeHandler=toNodeHandler(handler);
 const port=Number(process.env.PORT??3000); const host=process.env.HOST??'127.0.0.1';
 const validateHost=localhostHostValidation(); const validateOrigin=localhostOriginValidation();
-const allowedHosts=new Set((process.env.MCP_ALLOWED_HOSTS??'127.0.0.1,localhost').split(',').map(v=>v.trim()).filter(Boolean));
+const allowedHostValues=[process.env.MCP_ALLOWED_HOSTS??'127.0.0.1,localhost',process.env.VERCEL_URL,process.env.VERCEL_PROJECT_PRODUCTION_URL].filter(Boolean).flatMap(v=>String(v).split(',')).map(v=>v.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'')).filter(Boolean);
+const allowedHosts=new Set(allowedHostValues);
 function publicHeadersAllowed(req:any,res:any){const raw=String(req.headers.host??'');const hostname=raw.replace(/:\d+$/,'');if(!allowedHosts.has(hostname)){res.writeHead(403).end('Forbidden host');return false;}const origin=req.headers.origin;if(origin){try{const oh=new URL(String(origin)).hostname;if(!allowedHosts.has(oh)){res.writeHead(403).end('Forbidden origin');return false;}}catch{res.writeHead(403).end('Forbidden origin');return false;}}return true;}
 const rateLimitPerMinute=Number(process.env.MCP_RATE_LIMIT_PER_MINUTE??120); const buckets=new Map<string,{start:number;count:number}>();
 function rateAllowed(key:string){const now=Date.now();const b=buckets.get(key);if(!b||now-b.start>=60000){buckets.set(key,{start:now,count:1});return true;}b.count++;return b.count<=rateLimitPerMinute;}
