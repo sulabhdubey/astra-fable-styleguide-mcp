@@ -5,6 +5,10 @@ on:
       version:
         description: Release version to verify
         required: true
+  push:
+    branches: [main]
+    paths:
+      - package.json
 permissions: { contents: read }
 jobs:
   verify-release:
@@ -28,8 +32,18 @@ jobs:
       - run: pnpm audit
       - run: docker build -t style-constitution:release .
       - run: RELEASE_EVIDENCE_CONNECTED=1 pnpm evidence
-      - run: test "$(node -p \"require('./spec/manifest.json').version\")" = "${{ inputs.version }}"
+      - id: release_version
+        name: Verify and expose release version
+        env:
+          REQUESTED_VERSION: ${{ github.event.inputs.version || '' }}
+        run: |
+          actual="$(node -p \"require('./spec/manifest.json').version\")"
+          if [ -n "$REQUESTED_VERSION" ] && [ "$actual" != "$REQUESTED_VERSION" ]; then
+            echo "Requested release $REQUESTED_VERSION does not match manifest version $actual" >&2
+            exit 1
+          fi
+          echo "version=$actual" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
-          name: release-evidence-${{ inputs.version }}
-          path: releases/${{ inputs.version }}-build-evidence.json
+          name: release-evidence-${{ steps.release_version.outputs.version }}
+          path: releases/${{ steps.release_version.outputs.version }}-build-evidence.json
