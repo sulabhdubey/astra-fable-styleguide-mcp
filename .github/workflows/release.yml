@@ -13,9 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 10 }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: 'pnpm' }
+        with: { node-version: 22 }
       - run: pnpm install --frozen-lockfile=false
-      - run: pnpm verify
+      - run: pnpm lint
+      - run: pnpm lint:eslint
+      - run: pnpm typecheck:full
+      - run: pnpm test
+      - run: pnpm validate
+      - run: pnpm generate
+      - run: pnpm repro
+      - run: pnpm build:docs
+      - run: pnpm smoke:mcp
+      - run: pnpm audit
+      - run: docker build -t style-constitution:release .
+      - run: RELEASE_EVIDENCE_CONNECTED=1 pnpm evidence
       - run: test "$(node -p \"require('./spec/manifest.json').version\")" = "${{ inputs.version }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-${{ inputs.version }}
+          path: releases/${{ inputs.version }}-build-evidence.json
