@@ -39,7 +39,7 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ github.event.inputs.version || '' }}
         run: |
-          actual="$(node -p \"require('./spec/manifest.json').version\")"
+          actual="$(node -p "require('./spec/manifest.json').version")"
           if [ -n "$REQUESTED_VERSION" ] && [ "$actual" != "$REQUESTED_VERSION" ]; then
             echo "Requested release $REQUESTED_VERSION does not match manifest version $actual" >&2
             exit 1
