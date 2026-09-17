@@ -13,7 +13,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: 'pnpm' }
+        with: { node-version: 22 }
       - run: pnpm install --frozen-lockfile=false
       - run: pnpm build:docs
         env:
@@ -29,3 +29,4 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
