@@ -66,5 +66,6 @@ createServer((req,res)=>{
  if(host==='127.0.0.1'){if(!validateHost(req,res)||!validateOrigin(req,res))return;} else if(!publicHeadersAllowed(req,res))return;
  if(!path.startsWith('/mcp')){res.writeHead(404).end();return;}
  if(!req.method){res.writeHead(400).end('Missing HTTP method');return;}
- const mcpReq=Object.assign(req,{method:req.method}); void nodeHandler(mcpReq,res);
+ if(!req.url){res.writeHead(400).end('Missing request URL');return;}
+ const mcpReq=Object.assign(req,{method:req.method,url:req.url}); void nodeHandler(mcpReq,res);
 }).listen(port,host,()=>console.error(`Style Constitution MCP listening on http://${host}:${port}/mcp`));
