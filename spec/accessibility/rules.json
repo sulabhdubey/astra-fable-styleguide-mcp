@@ -1,0 +1,40 @@
+{
+  "baseline": "WCAG 2.2 AA",
+  "rules": [
+    {
+      "id": "STYLE-A11Y-001",
+      "name": "Visible focus",
+      "requirement": "Interactive controls expose a visible focus treatment."
+    },
+    {
+      "id": "STYLE-A11Y-002",
+      "name": "Button contrast",
+      "requirement": "Primary button text/background contrast is at least 4.5:1."
+    },
+    {
+      "id": "STYLE-A11Y-003",
+      "name": "Programmatic labels",
+      "requirement": "Inputs have programmatically associated labels."
+    }
+  ],
+  "contrastPairs": [
+    {
+      "id": "STYLE-A11Y-002",
+      "foreground": "semantic.action.primary.foreground",
+      "background": "semantic.action.primary.background",
+      "minimum": 4.5
+    },
+    {
+      "id": "STYLE-A11Y-004",
+      "foreground": "semantic.text.primary",
+      "background": "semantic.surface.primary",
+      "minimum": 4.5
+    },
+    {
+      "id": "STYLE-A11Y-005",
+      "foreground": "semantic.text.secondary",
+      "background": "semantic.surface.primary",
+      "minimum": 4.5
+    }
+  ]
+}

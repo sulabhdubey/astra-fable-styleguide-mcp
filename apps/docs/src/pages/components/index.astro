@@ -1,0 +1,5 @@
+---
+import Layout from '../../layouts.astro';
+import { components } from '../../lib/spec';
+---
+<Layout title="Components"><h1>Components</h1><div class="grid">{components.map((c:any)=><article class="card"><h2><a href={`./${c.id}/`}>{c.name}</a></h2><p>{c.purpose}</p><p>{c.states.map((s:string)=><span class="pill">{s}</span>)}</p></article>)}</div></Layout>

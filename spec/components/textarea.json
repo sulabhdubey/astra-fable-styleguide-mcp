@@ -1,0 +1,52 @@
+{
+  "id": "textarea",
+  "name": "Textarea",
+  "purpose": "Collect multi-line text.",
+  "anatomy": [
+    "label",
+    "control",
+    "supporting-text",
+    "error-message"
+  ],
+  "variants": [
+    "default"
+  ],
+  "sizes": [
+    "md"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled",
+    "invalid"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.md}",
+    "padding": "{space.3}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "focusVisible": true,
+    "keyboard": "Standard textarea behavior.",
+    "labelRequired": true
+  },
+  "contentRules": [
+    "Use for answers that may span multiple lines."
+  ],
+  "do": [
+    "Provide a visible label."
+  ],
+  "dont": [
+    "Do not use for single short values."
+  ],
+  "examples": [
+    "Project description"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "astra-fable-styleguide-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "lint": "node scripts/lint.mjs",
+    "typecheck": "tsc -p tsconfig.core.json --noEmit",
+    "typecheck:full": "tsc -p tsconfig.full.json --noEmit",
+    "compile:core": "tsc -p tsconfig.core.json",
+    "test": "npm run compile:core && node --test tests/*.test.mjs",
+    "validate": "npm run compile:core && node scripts/validate-spec.mjs",
+    "generate": "npm run compile:core && node scripts/generate-assets.mjs",
+    "build:portable": "npm run clean && npm run compile:core && npm run generate && node scripts/build-docs-portable.mjs",
+    "build:docs": "astro build apps/docs",
+    "build": "npm run build:portable && npm run build:docs",
+    "verify:core": "npm run lint && npm run typecheck && npm run test && npm run validate && npm run build:portable && npm run repro && npm run audit && npm run evidence",
+    "verify": "pnpm lint && pnpm lint:eslint && pnpm typecheck:full && pnpm test && pnpm validate && pnpm generate && pnpm repro && pnpm build:docs && pnpm smoke:mcp && pnpm audit && pnpm evidence",
+    "dev:mcp": "tsx apps/mcp-server/src/official-server.ts",
+    "dev:docs": "astro dev apps/docs",
+    "stylecon": "node scripts/stylecon.mjs",
+    "lint:eslint": "eslint scripts tests --ext .mjs",
+    "audit": "node scripts/audit.mjs",
+    "evidence": "node scripts/release-evidence.mjs",
+    "smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "repro": "npm run compile:core && node scripts/check-reproducibility.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "astro": "^5.0.0",
+    "eslint": "^9.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.3"
+  }
+}

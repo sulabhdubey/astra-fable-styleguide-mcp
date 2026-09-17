@@ -1,0 +1,12 @@
+{
+  "id": "empty-state",
+  "name": "Empty state",
+  "rules": [
+    "Explain why the area is empty.",
+    "Offer a relevant next action when one exists.",
+    "Avoid decorative copy that obscures the next step."
+  ],
+  "ruleIds": [
+    "STYLE-PATTERN-003"
+  ]
+}

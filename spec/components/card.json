@@ -1,0 +1,51 @@
+{
+  "id": "card",
+  "name": "Card",
+  "purpose": "Group related information and actions.",
+  "anatomy": [
+    "container",
+    "header",
+    "body",
+    "optional-footer"
+  ],
+  "variants": [
+    "default",
+    "interactive"
+  ],
+  "sizes": [
+    "md"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.lg}",
+    "padding": "{space.4}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "keyboard": "Only interactive cards receive keyboard focus.",
+    "focusVisible": true
+  },
+  "contentRules": [
+    "Card titles should identify the grouped subject."
+  ],
+  "do": [
+    "Keep related content together."
+  ],
+  "dont": [
+    "Do not nest cards repeatedly."
+  ],
+  "examples": [
+    "Project summary"
+  ]
+}

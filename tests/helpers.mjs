@@ -1,0 +1,3 @@
+import { readFile,readdir } from 'node:fs/promises';import { resolve } from 'node:path';
+export async function loadJson(p){return JSON.parse(await readFile(resolve(process.cwd(),p),'utf8'));}
+export async function loadBundle(){const {mergeObjects}=await import('../dist/packages/style-spec/src/index.js');const tokens={};for(const f of (await readdir('spec/tokens')).filter(x=>x.endsWith('.json')).sort())mergeObjects(tokens,await loadJson(`spec/tokens/${f}`));const components=await Promise.all((await readdir('spec/components')).filter(x=>x.endsWith('.json')).sort().map(f=>loadJson(`spec/components/${f}`)));return {manifest:await loadJson('spec/manifest.json'),tokens,components,accessibility:await loadJson('spec/accessibility/rules.json')};}

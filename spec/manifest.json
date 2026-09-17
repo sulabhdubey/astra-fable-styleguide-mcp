@@ -1,0 +1,21 @@
+{
+  "$schema": "../packages/schemas/style-manifest.schema.json",
+  "name": "Style Constitution",
+  "version": "0.1.0",
+  "status": "candidate",
+  "schemaVersion": "1.0",
+  "updatedAt": "2026-09-18",
+  "releaseCommit": "",
+  "principles": [
+    "clarity",
+    "accessibility",
+    "consistency",
+    "intentional-density",
+    "explainability"
+  ],
+  "compatibility": {
+    "css": true,
+    "typescript": true,
+    "mcp": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "icons",
+  "rules": [
+    {
+      "id": "STYLE-ICON-001",
+      "rule": "Use icons to reinforce meaning, not replace essential labels."
+    },
+    {
+      "id": "STYLE-ICON-002",
+      "rule": "Use approved icon sizes from size.icon tokens."
+    }
+  ]
+}

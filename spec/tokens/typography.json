@@ -1,0 +1,42 @@
+{
+  "typography": {
+    "fontFamily": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": "Inter, ui-sans-serif, system-ui, sans-serif"
+      }
+    },
+    "fontSize": {
+      "100": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "200": {
+        "$type": "dimension",
+        "$value": "14px"
+      },
+      "300": {
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "500": {
+        "$type": "dimension",
+        "$value": "24px"
+      },
+      "700": {
+        "$type": "dimension",
+        "$value": "36px"
+      }
+    },
+    "lineHeight": {
+      "tight": {
+        "$type": "number",
+        "$value": 1.2
+      },
+      "normal": {
+        "$type": "number",
+        "$value": 1.5
+      }
+    }
+  }
+}

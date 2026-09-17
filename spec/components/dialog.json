@@ -1,0 +1,55 @@
+{
+  "id": "dialog",
+  "name": "Dialog",
+  "purpose": "Focus attention on a bounded task or decision.",
+  "anatomy": [
+    "overlay",
+    "surface",
+    "title",
+    "body",
+    "actions"
+  ],
+  "variants": [
+    "default",
+    "danger"
+  ],
+  "sizes": [
+    "sm",
+    "md",
+    "lg"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.lg}",
+    "padding": "{space.6}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "focusVisible": true,
+    "keyboard": "Escape closes when dismissal is allowed; focus is trapped while open.",
+    "focusTrap": true
+  },
+  "contentRules": [
+    "Title states the decision or task."
+  ],
+  "do": [
+    "Return focus to the trigger on close."
+  ],
+  "dont": [
+    "Do not open dialogs from dialogs."
+  ],
+  "examples": [
+    "Delete project confirmation"
+  ]
+}

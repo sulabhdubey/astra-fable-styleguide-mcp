@@ -1,0 +1,855 @@
+{
+  "manifest": {
+    "$schema": "../packages/schemas/style-manifest.schema.json",
+    "name": "Style Constitution",
+    "version": "0.1.0",
+    "status": "candidate",
+    "schemaVersion": "1.0",
+    "updatedAt": "2026-09-18",
+    "releaseCommit": "",
+    "principles": [
+      "clarity",
+      "accessibility",
+      "consistency",
+      "intentional-density",
+      "explainability"
+    ],
+    "compatibility": {
+      "css": true,
+      "typescript": true,
+      "mcp": true
+    }
+  },
+  "principles": {
+    "principles": [
+      {
+        "id": "STYLE-PRINCIPLE-001",
+        "name": "Clarity before decoration",
+        "rule": "Visual choices must make hierarchy and action clearer."
+      },
+      {
+        "id": "STYLE-PRINCIPLE-002",
+        "name": "Accessible by construction",
+        "rule": "Interactive and text treatments must meet the configured accessibility baseline."
+      },
+      {
+        "id": "STYLE-PRINCIPLE-003",
+        "name": "Tokens over arbitrary values",
+        "rule": "Reusable UI must consume semantic tokens instead of introducing raw values."
+      },
+      {
+        "id": "STYLE-PRINCIPLE-004",
+        "name": "Explain every exception",
+        "rule": "Intentional deviations require an auditable decision record."
+      }
+    ]
+  },
+  "tokens": {
+    "border": {
+      "width": {
+        "hairline": {
+          "$type": "dimension",
+          "$value": "1px"
+        },
+        "strong": {
+          "$type": "dimension",
+          "$value": "2px"
+        }
+      },
+      "style": {
+        "default": {
+          "$type": "string",
+          "$value": "solid"
+        }
+      }
+    },
+    "elevation": {
+      "none": {
+        "$type": "shadow",
+        "$value": "none"
+      },
+      "sm": {
+        "$type": "shadow",
+        "$value": "0 1px 2px rgba(15, 23, 42, 0.08)"
+      },
+      "md": {
+        "$type": "shadow",
+        "$value": "0 8px 24px rgba(15, 23, 42, 0.12)"
+      }
+    },
+    "layout": {
+      "breakpoint": {
+        "sm": {
+          "$type": "dimension",
+          "$value": "640px"
+        },
+        "md": {
+          "$type": "dimension",
+          "$value": "768px"
+        },
+        "lg": {
+          "$type": "dimension",
+          "$value": "1024px"
+        },
+        "xl": {
+          "$type": "dimension",
+          "$value": "1280px"
+        }
+      },
+      "grid": {
+        "columns": {
+          "$type": "number",
+          "$value": 12
+        },
+        "gutter": {
+          "$type": "dimension",
+          "$value": "{space.4}"
+        }
+      }
+    },
+    "motion": {
+      "fast": {
+        "$type": "duration",
+        "$value": "{duration.fast}"
+      },
+      "normal": {
+        "$type": "duration",
+        "$value": "{duration.normal}"
+      },
+      "easing": {
+        "standard": {
+          "$type": "cubicBezier",
+          "$value": [
+            0.2,
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    "color": {
+      "white": {
+        "$type": "color",
+        "$value": "#FFFFFF"
+      },
+      "black": {
+        "$type": "color",
+        "$value": "#0B1020"
+      },
+      "blue": {
+        "500": {
+          "$type": "color",
+          "$value": "#2563EB"
+        },
+        "600": {
+          "$type": "color",
+          "$value": "#1D4ED8"
+        },
+        "700": {
+          "$type": "color",
+          "$value": "#1E40AF"
+        }
+      },
+      "slate": {
+        "50": {
+          "$type": "color",
+          "$value": "#F8FAFC"
+        },
+        "200": {
+          "$type": "color",
+          "$value": "#E2E8F0"
+        },
+        "600": {
+          "$type": "color",
+          "$value": "#475569"
+        },
+        "900": {
+          "$type": "color",
+          "$value": "#0F172A"
+        }
+      },
+      "red": {
+        "600": {
+          "$type": "color",
+          "$value": "#DC2626"
+        }
+      },
+      "green": {
+        "600": {
+          "$type": "color",
+          "$value": "#16A34A"
+        }
+      }
+    },
+    "space": {
+      "0": {
+        "$type": "dimension",
+        "$value": "0px"
+      },
+      "1": {
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "2": {
+        "$type": "dimension",
+        "$value": "8px"
+      },
+      "3": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "4": {
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "5": {
+        "$type": "dimension",
+        "$value": "24px"
+      },
+      "6": {
+        "$type": "dimension",
+        "$value": "32px"
+      },
+      "7": {
+        "$type": "dimension",
+        "$value": "48px"
+      }
+    },
+    "radius": {
+      "sm": {
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "md": {
+        "$type": "dimension",
+        "$value": "8px"
+      },
+      "lg": {
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "full": {
+        "$type": "dimension",
+        "$value": "9999px"
+      }
+    },
+    "duration": {
+      "fast": {
+        "$type": "duration",
+        "$value": "120ms"
+      },
+      "normal": {
+        "$type": "duration",
+        "$value": "200ms"
+      }
+    },
+    "semantic": {
+      "surface": {
+        "primary": {
+          "$type": "color",
+          "$value": "{color.white}"
+        },
+        "subtle": {
+          "$type": "color",
+          "$value": "{color.slate.50}"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "{color.slate.900}"
+        }
+      },
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "{color.slate.900}"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "{color.slate.600}"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "{color.white}"
+        },
+        "danger": {
+          "$type": "color",
+          "$value": "{color.red.600}"
+        }
+      },
+      "border": {
+        "default": {
+          "$type": "color",
+          "$value": "{color.slate.200}"
+        }
+      },
+      "action": {
+        "primary": {
+          "background": {
+            "$type": "color",
+            "$value": "{color.blue.600}"
+          },
+          "backgroundHover": {
+            "$type": "color",
+            "$value": "{color.blue.700}"
+          },
+          "foreground": {
+            "$type": "color",
+            "$value": "{color.white}"
+          }
+        }
+      },
+      "focus": {
+        "ring": {
+          "$type": "color",
+          "$value": "{color.blue.500}"
+        }
+      },
+      "feedback": {
+        "error": {
+          "$type": "color",
+          "$value": "{color.red.600}"
+        },
+        "success": {
+          "$type": "color",
+          "$value": "{color.green.600}"
+        }
+      }
+    },
+    "size": {
+      "control": {
+        "sm": {
+          "$type": "dimension",
+          "$value": "32px"
+        },
+        "md": {
+          "$type": "dimension",
+          "$value": "40px"
+        },
+        "lg": {
+          "$type": "dimension",
+          "$value": "48px"
+        }
+      },
+      "icon": {
+        "sm": {
+          "$type": "dimension",
+          "$value": "16px"
+        },
+        "md": {
+          "$type": "dimension",
+          "$value": "20px"
+        },
+        "lg": {
+          "$type": "dimension",
+          "$value": "24px"
+        }
+      }
+    },
+    "typography": {
+      "fontFamily": {
+        "sans": {
+          "$type": "fontFamily",
+          "$value": "Inter, ui-sans-serif, system-ui, sans-serif"
+        }
+      },
+      "fontSize": {
+        "100": {
+          "$type": "dimension",
+          "$value": "12px"
+        },
+        "200": {
+          "$type": "dimension",
+          "$value": "14px"
+        },
+        "300": {
+          "$type": "dimension",
+          "$value": "16px"
+        },
+        "500": {
+          "$type": "dimension",
+          "$value": "24px"
+        },
+        "700": {
+          "$type": "dimension",
+          "$value": "36px"
+        }
+      },
+      "lineHeight": {
+        "tight": {
+          "$type": "number",
+          "$value": 1.2
+        },
+        "normal": {
+          "$type": "number",
+          "$value": 1.5
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "button",
+      "name": "Button",
+      "purpose": "Trigger an immediate action.",
+      "anatomy": [
+        "container",
+        "label",
+        "optional-leading-icon",
+        "optional-trailing-icon"
+      ],
+      "variants": [
+        "primary",
+        "secondary",
+        "danger"
+      ],
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "active",
+        "disabled"
+      ],
+      "tokens": {
+        "background": "{semantic.action.primary.background}",
+        "foreground": "{semantic.action.primary.foreground}",
+        "hoverBackground": "{semantic.action.primary.backgroundHover}",
+        "radius": "{radius.md}",
+        "paddingInline": "{space.4}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001",
+          "STYLE-A11Y-002"
+        ],
+        "keyboard": "Enter and Space activate the button.",
+        "focusVisible": true,
+        "minimumTarget": "40px"
+      },
+      "contentRules": [
+        "Use concise action verbs."
+      ],
+      "do": [
+        "Use one primary action per local decision area."
+      ],
+      "dont": [
+        "Do not use a button for navigation."
+      ],
+      "examples": [
+        "Save changes",
+        "Create project"
+      ]
+    },
+    {
+      "id": "card",
+      "name": "Card",
+      "purpose": "Group related information and actions.",
+      "anatomy": [
+        "container",
+        "header",
+        "body",
+        "optional-footer"
+      ],
+      "variants": [
+        "default",
+        "interactive"
+      ],
+      "sizes": [
+        "md"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.lg}",
+        "padding": "{space.4}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "keyboard": "Only interactive cards receive keyboard focus.",
+        "focusVisible": true
+      },
+      "contentRules": [
+        "Card titles should identify the grouped subject."
+      ],
+      "do": [
+        "Keep related content together."
+      ],
+      "dont": [
+        "Do not nest cards repeatedly."
+      ],
+      "examples": [
+        "Project summary"
+      ]
+    },
+    {
+      "id": "dialog",
+      "name": "Dialog",
+      "purpose": "Focus attention on a bounded task or decision.",
+      "anatomy": [
+        "overlay",
+        "surface",
+        "title",
+        "body",
+        "actions"
+      ],
+      "variants": [
+        "default",
+        "danger"
+      ],
+      "sizes": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.lg}",
+        "padding": "{space.6}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "focusVisible": true,
+        "keyboard": "Escape closes when dismissal is allowed; focus is trapped while open.",
+        "focusTrap": true
+      },
+      "contentRules": [
+        "Title states the decision or task."
+      ],
+      "do": [
+        "Return focus to the trigger on close."
+      ],
+      "dont": [
+        "Do not open dialogs from dialogs."
+      ],
+      "examples": [
+        "Delete project confirmation"
+      ]
+    },
+    {
+      "id": "input",
+      "name": "Input",
+      "purpose": "Collect short-form text.",
+      "anatomy": [
+        "label",
+        "control",
+        "supporting-text",
+        "error-message"
+      ],
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        "md"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "invalid"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.md}",
+        "padding": "{space.3}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001",
+          "STYLE-A11Y-003"
+        ],
+        "keyboard": "Standard text-input behavior.",
+        "focusVisible": true,
+        "labelRequired": true
+      },
+      "contentRules": [
+        "Labels describe the requested value."
+      ],
+      "do": [
+        "Associate labels programmatically."
+      ],
+      "dont": [
+        "Do not rely on placeholder text as the only label."
+      ],
+      "examples": [
+        "Email address"
+      ]
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation",
+      "purpose": "Move between product destinations.",
+      "anatomy": [
+        "container",
+        "item",
+        "label",
+        "optional-icon"
+      ],
+      "variants": [
+        "primary",
+        "secondary"
+      ],
+      "sizes": [
+        "md"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "active"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.md}",
+        "padding": "{space.3}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "focusVisible": true,
+        "keyboard": "Tab moves between destinations; current destination is programmatically indicated."
+      },
+      "contentRules": [
+        "Labels name destinations, not actions."
+      ],
+      "do": [
+        "Mark the current destination."
+      ],
+      "dont": [
+        "Do not use vague labels such as More when a destination can be named."
+      ],
+      "examples": [
+        "Projects",
+        "Settings"
+      ]
+    },
+    {
+      "id": "select",
+      "name": "Select",
+      "purpose": "Choose one value from a bounded list.",
+      "anatomy": [
+        "label",
+        "trigger",
+        "value",
+        "indicator",
+        "listbox"
+      ],
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        "md"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "invalid"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.md}",
+        "padding": "{space.3}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "focusVisible": true,
+        "keyboard": "Arrow keys move options; Enter commits selection.",
+        "labelRequired": true
+      },
+      "contentRules": [
+        "Options use parallel concise labels."
+      ],
+      "do": [
+        "Use for bounded choices."
+      ],
+      "dont": [
+        "Do not hide critical choices in very long lists."
+      ],
+      "examples": [
+        "Country"
+      ]
+    },
+    {
+      "id": "textarea",
+      "name": "Textarea",
+      "purpose": "Collect multi-line text.",
+      "anatomy": [
+        "label",
+        "control",
+        "supporting-text",
+        "error-message"
+      ],
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        "md"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled",
+        "invalid"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.primary}",
+        "foreground": "{semantic.text.primary}",
+        "border": "{semantic.border.default}",
+        "radius": "{radius.md}",
+        "padding": "{space.3}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "focusVisible": true,
+        "keyboard": "Standard textarea behavior.",
+        "labelRequired": true
+      },
+      "contentRules": [
+        "Use for answers that may span multiple lines."
+      ],
+      "do": [
+        "Provide a visible label."
+      ],
+      "dont": [
+        "Do not use for single short values."
+      ],
+      "examples": [
+        "Project description"
+      ]
+    },
+    {
+      "id": "tooltip",
+      "name": "Tooltip",
+      "purpose": "Provide brief supplemental explanation.",
+      "anatomy": [
+        "bubble",
+        "content",
+        "optional-arrow"
+      ],
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        "sm"
+      ],
+      "states": [
+        "default",
+        "hover",
+        "focus",
+        "disabled"
+      ],
+      "tokens": {
+        "background": "{semantic.surface.inverse}",
+        "foreground": "{semantic.text.inverse}",
+        "radius": "{radius.sm}",
+        "padding": "{space.2}",
+        "focusRing": "{semantic.focus.ring}"
+      },
+      "accessibility": {
+        "ruleIds": [
+          "STYLE-A11Y-001"
+        ],
+        "focusVisible": true,
+        "keyboard": "Appears for keyboard focus as well as pointer hover."
+      },
+      "contentRules": [
+        "Keep content short and supplemental."
+      ],
+      "do": [
+        "Expose the same content on focus."
+      ],
+      "dont": [
+        "Do not put essential instructions only in a tooltip."
+      ],
+      "examples": [
+        "Keyboard shortcut hint"
+      ]
+    }
+  ],
+  "accessibility": {
+    "baseline": "WCAG 2.2 AA",
+    "rules": [
+      {
+        "id": "STYLE-A11Y-001",
+        "name": "Visible focus",
+        "requirement": "Interactive controls expose a visible focus treatment."
+      },
+      {
+        "id": "STYLE-A11Y-002",
+        "name": "Button contrast",
+        "requirement": "Primary button text/background contrast is at least 4.5:1."
+      },
+      {
+        "id": "STYLE-A11Y-003",
+        "name": "Programmatic labels",
+        "requirement": "Inputs have programmatically associated labels."
+      }
+    ],
+    "contrastPairs": [
+      {
+        "id": "STYLE-A11Y-002",
+        "foreground": "semantic.action.primary.foreground",
+        "background": "semantic.action.primary.background",
+        "minimum": 4.5
+      },
+      {
+        "id": "STYLE-A11Y-004",
+        "foreground": "semantic.text.primary",
+        "background": "semantic.surface.primary",
+        "minimum": 4.5
+      },
+      {
+        "id": "STYLE-A11Y-005",
+        "foreground": "semantic.text.secondary",
+        "background": "semantic.surface.primary",
+        "minimum": 4.5
+      }
+    ]
+  }
+}

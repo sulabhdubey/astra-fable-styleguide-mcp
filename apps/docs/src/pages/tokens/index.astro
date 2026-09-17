@@ -1,0 +1,5 @@
+---
+import Layout from '../../layouts.astro';
+import { tokenDocuments } from '../../lib/spec';
+---
+<Layout title="Design Tokens"><h1>Design Tokens</h1><p class="muted">Primitive and semantic tokens are read directly from the canonical specification.</p>{tokenDocuments.map((doc:any)=><section><h2>{doc.name}</h2><pre>{JSON.stringify(doc.data,null,2)}</pre></section>)}</Layout>

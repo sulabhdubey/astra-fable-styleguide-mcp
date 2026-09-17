@@ -1,0 +1,24 @@
+{
+  "principles": [
+    {
+      "id": "STYLE-PRINCIPLE-001",
+      "name": "Clarity before decoration",
+      "rule": "Visual choices must make hierarchy and action clearer."
+    },
+    {
+      "id": "STYLE-PRINCIPLE-002",
+      "name": "Accessible by construction",
+      "rule": "Interactive and text treatments must meet the configured accessibility baseline."
+    },
+    {
+      "id": "STYLE-PRINCIPLE-003",
+      "name": "Tokens over arbitrary values",
+      "rule": "Reusable UI must consume semantic tokens instead of introducing raw values."
+    },
+    {
+      "id": "STYLE-PRINCIPLE-004",
+      "name": "Explain every exception",
+      "rule": "Intentional deviations require an auditable decision record."
+    }
+  ]
+}

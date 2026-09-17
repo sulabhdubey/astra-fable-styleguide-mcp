@@ -1,0 +1,74 @@
+{
+  "semantic": {
+    "surface": {
+      "primary": {
+        "$type": "color",
+        "$value": "{color.white}"
+      },
+      "subtle": {
+        "$type": "color",
+        "$value": "{color.slate.50}"
+      },
+      "inverse": {
+        "$type": "color",
+        "$value": "{color.slate.900}"
+      }
+    },
+    "text": {
+      "primary": {
+        "$type": "color",
+        "$value": "{color.slate.900}"
+      },
+      "secondary": {
+        "$type": "color",
+        "$value": "{color.slate.600}"
+      },
+      "inverse": {
+        "$type": "color",
+        "$value": "{color.white}"
+      },
+      "danger": {
+        "$type": "color",
+        "$value": "{color.red.600}"
+      }
+    },
+    "border": {
+      "default": {
+        "$type": "color",
+        "$value": "{color.slate.200}"
+      }
+    },
+    "action": {
+      "primary": {
+        "background": {
+          "$type": "color",
+          "$value": "{color.blue.600}"
+        },
+        "backgroundHover": {
+          "$type": "color",
+          "$value": "{color.blue.700}"
+        },
+        "foreground": {
+          "$type": "color",
+          "$value": "{color.white}"
+        }
+      }
+    },
+    "focus": {
+      "ring": {
+        "$type": "color",
+        "$value": "{color.blue.500}"
+      }
+    },
+    "feedback": {
+      "error": {
+        "$type": "color",
+        "$value": "{color.red.600}"
+      },
+      "success": {
+        "$type": "color",
+        "$value": "{color.green.600}"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "form",
+  "name": "Data entry form",
+  "rules": [
+    "Group related fields with headings.",
+    "Keep labels visible.",
+    "Place validation near the affected field.",
+    "Use one primary submit action."
+  ],
+  "ruleIds": [
+    "STYLE-PATTERN-002"
+  ]
+}

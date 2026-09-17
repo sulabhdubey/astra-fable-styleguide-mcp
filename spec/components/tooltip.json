@@ -1,0 +1,48 @@
+{
+  "id": "tooltip",
+  "name": "Tooltip",
+  "purpose": "Provide brief supplemental explanation.",
+  "anatomy": [
+    "bubble",
+    "content",
+    "optional-arrow"
+  ],
+  "variants": [
+    "default"
+  ],
+  "sizes": [
+    "sm"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.inverse}",
+    "foreground": "{semantic.text.inverse}",
+    "radius": "{radius.sm}",
+    "padding": "{space.2}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "focusVisible": true,
+    "keyboard": "Appears for keyboard focus as well as pointer hover."
+  },
+  "contentRules": [
+    "Keep content short and supplemental."
+  ],
+  "do": [
+    "Expose the same content on focus."
+  ],
+  "dont": [
+    "Do not put essential instructions only in a tooltip."
+  ],
+  "examples": [
+    "Keyboard shortcut hint"
+  ]
+}

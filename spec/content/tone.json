@@ -1,0 +1,19 @@
+{
+  "id": "content-tone",
+  "principles": [
+    "Direct",
+    "Specific",
+    "Calm",
+    "Action-oriented"
+  ],
+  "rules": [
+    {
+      "id": "STYLE-CONTENT-001",
+      "rule": "Prefer concrete verbs over vague encouragement."
+    },
+    {
+      "id": "STYLE-CONTENT-002",
+      "rule": "Error messages state what happened and what the user can do next."
+    }
+  ]
+}

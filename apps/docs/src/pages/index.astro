@@ -1,0 +1,13 @@
+---
+import Layout from '../layouts.astro';
+import { manifest, principles, components, patterns } from '../lib/spec';
+const base = import.meta.env.BASE_URL;
+---
+<Layout title={`${manifest.name} ${manifest.version}`}>
+  <p class="pill">v{manifest.version}</p><p class="pill">{manifest.status}</p>
+  <h1>{manifest.name}</h1>
+  <p class="muted">A governed design constitution created through independent proposals, cross-review, deterministic checks, exact-hash consensus, and human-controlled release.</p>
+  <img class="hero" src={`${base}architecture.png`} alt="Astra and Fable Style Constitution architecture" />
+  <h2>Principles</h2><div class="grid">{principles.principles.map((p:any)=><article class="card"><h3>{p.name}</h3><p>{p.rule}</p><small>{p.id}</small></article>)}</div>
+  <h2>Canonical surface</h2><div class="grid"><article class="card"><strong>{components.length}</strong><p>canonical components</p></article><article class="card"><strong>{patterns.length}</strong><p>interaction/application patterns</p></article><article class="card"><strong>1</strong><p>source of truth: <code>/spec</code></p></article></div>
+</Layout>

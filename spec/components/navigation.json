@@ -1,0 +1,53 @@
+{
+  "id": "navigation",
+  "name": "Navigation",
+  "purpose": "Move between product destinations.",
+  "anatomy": [
+    "container",
+    "item",
+    "label",
+    "optional-icon"
+  ],
+  "variants": [
+    "primary",
+    "secondary"
+  ],
+  "sizes": [
+    "md"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled",
+    "active"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.md}",
+    "padding": "{space.3}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "focusVisible": true,
+    "keyboard": "Tab moves between destinations; current destination is programmatically indicated."
+  },
+  "contentRules": [
+    "Labels name destinations, not actions."
+  ],
+  "do": [
+    "Mark the current destination."
+  ],
+  "dont": [
+    "Do not use vague labels such as More when a destination can be named."
+  ],
+  "examples": [
+    "Projects",
+    "Settings"
+  ]
+}

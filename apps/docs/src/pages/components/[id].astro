@@ -1,0 +1,7 @@
+---
+import Layout from '../../layouts.astro';
+import { components } from '../../lib/spec';
+export function getStaticPaths(){return components.map((component:any)=>({params:{id:component.id},props:{component}}));}
+const { component } = Astro.props;
+---
+<Layout title={component.name}><p><a href="../">← Components</a></p><h1>{component.name}</h1><p class="muted">{component.purpose}</p><h2>States</h2><p>{component.states.map((s:string)=><span class="pill">{s}</span>)}</p><h2>Tokens</h2><table><tbody>{Object.entries(component.tokens).map(([k,v])=><tr><th>{k}</th><td><code>{String(v)}</code></td></tr>)}</tbody></table><h2>Accessibility</h2><pre>{JSON.stringify(component.accessibility,null,2)}</pre><h2>Do / Don't</h2><div class="grid"><article class="card"><h3>Do</h3><ul>{component.do.map((x:string)=><li>{x}</li>)}</ul></article><article class="card"><h3>Don't</h3><ul>{component.dont.map((x:string)=><li>{x}</li>)}</ul></article></div></Layout>

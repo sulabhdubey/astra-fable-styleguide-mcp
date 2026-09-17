@@ -1,0 +1,19 @@
+{
+  "antiPatterns": [
+    {
+      "id": "STYLE-ANTI-001",
+      "name": "Arbitrary values",
+      "rule": "Do not introduce raw colors, spacing, or radii when an approved token exists."
+    },
+    {
+      "id": "STYLE-ANTI-002",
+      "name": "Color-only meaning",
+      "rule": "Do not communicate state using color alone."
+    },
+    {
+      "id": "STYLE-ANTI-003",
+      "name": "Hidden focus",
+      "rule": "Do not remove focus indicators without an accessible replacement."
+    }
+  ]
+}

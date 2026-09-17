@@ -1,0 +1,53 @@
+{
+  "id": "input",
+  "name": "Input",
+  "purpose": "Collect short-form text.",
+  "anatomy": [
+    "label",
+    "control",
+    "supporting-text",
+    "error-message"
+  ],
+  "variants": [
+    "default"
+  ],
+  "sizes": [
+    "md"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled",
+    "invalid"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.md}",
+    "padding": "{space.3}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001",
+      "STYLE-A11Y-003"
+    ],
+    "keyboard": "Standard text-input behavior.",
+    "focusVisible": true,
+    "labelRequired": true
+  },
+  "contentRules": [
+    "Labels describe the requested value."
+  ],
+  "do": [
+    "Associate labels programmatically."
+  ],
+  "dont": [
+    "Do not rely on placeholder text as the only label."
+  ],
+  "examples": [
+    "Email address"
+  ]
+}

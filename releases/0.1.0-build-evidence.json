@@ -1,0 +1,22 @@
+{
+  "version": "0.1.0",
+  "status": "candidate",
+  "verification": {
+    "coreTests": 20,
+    "canonicalValidation": "pass",
+    "generatedReproducibility": "pass",
+    "secretScan": "pass",
+    "providerAdapterContractTests": "pass",
+    "oneCallOrchestrationMock": "pass",
+    "productionMcpSdkRuntime": "pending-connected-install",
+    "astroProductionBuild": "pending-connected-install",
+    "dockerBuild": "pending-docker-runtime"
+  },
+  "sha256": {
+    "generated/css/tokens.css": "3f4f668b65fed58a76a087895d9138d29df5cce526a6ebe0cf4012c0efbfd5cd",
+    "generated/json/tokens.json": "9eaf65c242b4c20c170896868b07ea5e22e961b051926a04dc839ca0f4c654de",
+    "generated/json/style-spec.json": "9b2bde7ea26f52b9c293938ed19ce55c6092ea15491c4589fb412ca0f66b451c",
+    "generated/typescript/tokens.ts": "fe5de3f91f091513e1c92a321797c7f68fa04666865f4e4abd31d59bcc534c65",
+    "architecture.png": "30141062b568b64f439444ddc6a7f18f04d7770d979ddf654e026c1a0bc4b3c2"
+  }
+}

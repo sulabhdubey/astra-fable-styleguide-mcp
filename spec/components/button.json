@@ -1,0 +1,58 @@
+{
+  "id": "button",
+  "name": "Button",
+  "purpose": "Trigger an immediate action.",
+  "anatomy": [
+    "container",
+    "label",
+    "optional-leading-icon",
+    "optional-trailing-icon"
+  ],
+  "variants": [
+    "primary",
+    "secondary",
+    "danger"
+  ],
+  "sizes": [
+    "sm",
+    "md",
+    "lg"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "active",
+    "disabled"
+  ],
+  "tokens": {
+    "background": "{semantic.action.primary.background}",
+    "foreground": "{semantic.action.primary.foreground}",
+    "hoverBackground": "{semantic.action.primary.backgroundHover}",
+    "radius": "{radius.md}",
+    "paddingInline": "{space.4}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001",
+      "STYLE-A11Y-002"
+    ],
+    "keyboard": "Enter and Space activate the button.",
+    "focusVisible": true,
+    "minimumTarget": "40px"
+  },
+  "contentRules": [
+    "Use concise action verbs."
+  ],
+  "do": [
+    "Use one primary action per local decision area."
+  ],
+  "dont": [
+    "Do not use a button for navigation."
+  ],
+  "examples": [
+    "Save changes",
+    "Create project"
+  ]
+}

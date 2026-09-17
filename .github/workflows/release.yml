@@ -1,0 +1,21 @@
+name: Release Gate
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version to verify
+        required: true
+permissions: { contents: read }
+jobs:
+  verify-release:
+    runs-on: ubuntu-latest
+    environment: release-approval
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: 'pnpm' }
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm verify
+      - run: test "$(node -p \"require('./spec/manifest.json').version\")" = "${{ inputs.version }}"

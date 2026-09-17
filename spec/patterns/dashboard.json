@@ -1,0 +1,12 @@
+{
+  "id": "dashboard",
+  "name": "Information dashboard",
+  "rules": [
+    "Use a consistent page grid.",
+    "Prioritize primary metrics before supporting detail.",
+    "Use semantic status colors with text labels."
+  ],
+  "ruleIds": [
+    "STYLE-PATTERN-001"
+  ]
+}

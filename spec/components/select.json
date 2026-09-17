@@ -1,0 +1,53 @@
+{
+  "id": "select",
+  "name": "Select",
+  "purpose": "Choose one value from a bounded list.",
+  "anatomy": [
+    "label",
+    "trigger",
+    "value",
+    "indicator",
+    "listbox"
+  ],
+  "variants": [
+    "default"
+  ],
+  "sizes": [
+    "md"
+  ],
+  "states": [
+    "default",
+    "hover",
+    "focus",
+    "disabled",
+    "invalid"
+  ],
+  "tokens": {
+    "background": "{semantic.surface.primary}",
+    "foreground": "{semantic.text.primary}",
+    "border": "{semantic.border.default}",
+    "radius": "{radius.md}",
+    "padding": "{space.3}",
+    "focusRing": "{semantic.focus.ring}"
+  },
+  "accessibility": {
+    "ruleIds": [
+      "STYLE-A11Y-001"
+    ],
+    "focusVisible": true,
+    "keyboard": "Arrow keys move options; Enter commits selection.",
+    "labelRequired": true
+  },
+  "contentRules": [
+    "Options use parallel concise labels."
+  ],
+  "do": [
+    "Use for bounded choices."
+  ],
+  "dont": [
+    "Do not hide critical choices in very long lists."
+  ],
+  "examples": [
+    "Country"
+  ]
+}

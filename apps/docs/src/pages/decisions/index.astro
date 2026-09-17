@@ -1,0 +1,5 @@
+---
+import Layout from '../../layouts.astro';
+import { decisions } from '../../lib/spec';
+---
+<Layout title="Decisions"><h1>Decision Log</h1><p class="muted">The decision log explains why high-impact rules exist.</p>{decisions.map((d:any)=><section class="card"><h2>{d.name}</h2><pre>{d.text}</pre></section>)}</Layout>

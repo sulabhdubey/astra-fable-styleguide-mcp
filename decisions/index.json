@@ -1,0 +1,6 @@
+{
+  "decisions": [
+    "ADR-0001-semantic-token-layer.md",
+    "ADR-0002-human-release-gate.md"
+  ]
+}

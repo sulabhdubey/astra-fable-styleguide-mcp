@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: 'pnpm' }
+      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm lint
+      - run: pnpm lint:eslint
+      - run: pnpm typecheck:full
+      - run: pnpm test
+      - run: pnpm validate
+      - run: pnpm generate
+      - run: pnpm build:docs
+      - run: pnpm smoke:mcp
+      - run: docker build -t style-constitution:ci .
+      - run: git diff --exit-code -- generated
