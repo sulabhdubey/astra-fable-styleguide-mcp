@@ -64,5 +64,7 @@ createServer((req,res)=>{
  if(path==='/health'&&req.method==='GET'){res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({ok:true,version:bundle.manifest.version,protocol:'2026-07-28'}));return;}
  if(path==='/version'&&req.method==='GET'){res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({version:bundle.manifest.version}));return;}
  if(host==='127.0.0.1'){if(!validateHost(req,res)||!validateOrigin(req,res))return;} else if(!publicHeadersAllowed(req,res))return;
- if(!path.startsWith('/mcp')){res.writeHead(404).end();return;} void nodeHandler(req,res);
+ if(!path.startsWith('/mcp')){res.writeHead(404).end();return;}
+ if(!req.method){res.writeHead(400).end('Missing HTTP method');return;}
+ const mcpReq=Object.assign(req,{method:req.method}); void nodeHandler(mcpReq,res);
 }).listen(port,host,()=>console.error(`Style Constitution MCP listening on http://${host}:${port}/mcp`));
