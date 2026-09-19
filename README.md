@@ -58,6 +58,8 @@ See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for deployment settings and ver
 
 The next compliance implementation reports source locations and explicit coverage limits. See [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) for its result contract.
 
+For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIPT_CLIENT.md).
+
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)
 - Build requirements: [`BUILD_SPEC.md`](./BUILD_SPEC.md)
