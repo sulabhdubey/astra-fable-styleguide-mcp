@@ -2,7 +2,7 @@
   "$schema": "../packages/schemas/style-manifest.schema.json",
   "name": "Style Constitution",
   "version": "0.3.0",
-  "status": "draft",
+  "status": "released",
   "schemaVersion": "1.0",
   "updatedAt": "2026-09-20",
   "principles": [
