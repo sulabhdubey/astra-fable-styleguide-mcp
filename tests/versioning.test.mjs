@@ -11,6 +11,7 @@ test('released v0.1 snapshot is tied to exact bytes and commit', async () => {
   const snapshot = verifySnapshot(entry, bytes);
   assert.equal(snapshot.version, '0.1.0');
   assert.equal(Object.keys(snapshot.files).length, 25);
+  assert.equal(verifySnapshot(entry, Buffer.from(bytes.toString().replace(/\r?\n/g, '\r\n'))).version, '0.1.0');
   const tampered = Buffer.from(bytes);
   tampered[tampered.length - 2] ^= 1;
   assert.throws(() => verifySnapshot(entry, tampered), /hash mismatch/);
