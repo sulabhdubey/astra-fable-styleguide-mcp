@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { randomUUID } from 'node:crypto';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { StyleConstitutionClient } from '../packages/sdk/dist/index.js';
 
 async function freePort() {
@@ -16,17 +19,23 @@ async function freePort() {
 test('governance MCP tool is admin-only while public read tools remain available', { timeout: 20000 }, async () => {
   const port = await freePort();
   const token = randomUUID();
+  const astraToken = randomUUID();
+  const fableToken = randomUUID();
+  const dir = await mkdtemp(join(tmpdir(), 'style-governance-mcp-'));
+  const auditPath = join(dir, 'audit.jsonl');
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/mcp-server/src/official-server.ts'], {
     cwd: process.cwd(), stdio: ['ignore', 'ignore', 'pipe'],
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', MCP_ENABLE_WRITES: 'true', MCP_ENABLE_RELEASE_TOOL: 'false', MCP_ENABLE_AI_ORCHESTRATION: 'false', MCP_ADMIN_TOKEN: token },
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', MCP_ENABLE_WRITES: 'true', MCP_ENABLE_RELEASE_TOOL: 'false', MCP_ENABLE_AI_ORCHESTRATION: 'false', MCP_ADMIN_TOKEN: token, MCP_AUDIT_PATH: auditPath, MCP_ASTRA_APPROVAL_TOKEN: astraToken, MCP_FABLE_APPROVAL_TOKEN: fableToken },
   });
   let stderr = '';
   child.stderr.on('data', chunk => { stderr += String(chunk); });
   const endpoint = `http://127.0.0.1:${port}/mcp`;
   const anonymous = new StyleConstitutionClient({ endpoint });
+  let roleToken;
   const authorized = new StyleConstitutionClient({ endpoint, fetchImpl: (input, init = {}) => {
     const headers = new Headers(init.headers);
     headers.set('authorization', `Bearer ${token}`);
+    if (roleToken) headers.set('x-role-approval-token', roleToken);
     return fetch(input, { ...init, headers });
   } });
   try {
@@ -48,7 +57,8 @@ test('governance MCP tool is admin-only while public read tools remain available
     assert.equal(granted.isError, undefined);
     const activity = JSON.parse(granted.content.find(block => block.type === 'text').text);
     assert.equal(activity.durable, false);
-    assert.equal(activity.identityAssurance, 'shared-admin-credential');
+    assert.equal(activity.audit.durable, true);
+    assert.equal(activity.identityAssurance, 'role-scoped-credentials');
     const base = { baseVersion: '0.1.0', summary: 'disabled button semantics', tradeoffs: [], unresolved: [] };
     const proposals = [
       { ...base, id: 'MCP-ADD-A', author: 'astra', changes: [{ path: 'tokens.semantic.action.primary.disabledBackground', value: { $type: 'color', $value: '{color.slate.200}' } }] },
@@ -64,10 +74,26 @@ test('governance MCP tool is admin-only while public read tools remain available
     assert.equal(candidate.status, 'candidate_ready');
     const status = await authorized.connection.callTool({ name: 'get_consensus_status', arguments: { candidateHash: candidate.candidateHash } });
     assert.equal(JSON.parse(status.content.find(block => block.type === 'text').text).changeCount, 2);
+    const deniedApproval = await authorized.connection.callTool({ name: 'approve_candidate', arguments: { candidateHash: candidate.candidateHash, actor: 'astra' } });
+    assert.equal(deniedApproval.isError, true);
+    roleToken = astraToken;
+    const astraApproval = await authorized.connection.callTool({ name: 'approve_candidate', arguments: { candidateHash: candidate.candidateHash, actor: 'astra' } });
+    assert.equal(astraApproval.isError, undefined);
+    const wrongRole = await authorized.connection.callTool({ name: 'approve_candidate', arguments: { candidateHash: candidate.candidateHash, actor: 'fable' } });
+    assert.equal(wrongRole.isError, true);
+    roleToken = fableToken;
+    const fableApproval = await authorized.connection.callTool({ name: 'approve_candidate', arguments: { candidateHash: candidate.candidateHash, actor: 'fable' } });
+    assert.equal(fableApproval.isError, undefined);
+    const audited = JSON.parse((await authorized.connection.callTool({ name: 'get_governance_activity', arguments: {} })).content.find(block => block.type === 'text').text);
+    assert.equal(audited.audit.eventCount, 5);
+    const auditBytes = await readFile(auditPath, 'utf8');
+    assert.equal(auditBytes.includes(astraToken), false);
+    assert.equal(auditBytes.includes(fableToken), false);
     await assert.rejects(anonymous.getDesignTokens('semantic.action.primary.disabledBackground'), /Unknown token scope/);
   } finally {
     await anonymous.close();
     await authorized.close();
     child.kill('SIGTERM');
+    await rm(dir, { recursive: true, force: true });
   }
 });
