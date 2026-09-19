@@ -34,7 +34,7 @@ pnpm verify
 ## Production MCP
 The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance remains process-local, with optional local audit evidence and separate role approval credentials; see [GOVERNANCE.md](GOVERNANCE.md).
 
-The released `v0.1.0` server is publicly available:
+The public server is available below. Check `/version` for the version currently serving; the immutable v0.1.0 release and snapshot remain available.
 
 | Endpoint | URL |
 | --- | --- |
@@ -66,7 +66,7 @@ For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIP
 
 Historical comparisons use [immutable `/spec` snapshots](./docs/VERSIONING.md).
 
-See the [v0.2.0 implementation plan](./docs/V0.2_PLAN.md) for remaining work and release criteria.
+See the [v0.2.0 release notes](./docs/V0.2.0_RELEASE_NOTES.md) for the design delta, compatibility, and governance scope. The [implementation plan](./docs/V0.2_PLAN.md) records the delivery criteria.
 
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)

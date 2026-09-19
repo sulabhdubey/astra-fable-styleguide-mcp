@@ -19,10 +19,11 @@ else if(cmd==='inspect'){
 }else if(cmd==='consensus'){
   const {runConsensus}=await import('../dist/packages/consensus-engine/src/index.js');
   const {MockAgent}=await import('../dist/packages/provider-adapters/src/index.js');
-  const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'CLI demo',changes:[{path:'demo.radius',value}],tradeoffs:[],unresolved:[]});
+  const manifest=JSON.parse(await readFile('spec/manifest.json','utf8'));
+  const mk=(id,author,value)=>({id,author,baseVersion:manifest.version,summary:'CLI demo',changes:[{path:'demo.radius',value}],tradeoffs:[],unresolved:[]});
   const astra=new MockAgent('astra',{initial:mk('A','astra','8px'),convergeTo:{'demo.radius':'10px'}});
   const fable=new MockAgent('fable',{initial:mk('F','fable','12px'),convergeTo:{'demo.radius':'10px'}});
-  console.log(JSON.stringify(await runConsensus({astra,fable,context:{brief:'CLI consensus demo',criteria:['consistency'],baseVersion:'0.1.0'}}),null,2));
+  console.log(JSON.stringify(await runConsensus({astra,fable,context:{brief:'CLI consensus demo',criteria:['consistency'],baseVersion:manifest.version}}),null,2));
 }else if(cmd==='mcp'){
   run('pnpm',['exec','tsx','apps/mcp-server/src/official-server.ts']);
 }else{console.error(`Unknown command: ${cmd}`);process.exitCode=1;}

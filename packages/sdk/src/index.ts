@@ -63,7 +63,7 @@ export class StyleConstitutionClient {
     if (this.connection) return;
     if (this.connecting) return this.connecting;
     this.connecting = (async () => {
-      const client = new Client({ name: 'style-constitution-ts-client', version: '0.1.0' }, { versionNegotiation: { mode: this.protocolMode } });
+      const client = new Client({ name: 'style-constitution-ts-client', version: '0.2.0' }, { versionNegotiation: { mode: this.protocolMode } });
       const transport = new StreamableHTTPClientTransport(this.url, { fetch: this.fetchImpl });
       try {
         await client.connect(transport);

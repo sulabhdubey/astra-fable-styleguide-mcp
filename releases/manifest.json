@@ -5,6 +5,12 @@
       "path": "0.1.0-style-spec.json",
       "sha256": "2b39b0e85132f3d5467bf6e09b502d00a9d5cd74ea838caaa53a30a68009f64c",
       "sourceCommit": "4874c7d3b338c69b48435509be122bab495263b6"
+    },
+    {
+      "version": "0.2.0",
+      "path": "0.2.0-style-spec.json",
+      "sha256": "26befd075ace6c99a420984d87e6e1f4d5ca7b0be9b99160543adcfe256869f7",
+      "sourceCommit": "e85a8a5e899157de384580ccefab2efab8b22a10"
     }
   ]
 }
