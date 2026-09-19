@@ -1,6 +1,6 @@
 import {spawn} from 'node:child_process';
 const port=Number(process.env.SMOKE_MCP_PORT??43127);
-const child=spawn('pnpm',['exec','tsx','apps/mcp-server/src/official-server.ts'],{stdio:['ignore','pipe','pipe'],env:{...process.env,PORT:String(port),HOST:'127.0.0.1',MCP_ENABLE_WRITES:'false'}});
+const child=spawn(process.execPath,['--import','tsx','apps/mcp-server/src/official-server.ts'],{stdio:['ignore','pipe','pipe'],env:{...process.env,PORT:String(port),HOST:'127.0.0.1',MCP_ENABLE_WRITES:'false'}});
 let stderr='';child.stderr.on('data',d=>stderr+=String(d));
 const deadline=Date.now()+15000;let response;
 try{
