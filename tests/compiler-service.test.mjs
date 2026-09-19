@@ -20,7 +20,7 @@ test('one-call agent orchestration independently proposes, cross-reviews, valida
   const astra=new MockAgent('astra',{initial:mk('AUTO-A','astra','4px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
   const fable=new MockAgent('fable',{initial:mk('AUTO-F','fable','12px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
   const run=await service.generateCandidateFromBrief({brief:'Premium analytics product',criteria:['accessibility','consistency'],astra,fable},'secret','secret');
-  assert.equal(run.status,'CONSENSUS');assert.equal(run.initial.length,2);assert.equal(run.critiques.length,2);assert.equal(service.getConsensusStatus(run.candidateHash,'secret','secret').source,'agent-consensus');
+  assert.equal(run.status,'CONSENSUS');assert.equal(run.initial.length,2);assert.equal(run.rounds,2);assert.equal(run.critiques.length,4);assert.equal(service.getConsensusStatus(run.candidateHash,'secret','secret').source,'agent-consensus');
   assert.equal(astra.seenInitialContexts.length,1);assert.equal(fable.seenInitialContexts.length,1);assert.equal('proposal' in astra.seenInitialContexts[0],false);
 });
 
