@@ -20,7 +20,7 @@ test('one-call agent orchestration independently proposes, cross-reviews, valida
   const astra=new MockAgent('astra',{initial:mk('AUTO-A','astra','4px'),convergeTo:{'tokens.radius.md.$value':'8px'}});
   const fable=new MockAgent('fable',{initial:mk('AUTO-F','fable','12px'),convergeTo:{'tokens.radius.md.$value':'8px'}});
   const run=await service.generateCandidateFromBrief({brief:'Premium analytics product',criteria:['accessibility','consistency'],astra,fable},'secret','secret');
-  assert.equal(run.status,'CONSENSUS');assert.equal(run.initial.length,2);assert.equal(run.critiques.length,2);assert.equal(service.getConsensusStatus(run.candidateHash).source,'agent-consensus');
+  assert.equal(run.status,'CONSENSUS');assert.equal(run.initial.length,2);assert.equal(run.critiques.length,2);assert.equal(service.getConsensusStatus(run.candidateHash,'secret','secret').source,'agent-consensus');
   assert.equal(astra.seenInitialContexts.length,1);assert.equal(fable.seenInitialContexts.length,1);assert.equal('proposal' in astra.seenInitialContexts[0],false);
 });
 
@@ -33,4 +33,46 @@ test('deterministic candidate evaluation rejects unsupported or non-leaf changes
 test('release requires a credential distinct from ordinary admin authorization',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'8px'}],tradeoffs:[],unresolved:[]});
   service.createProposal('RA',mk('RA','astra'),'admin','admin');service.createProposal('RF',mk('RF','fable'),'admin','admin');const c=await service.startConsensusRound('RA','RF','admin','admin');service.approveCandidate(c.candidateHash,'astra','admin','admin');service.approveCandidate(c.candidateHash,'fable','admin','admin');assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin',undefined,'human-secret'),/Separate human approval credential/);assert.equal(service.publishRelease(c.candidateHash,true,'admin','admin','human-secret','human-secret').status,'released');
+});
+
+test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'radius',changes:[{path:'tokens.radius.md.$value',value}],tradeoffs:[],unresolved:[]});
+  service.createProposal('GV-A',mk('GV-A','astra','8px'),'admin','admin');
+  service.createProposal('GV-F',mk('GV-F','fable','12px'),'admin','admin');
+  assert.throws(()=>service.getGovernanceActivity(undefined,'admin'),/Unauthorized/);
+  const conflict=await service.startConsensusRound('GV-A','GV-F','admin','admin');
+  assert.equal(conflict.status,'needs_revision');
+  let view=service.getGovernanceActivity('admin','admin');
+  assert.equal(view.durable,false);
+  assert.equal(view.identityAssurance,'shared-admin-credential');
+  assert.equal(view.recentRuns[0].status,'needs_revision');
+  assert.deepEqual(view.recentRuns[0].conflictPaths,['tokens.radius.md.$value']);
+  assert.equal(view.candidates.length,0);
+  assert.equal(JSON.stringify(view).includes('12px'),false);
+  service.createProposal('GV-F2',mk('GV-F2','fable','8px'),'admin','admin');
+  const ready=await service.startConsensusRound('GV-A','GV-F2','admin','admin');
+  assert.equal(ready.status,'candidate_ready');
+  assert.throws(()=>service.getConsensusStatus(ready.candidateHash,undefined,'admin'),/Unauthorized/);
+  assert.equal(service.getConsensusStatus(ready.candidateHash,'admin','admin').roleApprovalsComplete,false);
+  service.approveCandidate(ready.candidateHash,'astra','admin','admin');
+  service.approveCandidate(ready.candidateHash,'fable','admin','admin');
+  view=service.getGovernanceActivity('admin','admin');
+  assert.equal(view.candidates[0].candidateHash,ready.candidateHash);
+  assert.equal(view.candidates[0].roleApprovalsComplete,true);
+  assert.equal(view.candidates[0].humanApprovalRequired,true);
+  assert.equal(view.candidates[0].status,'candidate');
+  assert.equal(view.recentRuns[0].status,'candidate_ready');
+});
+
+test('operator governance view records provider failure without a candidate or raw error text',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const {MockAgent}=await import('../dist/packages/provider-adapters/src/index.js');
+  const astra={id:'astra',generateProposal:async()=>{throw new Error('private provider response');}};
+  const fable=new MockAgent('fable');
+  await assert.rejects(service.generateCandidateFromBrief({brief:'A settings interface',criteria:['consistency'],astra,fable},'admin','admin'),/private provider response/);
+  const view=service.getGovernanceActivity('admin','admin');
+  assert.equal(view.recentRuns[0].status,'provider_error');
+  assert.equal(view.candidates.length,0);
+  assert.equal(JSON.stringify(view).includes('private provider response'),false);
 });
