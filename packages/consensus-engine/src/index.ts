@@ -20,8 +20,23 @@ export async function sha256(value: unknown): Promise<string> {
 
 export function mergeProposals(a: DesignProposal,b: DesignProposal): { candidate: Candidate; conflicts: Conflict[] } {
   const byPath=new Map<string,Change>(); const conflicts:Conflict[]=[];
-  for (const change of a.changes) byPath.set(change.path,deepClone(change));
+  for (const change of a.changes){
+    const prior=byPath.get(change.path);
+    if(prior)conflicts.push({path:change.path,astra:[deepClone(prior.value),deepClone(change.value)],fable:null});
+    else byPath.set(change.path,deepClone(change));
+  }
+  const seenFable=new Map<string,Change>();
   for (const change of b.changes) {
+    const priorFable=seenFable.get(change.path);
+    if(priorFable)conflicts.push({path:change.path,astra:null,fable:[deepClone(priorFable.value),deepClone(change.value)]});
+    else seenFable.set(change.path,change);
+    for(const counterpart of a.changes){
+      if(change.path===counterpart.path)continue;
+      if(change.path.startsWith(`${counterpart.path}.`)||counterpart.path.startsWith(`${change.path}.`)){
+        const parent=change.path.length<counterpart.path.length?change.path:counterpart.path;
+        conflicts.push({path:parent,astra:{path:counterpart.path,value:deepClone(counterpart.value)},fable:{path:change.path,value:deepClone(change.value)}});
+      }
+    }
     const existing=byPath.get(change.path);
     if (!existing) byPath.set(change.path,deepClone(change));
     else if (canonicalize(existing.value)!==canonicalize(change.value)) conflicts.push({path:change.path,astra:deepClone(existing.value),fable:deepClone(change.value)});
