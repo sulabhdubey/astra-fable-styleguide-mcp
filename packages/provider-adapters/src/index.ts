@@ -11,7 +11,10 @@ function normalizeProposal(value:unknown,role:string,baseVersion:string,referenc
   if(!isRecord(value))throw new Error('Provider proposal must be an object');
   const rawChanges=value.changes;if(!Array.isArray(rawChanges)||rawChanges.length===0)throw new Error('Provider proposal must contain at least one change');
   const changes=rawChanges.map((change,i)=>{if(!isRecord(change))throw new Error(`Invalid change at ${i}`);if(!('value' in change)||change.value===undefined)throw new Error(`Provider returned invalid changes[${i}].value`);return {path:assertString(change.path,`changes[${i}].path`),value:deepClone(change.value),...(typeof change.rationale==='string'?{rationale:change.rationale}:{})};});
-  if(referenceSpec!==undefined)for(const change of changes)if(getPath(referenceSpec,change.path)===undefined)throw new Error(`Unknown proposal change path: ${change.path}`);
+  if(referenceSpec!==undefined)for(const change of changes){
+    const guidance=/^components\.([A-Za-z0-9_-]+)\.accessibility\.(errorTextRequired|errorAssociation)$/.exec(change.path);
+    if(getPath(referenceSpec,change.path)===undefined&&!(guidance&&isRecord(getPath(referenceSpec,`components.${guidance[1]}.accessibility`))))throw new Error(`Unknown proposal change path: ${change.path}`);
+  }
   return {id:previousId??(typeof value.id==='string'&&value.id?value.id:`PROP-${role}-${crypto.randomUUID()}`),author:role,baseVersion,summary:assertString(value.summary,'summary'),changes,tradeoffs:Array.isArray(value.tradeoffs)?assertStringArray(value.tradeoffs,'tradeoffs'):[],unresolved:Array.isArray(value.unresolved)?assertStringArray(value.unresolved,'unresolved'):[]};
 }
 function normalizeCritique(value:unknown,role:string,proposal:DesignProposal,referenceSpec:unknown):Critique{
@@ -38,7 +41,7 @@ export class AnthropicAdapter extends ConfigurableAgent {constructor(id:string,m
 export class OllamaAdapter extends ConfigurableAgent {constructor(id:string,model:string,invoke:AgentInvoker){super(id,{provider:'ollama',model},invoke);}}
 
 function taskPrompt(request:{role:string;model:string;task:AgentTask;payload:unknown}):string{
-  const shared=`You are the ${request.role.toUpperCase()} role in a governed two-agent design-system consensus process. Your counterpart is independent. Return ONLY one valid JSON object, with no Markdown fences and no commentary. Never claim a test ran. Prefer accessibility, semantic tokens, consistency, maintainability, and explicit tradeoffs. Paths must address EXISTING values in referenceSpec and must start with tokens. or components.<component-id>. Do not modify version/status/governance. When changing an existing token leaf, target its .$value path.\n`;
+  const shared=`You are the ${request.role.toUpperCase()} role in a governed two-agent design-system consensus process. Your counterpart is independent. Return ONLY one valid JSON object, with no Markdown fences and no commentary. Never claim a test ran. Prefer accessibility, semantic tokens, consistency, maintainability, and explicit tradeoffs. Use existing paths in referenceSpec. Permitted design paths include tokens.*, components.<id>.*, accessibility.rules, accessibility.contrastPairs, and patterns.<id>.rules. You may add components.<id>.accessibility.errorTextRequired or errorAssociation when the component already has an accessibility object. For accessibility and pattern lists, preserve every existing entry in its original order and append new entries. Do not modify version/status/governance. When changing an existing token leaf, target its .$value path.\n`;
   if(request.task==='proposal')return shared+`TASK: Produce an independent proposal before seeing the counterpart's proposal. JSON shape: {"summary":"...","changes":[{"path":"tokens....$value","value":<json>,"rationale":"..."}],"tradeoffs":["..."],"unresolved":["..."]}. Include at least one change and keep the proposal focused. INPUT: ${JSON.stringify(request.payload)}`;
   if(request.task==='critique')return shared+`TASK: Critique the counterpart proposal against the product brief, criteria, and referenceSpec. JSON shape: {"objections":[{"path":"...","reason":"...","severity":"blocking|warning"}],"acceptedPaths":["..."]}. Objection paths must occur in the proposed changes or exist in referenceSpec. acceptedPaths must come from the proposed changes and must not include a path with a blocking objection. Blocking objections should explain a concrete correction or measurable concern; do not invent accessibility failures. INPUT: ${JSON.stringify(request.payload)}`;
   return shared+`TASK: Revise your own proposal in response to the counterpart critique. Preserve useful accepted choices, resolve blocking objections where justified, and actively seek convergence without sacrificing deterministic requirements. JSON shape: {"summary":"...","changes":[{"path":"...","value":<json>,"rationale":"..."}],"tradeoffs":["..."],"unresolved":["..."]}. INPUT: ${JSON.stringify(request.payload)}`;
@@ -62,8 +65,13 @@ function ollamaChangePaths(request:{task:AgentTask;payload:unknown}):string[]{
     else paths.push(prefix);
   };
   if(isRecord(referenceSpec.components))for(const [id,component] of Object.entries(referenceSpec.components))collect(component,`components.${id}`);
+  if(isRecord(referenceSpec.components))for(const [id,component] of Object.entries(referenceSpec.components))if(isRecord(component)&&isRecord(component.accessibility)){
+    paths.push(`components.${id}.accessibility.errorTextRequired`,`components.${id}.accessibility.errorAssociation`);
+  }
+  if(isRecord(referenceSpec.accessibility))for(const key of ['rules','contrastPairs'])if(Array.isArray(referenceSpec.accessibility[key]))paths.push(`accessibility.${key}`);
+  if(isRecord(referenceSpec.patterns))for(const [id,pattern] of Object.entries(referenceSpec.patterns))if(isRecord(pattern)&&Array.isArray(pattern.rules))paths.push(`patterns.${id}.rules`);
   if(paths.length>500)throw new Error('Ollama change-path schema exceeds 500 paths');
-  return paths;
+  return [...new Set(paths)];
 }
 function ollamaFormat(request:{task:AgentTask;payload:unknown}):Record<string,unknown>{
   const stringArray={type:'array',items:{type:'string'}};

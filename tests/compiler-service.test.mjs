@@ -83,6 +83,44 @@ test('governed additions reject missing parents, unsafe keys, and incomplete tok
   }
 });
 
+test('governed candidate can extend accessibility rules, contrast pairs, and a form pattern',async()=>{
+  const b=await loadBundle();
+  const form=await loadJson('spec/patterns/form.json');
+  const service=new StyleService({...b,principles:{},patterns:[form],antiPatterns:{},decisions:{}});
+  const base={baseVersion:'0.1.0',summary:'input error guidance',tradeoffs:[],unresolved:[]};
+  const rule={id:'STYLE-A11Y-007',name:'Error identification',requirement:'Describe detected input errors in text.'};
+  const pair={id:'STYLE-A11Y-008',foreground:'semantic.text.danger',background:'semantic.surface.primary',minimum:4.5};
+  service.createProposal('DOMAIN-A',{...base,id:'DOMAIN-A',author:'astra',changes:[
+    {path:'accessibility.rules',value:[...b.accessibility.rules,rule]},
+    {path:'patterns.form.rules',value:[...form.rules,'Identify each affected field in error text.']},
+  ]},'admin','admin');
+  service.createProposal('DOMAIN-F',{...base,id:'DOMAIN-F',author:'fable',changes:[
+    {path:'accessibility.contrastPairs',value:[...b.accessibility.contrastPairs,pair]},
+    {path:'components.input.accessibility.errorTextRequired',value:true},
+  ]},'admin','admin');
+  const result=await service.startConsensusRound('DOMAIN-A','DOMAIN-F','admin','admin');
+  assert.equal(result.status,'candidate_ready',JSON.stringify(result));
+  assert.equal(result.candidate.changes.length,4);
+  assert.equal(service.getConsensusStatus(result.candidateHash,'admin','admin').changeCount,4);
+  assert.equal(service.getComponentRules('input').accessibility.errorTextRequired,undefined);
+});
+
+test('governed accessibility and pattern changes reject dropped rules and malformed pairs',async()=>{
+  const b=await loadBundle();
+  const form=await loadJson('spec/patterns/form.json');
+  const service=new StyleService({...b,principles:{},patterns:[form],antiPatterns:{},decisions:{}});
+  const base={baseVersion:'0.1.0',summary:'invalid design change',tradeoffs:[],unresolved:[]};
+  for(const [id,path,value] of [
+    ['DROP-RULE','accessibility.rules',b.accessibility.rules.slice(1)],
+    ['DROP-PATTERN','patterns.form.rules',form.rules.slice(1)],
+    ['BAD-PAIR','accessibility.contrastPairs',[...b.accessibility.contrastPairs,{id:'STYLE-A11Y-008',foreground:'missing.token',background:'semantic.surface.primary',minimum:4.5}]],
+    ['BAD-ACCESS','components.input.accessibility.errorTextRequired','yes'],
+  ]){
+    service.createProposal(id,{...base,id,author:'astra',changes:[{path,value}]},'admin','admin');
+    assert.equal(service.evaluateProposal(id,'admin','admin').valid,false,id);
+  }
+});
+
 test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
   const mk=(id,author,value)=>({id,author,baseVersion:'0.2.0',summary:'radius',changes:[{path:'tokens.radius.md.$value',value}],tradeoffs:[],unresolved:[]});

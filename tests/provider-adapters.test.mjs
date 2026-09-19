@@ -62,6 +62,18 @@ test('local Ollama proposal schema lists existing canonical change paths',async(
   assert.deepEqual(body.format.properties.changes.items.properties.path.enum,['tokens.radius.md.$value','components.button.tokens.radius']);
 });
 
+test('provider accepts governed accessibility additions and Ollama exposes their paths',async()=>{
+  let body;
+  const referenceSpec={tokens:{radius:{md:{$value:'8px'}}},components:{input:{id:'input',accessibility:{focusVisible:true}}},accessibility:{rules:[{id:'STYLE-A11Y-001',name:'Focus',requirement:'Visible focus.'}],contrastPairs:[{id:'STYLE-A11Y-002',foreground:'a',background:'b',minimum:4.5}]},patterns:{form:{id:'form',rules:['Keep labels visible.']}}};
+  const proposal={summary:'Error guidance',changes:[{path:'accessibility.rules',value:[...referenceSpec.accessibility.rules,{id:'STYLE-A11Y-007',name:'Error identification',requirement:'Describe errors in text.'}]}],tradeoffs:[],unresolved:[]};
+  const fetchImpl=async(_url,init)=>{body=JSON.parse(init.body);return new Response(JSON.stringify({response:JSON.stringify(proposal)}),{status:200,headers:{'content-type':'application/json'}});};
+  const agent=new OllamaAdapter('astra','local-model',createOllamaInvoker({fetchImpl}));
+  const result=await agent.generateProposal({brief:'Add explicit field error guidance',criteria:['accessibility'],baseVersion:'0.1.0',referenceSpec});
+  assert.equal(result.changes[0].path,'accessibility.rules');
+  const paths=body.format.properties.changes.items.properties.path.enum;
+  for(const path of ['accessibility.rules','accessibility.contrastPairs','patterns.form.rules','components.input.accessibility.errorTextRequired','components.input.accessibility.errorAssociation'])assert.ok(paths.includes(path),path);
+});
+
 test('provider proposal rejects an unknown path before cross-review',async()=>{
   const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes:[{path:'tokens/radius/md/$value',value:'12px'}]}));
   await assert.rejects(agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec:{tokens:{radius:{md:{$value:'8px'}}}}}),/Unknown proposal change path/);
