@@ -87,33 +87,36 @@ test('governed candidate can extend accessibility rules, contrast pairs, and a f
   const b=await loadBundle();
   const form=await loadJson('spec/patterns/form.json');
   const service=new StyleService({...b,principles:{},patterns:[form],antiPatterns:{},decisions:{}});
-  const base={baseVersion:'0.1.0',summary:'input error guidance',tradeoffs:[],unresolved:[]};
-  const rule={id:'STYLE-A11Y-007',name:'Error identification',requirement:'Describe detected input errors in text.'};
-  const pair={id:'STYLE-A11Y-008',foreground:'semantic.text.danger',background:'semantic.surface.primary',minimum:4.5};
+  const base={baseVersion:b.manifest.version,summary:'input error guidance',tradeoffs:[],unresolved:[]};
+  const rule={id:'STYLE-A11Y-099',name:'Error identification',requirement:'Describe detected input errors in text.'};
+  const pair={id:'STYLE-A11Y-100',foreground:'semantic.text.danger',background:'semantic.surface.primary',minimum:4.5};
+  const originalGuidance=b.components.find(component=>component.id==='input').accessibility;
+  const guidancePath=originalGuidance.errorTextRequired===undefined?'components.input.accessibility.errorTextRequired':'components.input.accessibility.errorAssociation';
+  const guidanceValue=originalGuidance.errorTextRequired===undefined?true:'Identify the field and associate its error text with the control.';
   service.createProposal('DOMAIN-A',{...base,id:'DOMAIN-A',author:'astra',changes:[
     {path:'accessibility.rules',value:[...b.accessibility.rules,rule]},
     {path:'patterns.form.rules',value:[...form.rules,'Identify each affected field in error text.']},
   ]},'admin','admin');
   service.createProposal('DOMAIN-F',{...base,id:'DOMAIN-F',author:'fable',changes:[
     {path:'accessibility.contrastPairs',value:[...b.accessibility.contrastPairs,pair]},
-    {path:'components.input.accessibility.errorTextRequired',value:true},
+    {path:guidancePath,value:guidanceValue},
   ]},'admin','admin');
   const result=await service.startConsensusRound('DOMAIN-A','DOMAIN-F','admin','admin');
   assert.equal(result.status,'candidate_ready',JSON.stringify(result));
   assert.equal(result.candidate.changes.length,4);
   assert.equal(service.getConsensusStatus(result.candidateHash,'admin','admin').changeCount,4);
-  assert.equal(service.getComponentRules('input').accessibility.errorTextRequired,undefined);
+  assert.deepEqual(service.getComponentRules('input').accessibility,originalGuidance);
 });
 
 test('governed accessibility and pattern changes reject dropped rules and malformed pairs',async()=>{
   const b=await loadBundle();
   const form=await loadJson('spec/patterns/form.json');
   const service=new StyleService({...b,principles:{},patterns:[form],antiPatterns:{},decisions:{}});
-  const base={baseVersion:'0.1.0',summary:'invalid design change',tradeoffs:[],unresolved:[]};
+  const base={baseVersion:b.manifest.version,summary:'invalid design change',tradeoffs:[],unresolved:[]};
   for(const [id,path,value] of [
     ['DROP-RULE','accessibility.rules',b.accessibility.rules.slice(1)],
     ['DROP-PATTERN','patterns.form.rules',form.rules.slice(1)],
-    ['BAD-PAIR','accessibility.contrastPairs',[...b.accessibility.contrastPairs,{id:'STYLE-A11Y-008',foreground:'missing.token',background:'semantic.surface.primary',minimum:4.5}]],
+    ['BAD-PAIR','accessibility.contrastPairs',[...b.accessibility.contrastPairs,{id:'STYLE-A11Y-100',foreground:'missing.token',background:'semantic.surface.primary',minimum:4.5}]],
     ['BAD-ACCESS','components.input.accessibility.errorTextRequired','yes'],
   ]){
     service.createProposal(id,{...base,id,author:'astra',changes:[{path,value}]},'admin','admin');
