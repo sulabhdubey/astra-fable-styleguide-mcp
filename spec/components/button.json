@@ -36,7 +36,9 @@
   "accessibility": {
     "ruleIds": [
       "STYLE-A11Y-001",
-      "STYLE-A11Y-002"
+      "STYLE-A11Y-002",
+      "STYLE-A11Y-009",
+      "STYLE-A11Y-010"
     ],
     "keyboard": "Enter and Space activate the button.",
     "focusVisible": true,

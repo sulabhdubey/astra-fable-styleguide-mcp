@@ -31,6 +31,10 @@ pnpm install
 pnpm verify
 ```
 
+## Validate a local StyleSpec
+
+The draft v0.3 CLI currently implements `stylecon validate` only. From this repository, run `pnpm build` and then `pnpm stylecon validate`. The command reads the `/spec` directory in the current working directory; use `--root <directory>` to select another project. It exits 0 for a valid spec, 1 for rule violations, and 2 for a missing or unreadable spec or invalid command. The CLI package is not published to a registry.
+
 ## Production MCP
 The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance remains process-local, with optional local audit evidence and separate role approval credentials; see [GOVERNANCE.md](GOVERNANCE.md).
 

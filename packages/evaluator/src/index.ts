@@ -47,6 +47,25 @@ export function validateComponents(components: unknown[], tokenRoot: unknown, kn
       const ref=tokenReference(val); if (!ref) issues.push({code:'STYLE-TOKEN-003',path:`components.${id}.tokens.${name}`,message:'Component token assignments must be token references',severity:'warning'});
       else if (getPath(tokenRoot, ref)===undefined) issues.push({code:'STYLE-TOKEN-001',path:`components.${id}.tokens.${name}`,message:`Unknown token ${ref}`,severity:'error'});
     }
+    if(id==='button'){
+      const target=typeof a11y.minimumTarget==='string'?/^([0-9]+(?:\.[0-9]+)?)px$/.exec(a11y.minimumTarget):null;
+      if(!target||Number(target[1])<40)issues.push({code:'STYLE-A11Y-009',path:'components.button.accessibility.minimumTarget',message:'Button minimum target must be at least 40px',severity:'error'});
+      try{
+        const ringPath=tokenReference(tokens.focusRing);
+        if(!ringPath)throw new Error('Button focus ring needs a color token');
+        const ring=resolveToken(tokenRoot,ringPath),surface=resolveToken(tokenRoot,'semantic.surface.primary');
+        if(typeof ring!=='string'||typeof surface!=='string'||contrastRatio(ring,surface)<3)throw new Error('Button focus ring needs at least 3:1 contrast against the primary surface');
+      }catch{
+        issues.push({code:'STYLE-A11Y-010',path:'components.button.tokens.focusRing',message:'Button focus ring needs at least 3:1 contrast against the primary surface',severity:'error'});
+      }
+    }
+    if(id==='dialog'){
+      if(a11y.accessibleNameSource!=='visible-title')issues.push({code:'STYLE-A11Y-011',path:'components.dialog.accessibility.accessibleNameSource',message:'Dialog must be named by its visible title',severity:'error'});
+      for(const [field,expected] of [['initialFocus','inside-dialog'],['focusTrap',true],['returnFocusToTrigger',true]] as const){
+        if(a11y[field]!==expected)issues.push({code:'STYLE-A11Y-012',path:`components.dialog.accessibility.${field}`,message:'Dialog must move focus inside, contain it while open, and return it to the trigger',severity:'error'});
+      }
+      if(a11y.escapeDismissal!=='when-allowed')issues.push({code:'STYLE-A11Y-013',path:'components.dialog.accessibility.escapeDismissal',message:'Escape must close a dialog when dismissal is allowed',severity:'error'});
+    }
   }
   return issues;
 }

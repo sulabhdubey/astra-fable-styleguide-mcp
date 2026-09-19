@@ -34,11 +34,18 @@
   },
   "accessibility": {
     "ruleIds": [
-      "STYLE-A11Y-001"
+      "STYLE-A11Y-001",
+      "STYLE-A11Y-011",
+      "STYLE-A11Y-012",
+      "STYLE-A11Y-013"
     ],
     "focusVisible": true,
     "keyboard": "Escape closes when dismissal is allowed; focus is trapped while open.",
-    "focusTrap": true
+    "focusTrap": true,
+    "accessibleNameSource": "visible-title",
+    "initialFocus": "inside-dialog",
+    "returnFocusToTrigger": true,
+    "escapeDismissal": "when-allowed"
   },
   "contentRules": [
     "Title states the decision or task."

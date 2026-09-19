@@ -20,6 +20,31 @@
       "id": "STYLE-A11Y-006",
       "name": "Invalid input feedback",
       "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
+    },
+    {
+      "id": "STYLE-A11Y-009",
+      "name": "Button target size",
+      "requirement": "Buttons declare a minimum target of at least 40px in both dimensions. This is a product rule, not a claim that WCAG requires 40px."
+    },
+    {
+      "id": "STYLE-A11Y-010",
+      "name": "Button focus ring contrast",
+      "requirement": "A button's mapped focus ring color has at least 3:1 contrast against the primary surface. Check other adjacent surfaces in rendered use."
+    },
+    {
+      "id": "STYLE-A11Y-011",
+      "name": "Dialog accessible name",
+      "requirement": "A dialog is programmatically named by its visible title."
+    },
+    {
+      "id": "STYLE-A11Y-012",
+      "name": "Dialog focus management",
+      "requirement": "Opening a dialog moves focus inside it, keeps focus inside while open, and returns focus to its trigger on close."
+    },
+    {
+      "id": "STYLE-A11Y-013",
+      "name": "Dialog Escape dismissal",
+      "requirement": "Escape closes a dialog when dismissal is allowed. Any non-dismissible exception must be explicit in the implementation."
     }
   ],
   "contrastPairs": [

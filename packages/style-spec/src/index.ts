@@ -151,9 +151,22 @@ export function dedupeIssues(issues: ValidationIssue[]): ValidationIssue[] {
 }
 
 export function mergeObjects(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
-  for (const [key, value] of Object.entries(source)) {
-    if (isRecord(value) && isRecord(target[key])) mergeObjects(target[key] as Record<string, unknown>, value);
-    else target[key] = deepClone(value);
+  const pending: unknown[] = [source];
+  while (pending.length) {
+    const current = pending.pop();
+    if (isRecord(current)) {
+      for (const [key, value] of Object.entries(current)) {
+        if (key === '__proto__' || key === 'prototype' || key === 'constructor') throw new Error(`Unsafe object key: ${key}`);
+        pending.push(value);
+      }
+    } else if (Array.isArray(current)) for (const value of current) pending.push(value);
   }
+  const merge = (into: Record<string, unknown>, from: Record<string, unknown>): void => {
+    for (const [key, value] of Object.entries(from)) {
+      if (Object.hasOwn(into, key) && isRecord(value) && isRecord(into[key])) merge(into[key] as Record<string, unknown>, value);
+      else into[key] = deepClone(value);
+    }
+  };
+  merge(target, source);
   return target;
 }

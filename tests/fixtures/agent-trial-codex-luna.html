@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v0.3 Button and Dialog Example</title>
+  <style>
+    :root {
+      --semantic-surface-primary: #FFFFFF;
+      --semantic-surface-subtle: #F8FAFC;
+      --semantic-text-primary: #0F172A;
+      --semantic-text-secondary: #475569;
+      --semantic-border-default: #E2E8F0;
+      --semantic-action-primary-background: #1D4ED8;
+      --semantic-action-primary-backgroundHover: #1E40AF;
+      --semantic-action-primary-foreground: #FFFFFF;
+      --semantic-focus-ring: #2563EB;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --space-4: 16px;
+      --space-6: 32px;
+      --size-control-md: 40px;
+      --elevation-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+      --typography-fontFamily-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--semantic-text-primary);
+      background: var(--semantic-surface-subtle);
+      font-family: var(--typography-fontFamily-sans);
+    }
+    button { font: inherit; }
+    .button {
+      min-width: var(--size-control-md);
+      min-height: var(--size-control-md);
+      padding: 0 var(--space-4);
+      border: 0;
+      border-radius: var(--radius-md);
+      color: var(--semantic-action-primary-foreground);
+      background: var(--semantic-action-primary-background);
+      cursor: pointer;
+    }
+    .button:hover { background: var(--semantic-action-primary-backgroundHover); }
+    :focus-visible {
+      outline: 3px solid var(--semantic-focus-ring);
+      outline-offset: 3px;
+    }
+    .backdrop[hidden] { display: none; }
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.48);
+    }
+    .dialog {
+      width: min(100%, 440px);
+      padding: var(--space-6);
+      border: 1px solid var(--semantic-border-default);
+      border-radius: var(--radius-lg);
+      color: var(--semantic-text-primary);
+      background: var(--semantic-surface-primary);
+      box-shadow: var(--elevation-md);
+    }
+    .dialog h2 { margin: 0 0 8px; }
+    .dialog p { margin: 0 0 24px; color: var(--semantic-text-secondary); }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .secondary {
+      color: var(--semantic-text-primary);
+      background: var(--semantic-surface-primary);
+      border: 1px solid var(--semantic-border-default);
+    }
+  </style>
+</head>
+<body>
+  <button class="button" id="open-dialog" type="button">Open dialog</button>
+
+  <div class="backdrop" id="dialog-backdrop" hidden>
+    <section class="dialog" id="example-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="dialog-title" data-escape-dismiss="true">
+      <h2 id="dialog-title">Review your changes</h2>
+      <p>Check the details before continuing.</p>
+      <div class="dialog-actions">
+        <button class="button secondary" id="cancel-dialog" type="button">Cancel</button>
+        <button class="button" id="continue-dialog" type="button">Continue</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const trigger = document.getElementById('open-dialog');
+    const backdrop = document.getElementById('dialog-backdrop');
+    const dialog = document.getElementById('example-dialog');
+    const closeButton = document.getElementById('cancel-dialog');
+    let returnFocus;
+
+    const focusable = () => [...dialog.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )];
+
+    function openDialog() {
+      returnFocus = document.activeElement;
+      backdrop.hidden = false;
+      closeButton.focus();
+    }
+
+    function closeDialog() {
+      backdrop.hidden = true;
+      returnFocus?.focus();
+    }
+
+    trigger.addEventListener('click', openDialog);
+    closeButton.addEventListener('click', closeDialog);
+    document.addEventListener('keydown', (event) => {
+      if (backdrop.hidden) return;
+      if (event.key === 'Escape' && dialog.dataset.escapeDismiss === 'true') {
+        event.preventDefault();
+        closeDialog();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!dialog.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  </script>
+</body>
+</html>
