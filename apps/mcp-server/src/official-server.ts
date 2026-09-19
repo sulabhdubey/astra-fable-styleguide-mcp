@@ -66,7 +66,7 @@ function buildServer(){
  server.registerTool('search_style_spec',{description:'Search components and decision records',inputSchema:z.object({query:z.string().min(1)})},async({query})=>asText(service.search(query)));
  server.registerTool('explain_style_decision',{description:'Explain an ADR by id/filename',inputSchema:z.object({id:z.string()})},async({id})=>asText(service.explainDecision(id)));
  server.registerTool('validate_tokens',{description:'Run deterministic validation of the canonical StyleSpec'},async()=>asText(service.validate()));
- server.registerTool('check_style_compliance',{description:'Check CSS in supplied source for canonical color and pixel literals; returns source locations and explicit coverage limits',inputSchema:z.object({input:z.string().max(200000)})},async({input})=>asText(service.checkStyleCompliance(input)));
+ server.registerTool('check_style_compliance',{description:'Check CSS color/pixel literals and canonical semantic token references; returns source locations and explicit coverage limits',inputSchema:z.object({input:z.string().max(200000)})},async({input})=>asText(service.checkStyleCompliance(input)));
  server.registerTool('compare_spec_versions',{description:'Compare known immutable StyleSpec snapshots',inputSchema:z.object({fromVersion:z.string(),toVersion:z.string()})},async({fromVersion,toVersion})=>asText(service.compareSpecVersions(fromVersion,toVersion)));
  if(process.env.MCP_ENABLE_WRITES==='true'){
    server.registerTool('create_style_proposal',{description:'Create a governed style proposal (admin only)',inputSchema:z.object({id:z.string(),proposalJson:z.string()})},async({id,proposalJson},ctx)=>asText(service.createProposal(id,JSON.parse(proposalJson),bearer(ctx),adminToken)));

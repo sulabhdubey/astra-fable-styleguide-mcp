@@ -1,7 +1,7 @@
 import { flattenTokenLeaves, resolveToken } from '../../style-spec/src/index.js';
 
 export interface ComplianceViolation {
-  ruleId: 'STYLE-COLOR-001' | 'STYLE-SPACE-001';
+  ruleId: 'STYLE-COLOR-001' | 'STYLE-SPACE-001' | 'STYLE-TOKEN-001';
   message: string;
   match: string;
   line: number;
@@ -75,7 +75,9 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
   const maxFindings = 200;
   const starts = lineStarts(input);
   const allowed = new Set<string>();
+  const semanticNames = new Set<string>();
   for (const { path } of flattenTokenLeaves(tokens)) {
+    if (path.startsWith('semantic.')) semanticNames.add(`--${path.replace(/\./g, '-')}`);
     try {
       const value = resolveToken(tokens, path);
       if (typeof value === 'string') allowed.add(value.toLowerCase());
@@ -101,6 +103,9 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
     for (const match of source.matchAll(/(?<![\w.-])\d+(?:\.\d+)?px\b/g)) {
       if (!allowed.has(match[0]!.toLowerCase())) emit('STYLE-SPACE-001', 'Raw pixel value is not present in the approved token set', match);
     }
+    for (const match of source.matchAll(/var\(\s*(--semantic-[\w-]+)/g)) {
+      if (!semanticNames.has(match[1]!)) emit('STYLE-TOKEN-001', 'Unknown canonical semantic token reference', match);
+    }
   }
   violations.sort((a, b) => a.line - b.line || a.column - b.column || a.ruleId.localeCompare(b.ruleId));
   const checked = spans.some(span => span.text.trim().length > 0);
@@ -113,7 +118,7 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
     violations,
     warnings,
     suggestedFixes: [...new Set(violations.map(v => `Replace ${v.match} with an approved semantic token.`))],
-    checksPerformed: ['Canonical hex color literals', 'Pixel literals against resolved token values'],
-    limitations: ['Textual CSS scan only; does not parse all CSS, JavaScript style objects, visual output, interaction states, contrast, or accessibility.'],
+    checksPerformed: ['Canonical hex color literals', 'Pixel literals against resolved token values', 'Canonical semantic token references in CSS var()'],
+    limitations: ['Textual CSS scan only; does not parse all CSS, JavaScript style objects, visual output, interaction states, contrast, or accessibility.', 'Only the canonical --semantic-* namespace is checked; app-local CSS variables are outside this check.'],
   };
 }
