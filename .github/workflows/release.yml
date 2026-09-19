@@ -5,14 +5,9 @@ on:
       version:
         description: Release version to verify
         required: true
-  push:
-    branches: [main]
-    paths:
-      - package.json
-      - apps/docs/src/lib/spec.ts
-      - .github/workflows/release.yml
-      - spec/manifest.json
-      - generated/json/style-spec.json
+      candidate_sha:
+        description: Exact approved commit SHA to publish
+        required: true
 permissions: { contents: write }
 jobs:
   verify-release:
@@ -20,10 +15,18 @@ jobs:
     environment: release-approval
     steps:
       - uses: actions/checkout@v4
+      - name: Verify approved candidate commit
+        env:
+          APPROVED_SHA: ${{ github.event.inputs.candidate_sha || '' }}
+        run: |
+          if [ -z "$APPROVED_SHA" ] || [ "$APPROVED_SHA" != "$GITHUB_SHA" ]; then
+            echo "Approved candidate SHA must exactly match the checked-out commit" >&2
+            exit 1
+          fi
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      - run: pnpm install --frozen-lockfile=false
+      - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm lint:eslint
       - run: pnpm typecheck:full
@@ -71,7 +74,7 @@ jobs:
           cat > "$notes" <<EOF
           # Astra + Fable Style Constitution ${tag}
 
-          First governed public release of the provider-independent Style Constitution.
+          Governed release of the provider-independent Style Constitution.
 
           ## Included
           - Canonical machine-readable StyleSpec and deterministic validation
@@ -82,7 +85,7 @@ jobs:
           - Astro documentation site and Docker packaging
 
           ## Release verification
-          - 20/20 tests passed
+          - Repository tests passed in this release run
           - Canonical validation passed
           - Generated artifacts reproducible
           - MCP production smoke passed
@@ -91,8 +94,7 @@ jobs:
           - Dependency audit reported no known vulnerabilities
           - Protected Release Gate completed successfully
 
-          Verified candidate provenance: 95024fff6891312d736e0e2040c471bfe803e9c7.
-          Publication commit: ${GITHUB_SHA}.
+          Approved candidate and publication commit: ${GITHUB_SHA}.
 
           The attached build-evidence JSON contains connected verification hashes and GitHub Actions proof.
           EOF

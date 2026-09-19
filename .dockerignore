@@ -8,3 +8,9 @@ build
 **/build
 coverage
 *.log
+.env
+.env.*
+!.env.example
+.vercel
+.rta-smriti
+*.sqlite

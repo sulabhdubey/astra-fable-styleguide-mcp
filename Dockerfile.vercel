@@ -1,11 +1,10 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
-COPY package.json pnpm-workspace.yaml ./
-RUN pnpm install --prod=false --frozen-lockfile=false
+COPY . .
+RUN pnpm install --prod=false --frozen-lockfile
 
 FROM deps AS build
-COPY . .
 RUN pnpm typecheck:full && pnpm test && pnpm validate && pnpm generate
 
 FROM node:22-alpine AS runtime

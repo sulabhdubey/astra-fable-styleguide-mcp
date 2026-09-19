@@ -29,3 +29,7 @@ An MCP `server/discover` request with the `2026-07-28` version header, method he
 For another Node 22-capable container host, use the root `Dockerfile`. The service exposes `/health`, `/version`, and `/mcp`.
 
 For a public internet deployment, terminate TLS at the platform/reverse proxy, set allowed host/origin policy, and add OAuth/resource-server authentication before enabling any mutation tools. Public v0.1.0 operation is intentionally read-oriented.
+
+## Future release gate
+
+The GitHub Release Gate runs only through a manual workflow dispatch. It requires the intended version and the exact approved commit SHA; the job checks that SHA against its checkout before verification and publication. The `release-approval` environment remains the separate human approval step. A green main-branch build or Vercel preview does not publish a new release. The v0.1.0 Vercel production branch remains pinned until a later deployment is explicitly approved.

@@ -3,7 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./src": "./src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0"
   }
 }
