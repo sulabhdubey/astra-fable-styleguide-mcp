@@ -1,6 +1,6 @@
 import { evaluateSpec } from '../../../packages/evaluator/src/index.js';
 import { approve, approvalsMatch, mergeProposals, runConsensus, sha256, type Approval, type Candidate, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
-import { deepClone, getPath, isRecord, setPath } from '../../../packages/style-spec/src/index.js';
+import { addPath, deepClone, getPath, isRecord, setPath, tokenReference } from '../../../packages/style-spec/src/index.js';
 import { checkStyleCompliance } from '../../../packages/compliance/src/index.js';
 import { compareSnapshots, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
 
@@ -66,8 +66,14 @@ export class StyleService {
    const draft={tokens:deepClone(this.bundle.tokens),components:Object.fromEntries(this.bundle.components.map(c=>[String(c.id),deepClone(c)]))};const errors:string[]=[];
    for(const change of candidate.changes){
      if(!(change.path.startsWith('tokens.')||change.path.startsWith('components.'))){errors.push(`Unsupported change path: ${change.path}`);continue;}
-     if(change.path.startsWith('tokens.')&&!change.path.endsWith('.$value')){errors.push(`Token changes must target an existing .$value: ${change.path}`);continue;}
-     try{setPath(draft as unknown as Record<string,unknown>,change.path,change.value);}catch(error){errors.push(error instanceof Error?error.message:String(error));}
+     const existing=getPath(draft,change.path);
+     if(change.path.startsWith('tokens.')){
+       if(change.path.endsWith('.$value')){if(existing===undefined){errors.push(`Unknown token value path: ${change.path}`);continue;}}
+       else if(existing!==undefined||!isRecord(change.value)||typeof change.value.$type!=='string'||!('$value' in change.value)){errors.push(`New token path requires a complete unused leaf: ${change.path}`);continue;}
+     }else if(existing===undefined&&(!/^components\.[^.]+\.tokens\.[^.]+$/.test(change.path)||tokenReference(change.value)===null)){
+       errors.push(`New component token mapping requires a token reference: ${change.path}`);continue;
+     }
+     try{if(existing===undefined)addPath(draft as unknown as Record<string,unknown>,change.path,change.value);else setPath(draft as unknown as Record<string,unknown>,change.path,change.value);}catch(error){errors.push(error instanceof Error?error.message:String(error));}
    }
    if(errors.length)return errors;
    const components=isRecord(draft.components)?Object.values(draft.components).filter(isRecord):[];
