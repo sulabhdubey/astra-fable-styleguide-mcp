@@ -33,6 +33,24 @@ test('v0.2 snapshot verifies and reports the reviewed design delta', async () =>
   assert.ok(comparison.changes.some(change => change.path === 'spec/tokens/semantic.json#/semantic/border/danger' && change.kind === 'added'));
 });
 
+test('v0.3 snapshot verifies and reports the button and dialog rules', async () => {
+  const { releases } = JSON.parse(await readFile('releases/manifest.json', 'utf8'));
+  const previousEntry = releases.find(item => item.version === '0.2.0');
+  const nextEntry = releases.find(item => item.version === '0.3.0');
+  assert.equal(nextEntry.sourceCommit, '94d3afdbb9edc38768df00425259d74cf2911526');
+  const previous = verifySnapshot(previousEntry, await readFile(`releases/${previousEntry.path}`));
+  const next = verifySnapshot(nextEntry, await readFile(`releases/${nextEntry.path}`));
+  assert.equal(Object.keys(next.files).length, 25);
+  assert.equal(next.files['manifest.json'].status, 'released');
+  const comparison = compareSnapshots(previous, next);
+  assert.equal(comparison.totalChanges, 13);
+  assert.equal(comparison.truncated, false);
+  assert.equal(comparison.summaryByDomain.accessibility, 5);
+  assert.equal(comparison.summaryByDomain.components, 6);
+  assert.ok(comparison.changes.some(change => change.path === 'spec/accessibility/rules.json#/rules/id=STYLE-A11Y-009'));
+  assert.ok(comparison.changes.some(change => change.path === 'spec/components/dialog.json#/accessibility/initialFocus'));
+});
+
 test('version comparison reports stable domain changes and bounds output', async () => {
   const { releases } = JSON.parse(await readFile('releases/manifest.json', 'utf8'));
   const entry = releases.find(item => item.version === '0.1.0');
