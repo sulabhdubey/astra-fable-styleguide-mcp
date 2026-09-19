@@ -49,6 +49,22 @@ test('governance MCP tool is admin-only while public read tools remain available
     const activity = JSON.parse(granted.content.find(block => block.type === 'text').text);
     assert.equal(activity.durable, false);
     assert.equal(activity.identityAssurance, 'shared-admin-credential');
+    const base = { baseVersion: '0.1.0', summary: 'disabled button semantics', tradeoffs: [], unresolved: [] };
+    const proposals = [
+      { ...base, id: 'MCP-ADD-A', author: 'astra', changes: [{ path: 'tokens.semantic.action.primary.disabledBackground', value: { $type: 'color', $value: '{color.slate.200}' } }] },
+      { ...base, id: 'MCP-ADD-F', author: 'fable', changes: [{ path: 'components.button.tokens.disabledBackground', value: '{semantic.action.primary.disabledBackground}' }] },
+    ];
+    for (const proposal of proposals) {
+      const response = await authorized.connection.callTool({ name: 'create_style_proposal', arguments: { id: proposal.id, proposalJson: JSON.stringify(proposal) } });
+      assert.equal(response.isError, undefined);
+    }
+    const round = await authorized.connection.callTool({ name: 'start_consensus_round', arguments: { astraProposalId: 'MCP-ADD-A', fableProposalId: 'MCP-ADD-F' } });
+    assert.equal(round.isError, undefined);
+    const candidate = JSON.parse(round.content.find(block => block.type === 'text').text);
+    assert.equal(candidate.status, 'candidate_ready');
+    const status = await authorized.connection.callTool({ name: 'get_consensus_status', arguments: { candidateHash: candidate.candidateHash } });
+    assert.equal(JSON.parse(status.content.find(block => block.type === 'text').text).changeCount, 2);
+    await assert.rejects(anonymous.getDesignTokens('semantic.action.primary.disabledBackground'), /Unknown token scope/);
   } finally {
     await anonymous.close();
     await authorized.close();

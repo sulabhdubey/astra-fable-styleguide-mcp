@@ -42,6 +42,30 @@ test('candidate evaluation rejects an object inside a dimension token value',asy
   assert.equal(result.valid,false);
   assert.ok(result.deterministicErrors.some(error=>error.includes('STYLE-TOKEN-004')));
 });
+test('governed candidate can add a complete token leaf and a component token mapping',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const base={baseVersion:'0.1.0',summary:'disabled button semantics',tradeoffs:[],unresolved:[]};
+  service.createProposal('ADD-A',{...base,id:'ADD-A',author:'astra',changes:[{path:'tokens.semantic.action.primary.disabledBackground',value:{$type:'color',$value:'{color.slate.200}'}}]},'admin','admin');
+  service.createProposal('ADD-F',{...base,id:'ADD-F',author:'fable',changes:[{path:'components.button.tokens.disabledBackground',value:'{semantic.action.primary.disabledBackground}'}]},'admin','admin');
+  const result=await service.startConsensusRound('ADD-A','ADD-F','admin','admin');
+  assert.equal(result.status,'candidate_ready',JSON.stringify(result));
+  assert.equal(result.candidate.changes.length,2);
+  assert.equal(service.getConsensusStatus(result.candidateHash,'admin','admin').changeCount,2);
+  assert.throws(()=>service.getDesignTokens('semantic.action.primary.disabledBackground'),/Unknown token scope/);
+});
+test('governed additions reject missing parents, unsafe keys, and incomplete token leaves',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const base={baseVersion:'0.1.0',summary:'bad addition',tradeoffs:[],unresolved:[]};
+  for(const [id,path,value] of [
+    ['BAD-PARENT','tokens.newFamily.item',{$type:'color',$value:'#FFFFFF'}],
+    ['BAD-KEY','tokens.semantic.action.primary.__proto__',{$type:'color',$value:'#FFFFFF'}],
+    ['BAD-DOTS','tokens.semantic.action..disabledBackground',{$type:'color',$value:'#FFFFFF'}],
+    ['BAD-LEAF','tokens.semantic.action.primary.disabledBackground',{$value:'#FFFFFF'}],
+  ]){
+    service.createProposal(id,{...base,id,author:'astra',changes:[{path,value}]},'admin','admin');
+    assert.equal(service.evaluateProposal(id,'admin','admin').valid,false,id);
+  }
+});
 
 test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});

@@ -37,24 +37,43 @@ export function deepFreeze<T>(value: T): Readonly<T> {
 export function getPath(root: unknown, path: string): unknown {
   let current: unknown = root;
   for (const part of path.split('.')) {
-    if (!isRecord(current) || !(part in current)) return undefined;
+    if (!isRecord(current) || !Object.hasOwn(current,part)) return undefined;
     current = current[part];
   }
   return current;
 }
 
 export function setPath(root: Record<string, unknown>, path: string, value: unknown): void {
-  const parts=path.split('.').filter(Boolean);
+  const parts=path.split('.');
   if(parts.length===0)throw new Error('Path cannot be empty');
+  if(parts.some(part=>!part))throw new Error('Path contains an empty segment');
   if(parts.some(p=>p==='__proto__'||p==='prototype'||p==='constructor'))throw new Error('Unsafe path');
   let current:Record<string,unknown>=root;
   for(const part of parts.slice(0,-1)){
+    if(!Object.hasOwn(current,part))throw new Error(`Unknown object path: ${path}`);
     const next=current[part];
     if(!isRecord(next))throw new Error(`Unknown object path: ${parts.slice(0,parts.indexOf(part)+1).join('.')}`);
     current=next;
   }
   const leaf=parts.at(-1)!;
-  if(!(leaf in current))throw new Error(`Unknown path: ${path}`);
+  if(!Object.hasOwn(current,leaf))throw new Error(`Unknown path: ${path}`);
+  current[leaf]=deepClone(value);
+}
+
+export function addPath(root: Record<string,unknown>,path:string,value:unknown):void{
+  const parts=path.split('.');
+  if(parts.length<2)throw new Error('Addition requires an existing parent path');
+  if(parts.some(part=>!part))throw new Error('Path contains an empty segment');
+  if(parts.some(part=>part==='__proto__'||part==='prototype'||part==='constructor'))throw new Error('Unsafe path');
+  let current:Record<string,unknown>=root;
+  for(const part of parts.slice(0,-1)){
+    if(!Object.hasOwn(current,part))throw new Error(`Unknown object path: ${path}`);
+    const next=current[part];
+    if(!isRecord(next))throw new Error(`Unknown object path: ${path}`);
+    current=next;
+  }
+  const leaf=parts.at(-1)!;
+  if(Object.hasOwn(current,leaf))throw new Error(`Path already exists: ${path}`);
   current[leaf]=deepClone(value);
 }
 
