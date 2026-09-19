@@ -19,13 +19,13 @@ test('candidate danger text contrast rule rejects the observed low-contrast red'
   const bundle=await loadBundle();
   bundle.tokens.color.red['600'].$value='#E53E3E';
   const result=evaluateSpec(bundle);
-  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-008'&&issue.severity==='error'),JSON.stringify(result.issues));
+  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-007'&&issue.severity==='error'),JSON.stringify(result.issues));
 });
 test('candidate invalid border contrast rule rejects a low-contrast state cue',async()=>{
   const bundle=await loadBundle();
-  bundle.tokens.semantic.border.invalid.$value='{color.slate.200}';
+  bundle.tokens.semantic.border.danger.$value='{color.slate.200}';
   const result=evaluateSpec(bundle);
-  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-009'&&issue.severity==='error'),JSON.stringify(result.issues));
+  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-008'&&issue.severity==='error'),JSON.stringify(result.issues));
 });
 test('declared dimension token rejects an object value',()=>{
   const issues=validateTokenGraph({radius:{md:{$type:'dimension',$value:{$type:'dimension',$value:'12px'}}}});

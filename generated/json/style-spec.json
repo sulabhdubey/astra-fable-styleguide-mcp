@@ -281,7 +281,7 @@
           "$type": "color",
           "$value": "{color.slate.200}"
         },
-        "invalid": {
+        "danger": {
           "$type": "color",
           "$value": "{color.red.600}"
         }
@@ -582,37 +582,31 @@
         "background": "{semantic.surface.primary}",
         "foreground": "{semantic.text.primary}",
         "border": "{semantic.border.default}",
-        "invalidBorder": "{semantic.border.invalid}",
-        "errorText": "{semantic.text.danger}",
         "radius": "{radius.md}",
         "padding": "{space.3}",
-        "focusRing": "{semantic.focus.ring}"
+        "focusRing": "{semantic.focus.ring}",
+        "errorForeground": "{semantic.text.danger}",
+        "invalidBorder": "{semantic.border.danger}"
       },
       "accessibility": {
         "ruleIds": [
           "STYLE-A11Y-001",
           "STYLE-A11Y-003",
-          "STYLE-A11Y-007",
-          "STYLE-A11Y-008",
-          "STYLE-A11Y-009"
+          "STYLE-A11Y-006"
         ],
         "keyboard": "Standard text-input behavior.",
         "focusVisible": true,
         "labelRequired": true,
-        "errorTextRequired": true,
-        "errorAssociation": "When invalid, identify the field and describe the error in text associated with the control."
+        "errorAssociation": "For an automatically detected error, show a visible message that names the affected field and states the needed correction. Set aria-invalid=\"true\" on that control and append the message element's ID to aria-describedby, preserving existing supporting-text references."
       },
       "contentRules": [
-        "Labels describe the requested value.",
-        "Error messages identify the affected field and explain what needs correction."
+        "Labels describe the requested value."
       ],
       "do": [
-        "Associate labels programmatically.",
-        "Associate an invalid field with its error message."
+        "Associate labels programmatically."
       ],
       "dont": [
-        "Do not rely on placeholder text as the only label.",
-        "Do not rely on border color alone to identify an error."
+        "Do not rely on placeholder text as the only label."
       ],
       "examples": [
         "Email address"
@@ -858,7 +852,7 @@
         "Keep labels visible.",
         "Place validation near the affected field.",
         "Use one primary submit action.",
-        "When input validation fails, identify each affected field and describe the error in text near that field."
+        "For each automatically detected invalid field, place its associated corrective error message adjacent to the control."
       ],
       "ruleIds": [
         "STYLE-PATTERN-002"
@@ -884,19 +878,9 @@
         "requirement": "Inputs have programmatically associated labels."
       },
       {
-        "id": "STYLE-A11Y-007",
-        "name": "Input error identification",
-        "requirement": "Automatically detected input errors identify the affected field and describe the error in text."
-      },
-      {
-        "id": "STYLE-A11Y-008",
-        "name": "Danger text contrast",
-        "requirement": "Danger text on the primary surface has at least 4.5:1 contrast."
-      },
-      {
-        "id": "STYLE-A11Y-009",
-        "name": "Invalid border contrast",
-        "requirement": "An invalid control border used as a state cue has at least 3:1 contrast against the primary surface."
+        "id": "STYLE-A11Y-006",
+        "name": "Invalid input feedback",
+        "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
       }
     ],
     "contrastPairs": [
@@ -919,14 +903,14 @@
         "minimum": 4.5
       },
       {
-        "id": "STYLE-A11Y-008",
+        "id": "STYLE-A11Y-007",
         "foreground": "semantic.text.danger",
         "background": "semantic.surface.primary",
         "minimum": 4.5
       },
       {
-        "id": "STYLE-A11Y-009",
-        "foreground": "semantic.border.invalid",
+        "id": "STYLE-A11Y-008",
+        "foreground": "semantic.border.danger",
         "background": "semantic.surface.primary",
         "minimum": 3
       }

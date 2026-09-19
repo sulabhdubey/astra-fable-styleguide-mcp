@@ -25,37 +25,31 @@
     "background": "{semantic.surface.primary}",
     "foreground": "{semantic.text.primary}",
     "border": "{semantic.border.default}",
-    "invalidBorder": "{semantic.border.invalid}",
-    "errorText": "{semantic.text.danger}",
     "radius": "{radius.md}",
     "padding": "{space.3}",
-    "focusRing": "{semantic.focus.ring}"
+    "focusRing": "{semantic.focus.ring}",
+    "errorForeground": "{semantic.text.danger}",
+    "invalidBorder": "{semantic.border.danger}"
   },
   "accessibility": {
     "ruleIds": [
       "STYLE-A11Y-001",
       "STYLE-A11Y-003",
-      "STYLE-A11Y-007",
-      "STYLE-A11Y-008",
-      "STYLE-A11Y-009"
+      "STYLE-A11Y-006"
     ],
     "keyboard": "Standard text-input behavior.",
     "focusVisible": true,
     "labelRequired": true,
-    "errorTextRequired": true,
-    "errorAssociation": "When invalid, identify the field and describe the error in text associated with the control."
+    "errorAssociation": "For an automatically detected error, show a visible message that names the affected field and states the needed correction. Set aria-invalid=\"true\" on that control and append the message element's ID to aria-describedby, preserving existing supporting-text references."
   },
   "contentRules": [
-    "Labels describe the requested value.",
-    "Error messages identify the affected field and explain what needs correction."
+    "Labels describe the requested value."
   ],
   "do": [
-    "Associate labels programmatically.",
-    "Associate an invalid field with its error message."
+    "Associate labels programmatically."
   ],
   "dont": [
-    "Do not rely on placeholder text as the only label.",
-    "Do not rely on border color alone to identify an error."
+    "Do not rely on placeholder text as the only label."
   ],
   "examples": [
     "Email address"

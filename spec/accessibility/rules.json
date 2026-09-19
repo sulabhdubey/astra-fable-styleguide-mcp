@@ -17,19 +17,9 @@
       "requirement": "Inputs have programmatically associated labels."
     },
     {
-      "id": "STYLE-A11Y-007",
-      "name": "Input error identification",
-      "requirement": "Automatically detected input errors identify the affected field and describe the error in text."
-    },
-    {
-      "id": "STYLE-A11Y-008",
-      "name": "Danger text contrast",
-      "requirement": "Danger text on the primary surface has at least 4.5:1 contrast."
-    },
-    {
-      "id": "STYLE-A11Y-009",
-      "name": "Invalid border contrast",
-      "requirement": "An invalid control border used as a state cue has at least 3:1 contrast against the primary surface."
+      "id": "STYLE-A11Y-006",
+      "name": "Invalid input feedback",
+      "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
     }
   ],
   "contrastPairs": [
@@ -52,14 +42,14 @@
       "minimum": 4.5
     },
     {
-      "id": "STYLE-A11Y-008",
+      "id": "STYLE-A11Y-007",
       "foreground": "semantic.text.danger",
       "background": "semantic.surface.primary",
       "minimum": 4.5
     },
     {
-      "id": "STYLE-A11Y-009",
-      "foreground": "semantic.border.invalid",
+      "id": "STYLE-A11Y-008",
+      "foreground": "semantic.border.danger",
       "background": "semantic.surface.primary",
       "minimum": 3
     }

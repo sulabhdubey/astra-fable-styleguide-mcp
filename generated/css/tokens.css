@@ -47,7 +47,7 @@
   --semantic-text-inverse: #FFFFFF;
   --semantic-text-danger: #DC2626;
   --semantic-border-default: #E2E8F0;
-  --semantic-border-invalid: #DC2626;
+  --semantic-border-danger: #DC2626;
   --semantic-action-primary-background: #1D4ED8;
   --semantic-action-primary-backgroundHover: #1E40AF;
   --semantic-action-primary-foreground: #FFFFFF;

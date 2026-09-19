@@ -36,7 +36,7 @@ test('governed candidate rejects whole component object replacement and overlapp
   const accessibility=b.components.find(component=>component.id==='input').accessibility;
   const parent={path:'components.input.accessibility',value:{...accessibility,errorAssociation:'Associate a visible error message with the input.'}};
   const child={path:'components.input.accessibility.errorAssociation',value:'Use aria-describedby.'};
-  const base={author:'astra',baseVersion:'0.1.0',summary:'invalid structure',tradeoffs:[],unresolved:[]};
+  const base={author:'astra',baseVersion:b.manifest.version,summary:'invalid structure',tradeoffs:[],unresolved:[]};
   for(const [id,changes,reason] of [
     ['OBJECT-REPLACE',[parent],/object replacement/i],
     ['OVERLAP',[parent,child],/overlap/i]

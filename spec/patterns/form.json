@@ -6,7 +6,7 @@
     "Keep labels visible.",
     "Place validation near the affected field.",
     "Use one primary submit action.",
-    "When input validation fails, identify each affected field and describe the error in text near that field."
+    "For each automatically detected invalid field, place its associated corrective error message adjacent to the control."
   ],
   "ruleIds": [
     "STYLE-PATTERN-002"
