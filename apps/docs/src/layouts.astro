@@ -1,6 +1,6 @@
 ---
 const { title = 'Style Constitution' } = Astro.props;
-const base = import.meta.env.BASE_URL;
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 ---
 <html lang="en">
   <head>
