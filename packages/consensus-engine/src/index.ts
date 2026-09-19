@@ -29,6 +29,10 @@ export function mergeProposals(a: DesignProposal,b: DesignProposal): { candidate
   return {candidate:{baseVersion:a.baseVersion,changes:[...byPath.values()].sort((x,y)=>x.path.localeCompare(y.path))},conflicts};
 }
 
+function proposalValues(proposal:DesignProposal):string{
+  return canonicalize(proposal.changes.map(change=>({path:change.path,value:change.value})).sort((a,b)=>a.path.localeCompare(b.path)));
+}
+
 export async function runConsensus(opts:{astra:DesignAgent;fable:DesignAgent;context:DesignContext;maxRounds?:number;evaluate?:(candidate:Candidate)=>Promise<string[]>|string[]}):Promise<ConsensusRun>{
   const max=opts.maxRounds??5; const context=deepFreeze(deepClone(opts.context));
   const [initialA,initialB]=await Promise.all([opts.astra.generateProposal(context),opts.fable.generateProposal(context)]);
@@ -39,19 +43,21 @@ export async function runConsensus(opts:{astra:DesignAgent;fable:DesignAgent;con
       opts.fable.critiqueProposal(deepFreeze(deepClone(a)),context)
     ]);
     critiques.push(critAonB,critBonA);
+    const beforeA=proposalValues(a),beforeB=proposalValues(b);
     [a,b]=await Promise.all([
       opts.astra.reviseProposal(deepFreeze(deepClone(a)),deepFreeze(deepClone(critBonA)),context,round),
       opts.fable.reviseProposal(deepFreeze(deepClone(b)),deepFreeze(deepClone(critAonB)),context,round)
     ]);
     const merged=mergeProposals(a,b);
     lastErrors=opts.evaluate?await opts.evaluate(merged.candidate):[];
-    if(merged.conflicts.length===0 && lastErrors.length===0){
+    const reviewPending=critAonB.objections.some(o=>o.severity==='blocking')||critBonA.objections.some(o=>o.severity==='blocking')||beforeA!==proposalValues(a)||beforeB!==proposalValues(b);
+    if(merged.conflicts.length===0 && lastErrors.length===0 && !reviewPending){
       const hash=await sha256(merged.candidate);
       return {status:'CONSENSUS',rounds:round,initial:[deepClone(initialA),deepClone(initialB)],critiques,candidate:merged.candidate,candidateHash:hash,conflicts:[],evaluationErrors:[]};
     }
     if(round===max){
       const hash=await sha256(merged.candidate);
-      return {status:merged.conflicts.length?'DEADLOCK':'INVALID',rounds:round,initial:[deepClone(initialA),deepClone(initialB)],critiques,candidate:merged.candidate,candidateHash:hash,conflicts:merged.conflicts,evaluationErrors:lastErrors};
+      return {status:merged.conflicts.length?'DEADLOCK':lastErrors.length?'INVALID':'PARTIAL_CONSENSUS',rounds:round,initial:[deepClone(initialA),deepClone(initialB)],critiques,candidate:merged.candidate,candidateHash:hash,conflicts:merged.conflicts,evaluationErrors:lastErrors};
     }
   }
   throw new Error('Unreachable consensus state');
