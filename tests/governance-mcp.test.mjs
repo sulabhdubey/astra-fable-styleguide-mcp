@@ -49,7 +49,7 @@ test('governance MCP tool is admin-only while public read tools remain available
     await anonymous.connect();
     const { tools } = await anonymous.listTools();
     assert.ok(tools.some(tool => tool.name === 'get_governance_activity'));
-    assert.equal((await anonymous.getStyleManifest()).version, '0.1.0');
+    assert.equal((await anonymous.getStyleManifest()).version, '0.2.0');
     const denied = await anonymous.connection.callTool({ name: 'get_governance_activity', arguments: {} });
     assert.equal(denied.isError, true);
     await authorized.connect();
@@ -59,7 +59,7 @@ test('governance MCP tool is admin-only while public read tools remain available
     assert.equal(activity.durable, false);
     assert.equal(activity.audit.durable, true);
     assert.equal(activity.identityAssurance, 'role-scoped-credentials');
-    const base = { baseVersion: '0.1.0', summary: 'disabled button semantics', tradeoffs: [], unresolved: [] };
+    const base = { baseVersion: '0.2.0', summary: 'disabled button semantics', tradeoffs: [], unresolved: [] };
     const proposals = [
       { ...base, id: 'MCP-ADD-A', author: 'astra', changes: [{ path: 'tokens.semantic.action.primary.disabledBackground', value: { $type: 'color', $value: '{color.slate.200}' } }] },
       { ...base, id: 'MCP-ADD-F', author: 'fable', changes: [{ path: 'components.button.tokens.disabledBackground', value: '{semantic.action.primary.disabledBackground}' }] },

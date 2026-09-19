@@ -25,6 +25,8 @@
     "background": "{semantic.surface.primary}",
     "foreground": "{semantic.text.primary}",
     "border": "{semantic.border.default}",
+    "invalidBorder": "{semantic.border.invalid}",
+    "errorText": "{semantic.text.danger}",
     "radius": "{radius.md}",
     "padding": "{space.3}",
     "focusRing": "{semantic.focus.ring}"
@@ -32,20 +34,28 @@
   "accessibility": {
     "ruleIds": [
       "STYLE-A11Y-001",
-      "STYLE-A11Y-003"
+      "STYLE-A11Y-003",
+      "STYLE-A11Y-007",
+      "STYLE-A11Y-008",
+      "STYLE-A11Y-009"
     ],
     "keyboard": "Standard text-input behavior.",
     "focusVisible": true,
-    "labelRequired": true
+    "labelRequired": true,
+    "errorTextRequired": true,
+    "errorAssociation": "When invalid, identify the field and describe the error in text associated with the control."
   },
   "contentRules": [
-    "Labels describe the requested value."
+    "Labels describe the requested value.",
+    "Error messages identify the affected field and explain what needs correction."
   ],
   "do": [
-    "Associate labels programmatically."
+    "Associate labels programmatically.",
+    "Associate an invalid field with its error message."
   ],
   "dont": [
-    "Do not rely on placeholder text as the only label."
+    "Do not rely on placeholder text as the only label.",
+    "Do not rely on border color alone to identify an error."
   ],
   "examples": [
     "Email address"

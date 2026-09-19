@@ -19,11 +19,11 @@ test('local audit survives restart, detects edits, and contains no proposal valu
       auditLedger: ledger,
       roleApprovalTokens: { astra: 'astra-private-credential', fable: 'fable-private-credential' },
     });
-    const circular = { id: 'CIRCULAR', author: 'astra', baseVersion: '0.1.0', summary: 'invalid', changes: [], tradeoffs: [], unresolved: [] };
+    const circular = { id: 'CIRCULAR', author: 'astra', baseVersion: '0.2.0', summary: 'invalid', changes: [], tradeoffs: [], unresolved: [] };
     circular.tradeoffs.push(circular);
     assert.throws(() => service.createProposal('CIRCULAR', circular, 'admin-private-credential', 'admin-private-credential'), /circular/i);
     assert.equal(ledger.status().eventCount, 0);
-    const base = { baseVersion: '0.1.0', summary: 'private proposal text', tradeoffs: [], unresolved: [] };
+    const base = { baseVersion: '0.2.0', summary: 'private proposal text', tradeoffs: [], unresolved: [] };
     service.createProposal('AUD-A', { ...base, id: 'AUD-A', author: 'astra', changes: [{ path: 'tokens.radius.md.$value', value: '12px' }] }, 'admin-private-credential', 'admin-private-credential');
     service.createProposal('AUD-F', { ...base, id: 'AUD-F', author: 'fable', changes: [{ path: 'tokens.radius.md.$value', value: '12px' }] }, 'admin-private-credential', 'admin-private-credential');
     const round = await service.startConsensusRound('AUD-A', 'AUD-F', 'admin-private-credential', 'admin-private-credential');
@@ -67,7 +67,7 @@ test('audit write failure cannot acknowledge a proposal or approval', async () =
   const bundle = await loadBundle();
   const fail = { record: () => { throw new Error('audit unavailable'); }, status: () => ({ durable: false, eventCount: 0, headHash: null }) };
   const service = new StyleService({ ...bundle, principles: {}, patterns: [], antiPatterns: {}, decisions: {} }, new Map(), { auditLedger: fail });
-  const proposal = { id: 'FAIL-A', author: 'astra', baseVersion: '0.1.0', summary: 'x', changes: [{ path: 'tokens.radius.md.$value', value: '8px' }], tradeoffs: [], unresolved: [] };
+  const proposal = { id: 'FAIL-A', author: 'astra', baseVersion: '0.2.0', summary: 'x', changes: [{ path: 'tokens.radius.md.$value', value: '8px' }], tradeoffs: [], unresolved: [] };
   assert.throws(() => service.createProposal('FAIL-A', proposal, 'admin', 'admin'), /audit unavailable/);
   assert.equal(service.getProposal('FAIL-A'), undefined);
   const plain = new StyleService({ ...bundle, principles: {}, patterns: [], antiPatterns: {}, decisions: {} });

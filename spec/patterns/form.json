@@ -5,7 +5,8 @@
     "Group related fields with headings.",
     "Keep labels visible.",
     "Place validation near the affected field.",
-    "Use one primary submit action."
+    "Use one primary submit action.",
+    "When input validation fails, identify each affected field and describe the error in text near that field."
   ],
   "ruleIds": [
     "STYLE-PATTERN-002"

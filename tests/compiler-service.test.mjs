@@ -3,20 +3,20 @@ import {compileCss,compileFlat} from '../dist/packages/token-compiler/src/index.
 test('token compiler resolves semantic tokens',async()=>{const b=await loadBundle();const flat=compileFlat(b.tokens);assert.equal(flat['semantic.action.primary.background'],'#1D4ED8');assert.match(compileCss(b.tokens),/--semantic-action-primary-background: #1D4ED8/);});
 test('service validates and returns component rules',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{'ADR.md':'hello'}});assert.equal(service.validate().valid,true);assert.equal(service.getComponentRules('button').id,'button');assert.equal(service.explainDecision('ADR.md').text,'hello');});
 test('compliance checker flags arbitrary values',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const r=service.checkStyleCompliance('.x{color:#ABCDEF;margin:27px}');assert.equal(r.compliant,false);assert.ok(r.violations.length>=2);});
-test('mutation service rejects unauthenticated proposal writes',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const proposal={id:'P1',author:'astra',baseVersion:'0.1.0',summary:'x',changes:[{path:'x',value:1}],tradeoffs:[],unresolved:[]};assert.throws(()=>service.createProposal('P1',proposal,undefined,'secret'),/Unauthorized/);assert.equal(service.createProposal('P1',proposal,'secret','secret').status,'open');});
+test('mutation service rejects unauthenticated proposal writes',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const proposal={id:'P1',author:'astra',baseVersion:'0.2.0',summary:'x',changes:[{path:'x',value:1}],tradeoffs:[],unresolved:[]};assert.throws(()=>service.createProposal('P1',proposal,undefined,'secret'),/Unauthorized/);assert.equal(service.createProposal('P1',proposal,'secret','secret').status,'open');});
 
 
-test('governed proposal lifecycle requires exact roles, dual approval, and human gate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});service.createProposal('A',mk('A','astra'),'secret','secret');service.createProposal('F',mk('F','fable'),'secret','secret');assert.equal(service.evaluateProposal('A','secret','secret').valid,true);const round=await service.startConsensusRound('A','F','secret','secret');assert.equal(round.status,'candidate_ready');const h=round.candidateHash;assert.throws(()=>service.publishRelease(h,true,'secret','secret','human','human'),/Astra and Fable approvals/);service.approveCandidate(h,'astra','secret','secret');service.approveCandidate(h,'fable','secret','secret');assert.throws(()=>service.publishRelease(h,false,'secret','secret','human','human'),/Human approval/);assert.equal(service.publishRelease(h,true,'secret','secret','human','human').status,'released');});
+test('governed proposal lifecycle requires exact roles, dual approval, and human gate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.2.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});service.createProposal('A',mk('A','astra'),'secret','secret');service.createProposal('F',mk('F','fable'),'secret','secret');assert.equal(service.evaluateProposal('A','secret','secret').valid,true);const round=await service.startConsensusRound('A','F','secret','secret');assert.equal(round.status,'candidate_ready');const h=round.candidateHash;assert.throws(()=>service.publishRelease(h,true,'secret','secret','human','human'),/Astra and Fable approvals/);service.approveCandidate(h,'astra','secret','secret');service.approveCandidate(h,'fable','secret','secret');assert.throws(()=>service.publishRelease(h,false,'secret','secret','human','human'),/Human approval/);assert.equal(service.publishRelease(h,true,'secret','secret','human','human').status,'released');});
 
 
-test('conflicting stored proposals do not create a candidate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'x',changes:[{path:'same.path',value}],tradeoffs:[],unresolved:[]});service.createProposal('A2',mk('A2','astra',1),'s','s');service.createProposal('F2',mk('F2','fable',2),'s','s');const r=await service.startConsensusRound('A2','F2','s','s');assert.equal(r.status,'needs_revision');assert.ok(r.conflicts.length===1);});
+test('conflicting stored proposals do not create a candidate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author,value)=>({id,author,baseVersion:'0.2.0',summary:'x',changes:[{path:'same.path',value}],tradeoffs:[],unresolved:[]});service.createProposal('A2',mk('A2','astra',1),'s','s');service.createProposal('F2',mk('F2','fable',2),'s','s');const r=await service.startConsensusRound('A2','F2','s','s');assert.equal(r.status,'needs_revision');assert.ok(r.conflicts.length===1);});
 
 test('publish is protected by admin authorization',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});assert.throws(()=>service.publishRelease('nope',true,undefined,'secret','human','human'),/Unauthorized/);});
 
 test('one-call agent orchestration independently proposes, cross-reviews, validates, and creates a governed candidate',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
   const {MockAgent}=await import('../dist/packages/provider-adapters/src/index.js');
-  const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'product-specific radius',changes:[{path:'tokens.radius.md.$value',value,rationale:'Mock design direction'}],tradeoffs:[],unresolved:[]});
+  const mk=(id,author,value)=>({id,author,baseVersion:'0.2.0',summary:'product-specific radius',changes:[{path:'tokens.radius.md.$value',value,rationale:'Mock design direction'}],tradeoffs:[],unresolved:[]});
   const astra=new MockAgent('astra',{initial:mk('AUTO-A','astra','4px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
   const fable=new MockAgent('fable',{initial:mk('AUTO-F','fable','12px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
   const run=await service.generateCandidateFromBrief({brief:'Premium analytics product',criteria:['accessibility','consistency'],astra,fable},'secret','secret');
@@ -26,17 +26,17 @@ test('one-call agent orchestration independently proposes, cross-reviews, valida
 
 test('deterministic candidate evaluation rejects unsupported or non-leaf changes',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const bad={id:'BAD',author:'astra',baseVersion:'0.1.0',summary:'invalid',changes:[{path:'manifest.version',value:'9.9.9'}],tradeoffs:[],unresolved:[]};
+  const bad={id:'BAD',author:'astra',baseVersion:'0.2.0',summary:'invalid',changes:[{path:'manifest.version',value:'9.9.9'}],tradeoffs:[],unresolved:[]};
   service.createProposal('BAD',bad,'secret','secret');const result=service.evaluateProposal('BAD','secret','secret');assert.equal(result.valid,false);assert.match(result.deterministicErrors[0],/Unsupported change path/);
 });
 
 test('release requires a credential distinct from ordinary admin authorization',async()=>{
-  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.2.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});
   service.createProposal('RA',mk('RA','astra'),'admin','admin');service.createProposal('RF',mk('RF','fable'),'admin','admin');const c=await service.startConsensusRound('RA','RF','admin','admin');service.approveCandidate(c.candidateHash,'astra','admin','admin');service.approveCandidate(c.candidateHash,'fable','admin','admin');assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin',undefined,'human-secret'),/Separate human approval credential/);assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin','admin','admin'),/Separate human approval credential/);assert.equal(service.publishRelease(c.candidateHash,true,'admin','admin','human-secret','human-secret').status,'released');
 });
 test('candidate evaluation rejects an object inside a dimension token value',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const proposal={id:'BAD-VALUE',author:'astra',baseVersion:'0.1.0',summary:'invalid token value',changes:[{path:'tokens.radius.md.$value',value:{$type:'dimension',$value:'12px'}}],tradeoffs:[],unresolved:[]};
+  const proposal={id:'BAD-VALUE',author:'astra',baseVersion:'0.2.0',summary:'invalid token value',changes:[{path:'tokens.radius.md.$value',value:{$type:'dimension',$value:'12px'}}],tradeoffs:[],unresolved:[]};
   service.createProposal('BAD-VALUE',proposal,'admin','admin');
   const result=service.evaluateProposal('BAD-VALUE','admin','admin');
   assert.equal(result.valid,false);
@@ -44,7 +44,7 @@ test('candidate evaluation rejects an object inside a dimension token value',asy
 });
 test('candidate evaluation rejects a shadow name instead of a CSS shadow value',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const proposal={id:'BAD-SHADOW',author:'astra',baseVersion:'0.1.0',summary:'invalid shadow',changes:[{path:'tokens.elevation.md.$value',value:"'lg'"}],tradeoffs:[],unresolved:[]};
+  const proposal={id:'BAD-SHADOW',author:'astra',baseVersion:'0.2.0',summary:'invalid shadow',changes:[{path:'tokens.elevation.md.$value',value:"'lg'"}],tradeoffs:[],unresolved:[]};
   service.createProposal('BAD-SHADOW',proposal,'admin','admin');
   const result=service.evaluateProposal('BAD-SHADOW','admin','admin');
   assert.equal(result.valid,false);
@@ -52,7 +52,7 @@ test('candidate evaluation rejects a shadow name instead of a CSS shadow value',
 });
 test('candidate evaluation rejects changes that leave the canonical value unchanged',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const proposal={id:'NO-OP',author:'astra',baseVersion:'0.1.0',summary:'unchanged',changes:[{path:'tokens.color.red.600.$value',value:'#DC2626'}],tradeoffs:[],unresolved:[]};
+  const proposal={id:'NO-OP',author:'astra',baseVersion:'0.2.0',summary:'unchanged',changes:[{path:'tokens.color.red.600.$value',value:'#DC2626'}],tradeoffs:[],unresolved:[]};
   service.createProposal('NO-OP',proposal,'admin','admin');
   const result=service.evaluateProposal('NO-OP','admin','admin');
   assert.equal(result.valid,false);
@@ -60,7 +60,7 @@ test('candidate evaluation rejects changes that leave the canonical value unchan
 });
 test('governed candidate can add a complete token leaf and a component token mapping',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const base={baseVersion:'0.1.0',summary:'disabled button semantics',tradeoffs:[],unresolved:[]};
+  const base={baseVersion:'0.2.0',summary:'disabled button semantics',tradeoffs:[],unresolved:[]};
   service.createProposal('ADD-A',{...base,id:'ADD-A',author:'astra',changes:[{path:'tokens.semantic.action.primary.disabledBackground',value:{$type:'color',$value:'{color.slate.200}'}}]},'admin','admin');
   service.createProposal('ADD-F',{...base,id:'ADD-F',author:'fable',changes:[{path:'components.button.tokens.disabledBackground',value:'{semantic.action.primary.disabledBackground}'}]},'admin','admin');
   const result=await service.startConsensusRound('ADD-A','ADD-F','admin','admin');
@@ -71,7 +71,7 @@ test('governed candidate can add a complete token leaf and a component token map
 });
 test('governed additions reject missing parents, unsafe keys, and incomplete token leaves',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const base={baseVersion:'0.1.0',summary:'bad addition',tradeoffs:[],unresolved:[]};
+  const base={baseVersion:'0.2.0',summary:'bad addition',tradeoffs:[],unresolved:[]};
   for(const [id,path,value] of [
     ['BAD-PARENT','tokens.newFamily.item',{$type:'color',$value:'#FFFFFF'}],
     ['BAD-KEY','tokens.semantic.action.primary.__proto__',{$type:'color',$value:'#FFFFFF'}],
@@ -85,7 +85,7 @@ test('governed additions reject missing parents, unsafe keys, and incomplete tok
 
 test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
-  const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'radius',changes:[{path:'tokens.radius.md.$value',value}],tradeoffs:[],unresolved:[]});
+  const mk=(id,author,value)=>({id,author,baseVersion:'0.2.0',summary:'radius',changes:[{path:'tokens.radius.md.$value',value}],tradeoffs:[],unresolved:[]});
   service.createProposal('GV-A',mk('GV-A','astra','10px'),'admin','admin');
   service.createProposal('GV-F',mk('GV-F','fable','12px'),'admin','admin');
   assert.throws(()=>service.getGovernanceActivity(undefined,'admin'),/Unauthorized/);
