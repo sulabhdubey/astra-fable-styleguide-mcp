@@ -16,6 +16,12 @@ test('a color token cannot resolve to a dimension token',()=>{
   const issues=validateTokenGraph({radius:{$type:'dimension',$value:'8px'},semantic:{$type:'color',$value:'{radius}'}});
   assert.ok(issues.some(issue=>issue.code==='STYLE-TOKEN-004'&&issue.path==='semantic'),JSON.stringify(issues));
 });
+test('shadow tokens reject names and malformed colors while accepting declared CSS shadow forms',()=>{
+  const invalid=validateTokenGraph({elevation:{md:{$type:'shadow',$value:"'lg'"},badColor:{$type:'shadow',$value:'0 8px 24px rgba(999, 23, 42, 0.12)'},badAlpha:{$type:'shadow',$value:'0 8px 24px rgba(15, 23, 42, 1.2)'},negativeBlur:{$type:'shadow',$value:'0 8px -24px #0F172A'}}});
+  assert.deepEqual(invalid.filter(issue=>issue.code==='STYLE-TOKEN-004').map(issue=>issue.path),['elevation.md','elevation.badColor','elevation.badAlpha','elevation.negativeBlur']);
+  const valid=validateTokenGraph({elevation:{none:{$type:'shadow',$value:'none'},md:{$type:'shadow',$value:'0 8px 24px rgba(15, 23, 42, 0.12)'},inset:{$type:'shadow',$value:'inset 0 1px 2px #0F172A'}}});
+  assert.deepEqual(valid,[]);
+});
 test('path lookup and replacement do not follow inherited object properties',()=>{
   assert.equal(getPath({},'toString'),undefined);
   assert.throws(()=>setPath({},'toString','changed'),/Unknown path/);

@@ -103,13 +103,30 @@ export function resolveToken(root: unknown, path: string, stack: string[] = []):
   return resolveToken(root, ref, [...stack, path]);
 }
 
+function isShadowValue(value:JsonValue):boolean{
+  if(typeof value!=='string')return false;
+  if(value==='none')return true;
+  const match=/^(?:inset\s+)?(.+?)\s+(#[0-9a-f]{6}|rgba?\([^)]+\))$/i.exec(value.trim());
+  if(!match)return false;
+  const lengths=match[1]!.split(/\s+/);
+  if(lengths.length<2||lengths.length>4||lengths.some(length=>!/^-(?:\d+|\d*\.\d+)(?:px|rem|em)$|^(?:0|(?:\d+|\d*\.\d+)(?:px|rem|em))$/.test(length)))return false;
+  if(lengths.length>=3&&Number.parseFloat(lengths[2]!)<0)return false;
+  const color=match[2]!;
+  if(color.startsWith('#'))return true;
+  const rgb=/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(\d*\.\d+|\d+))?\s*\)$/i.exec(color);
+  if(!rgb||rgb.slice(1,4).some(channel=>Number(channel)>255))return false;
+  const hasAlpha=rgb[4]!==undefined;
+  return /^rgba\(/i.test(color)===hasAlpha&&(!hasAlpha||(Number(rgb[4])>=0&&Number(rgb[4])<=1));
+}
+
 function valueMatchesType(type:string,value:JsonValue):boolean{
   if(type==='number')return typeof value==='number'&&Number.isFinite(value);
   if(type==='cubicBezier')return Array.isArray(value)&&value.length===4&&value.every(item=>typeof item==='number'&&Number.isFinite(item));
   if(type==='dimension')return typeof value==='string'&&/^-?(?:\d+|\d*\.\d+)(?:px|rem|em|%)$/.test(value);
   if(type==='duration')return typeof value==='string'&&/^-?(?:\d+|\d*\.\d+)(?:ms|s)$/.test(value);
   if(type==='color')return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);
-  if(['fontFamily','shadow','string'].includes(type))return typeof value==='string'&&value.trim().length>0;
+  if(type==='shadow')return isShadowValue(value);
+  if(['fontFamily','string'].includes(type))return typeof value==='string'&&value.trim().length>0;
   return false;
 }
 

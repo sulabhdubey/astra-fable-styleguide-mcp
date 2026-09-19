@@ -6,7 +6,7 @@ test('compliance checker flags arbitrary values',async()=>{const b=await loadBun
 test('mutation service rejects unauthenticated proposal writes',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const proposal={id:'P1',author:'astra',baseVersion:'0.1.0',summary:'x',changes:[{path:'x',value:1}],tradeoffs:[],unresolved:[]};assert.throws(()=>service.createProposal('P1',proposal,undefined,'secret'),/Unauthorized/);assert.equal(service.createProposal('P1',proposal,'secret','secret').status,'open');});
 
 
-test('governed proposal lifecycle requires exact roles, dual approval, and human gate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'8px'}],tradeoffs:[],unresolved:[]});service.createProposal('A',mk('A','astra'),'secret','secret');service.createProposal('F',mk('F','fable'),'secret','secret');assert.equal(service.evaluateProposal('A','secret','secret').valid,true);const round=await service.startConsensusRound('A','F','secret','secret');assert.equal(round.status,'candidate_ready');const h=round.candidateHash;assert.throws(()=>service.publishRelease(h,true,'secret','secret','human','human'),/Astra and Fable approvals/);service.approveCandidate(h,'astra','secret','secret');service.approveCandidate(h,'fable','secret','secret');assert.throws(()=>service.publishRelease(h,false,'secret','secret','human','human'),/Human approval/);assert.equal(service.publishRelease(h,true,'secret','secret','human','human').status,'released');});
+test('governed proposal lifecycle requires exact roles, dual approval, and human gate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});service.createProposal('A',mk('A','astra'),'secret','secret');service.createProposal('F',mk('F','fable'),'secret','secret');assert.equal(service.evaluateProposal('A','secret','secret').valid,true);const round=await service.startConsensusRound('A','F','secret','secret');assert.equal(round.status,'candidate_ready');const h=round.candidateHash;assert.throws(()=>service.publishRelease(h,true,'secret','secret','human','human'),/Astra and Fable approvals/);service.approveCandidate(h,'astra','secret','secret');service.approveCandidate(h,'fable','secret','secret');assert.throws(()=>service.publishRelease(h,false,'secret','secret','human','human'),/Human approval/);assert.equal(service.publishRelease(h,true,'secret','secret','human','human').status,'released');});
 
 
 test('conflicting stored proposals do not create a candidate',async()=>{const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'x',changes:[{path:'same.path',value}],tradeoffs:[],unresolved:[]});service.createProposal('A2',mk('A2','astra',1),'s','s');service.createProposal('F2',mk('F2','fable',2),'s','s');const r=await service.startConsensusRound('A2','F2','s','s');assert.equal(r.status,'needs_revision');assert.ok(r.conflicts.length===1);});
@@ -17,8 +17,8 @@ test('one-call agent orchestration independently proposes, cross-reviews, valida
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
   const {MockAgent}=await import('../dist/packages/provider-adapters/src/index.js');
   const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'product-specific radius',changes:[{path:'tokens.radius.md.$value',value,rationale:'Mock design direction'}],tradeoffs:[],unresolved:[]});
-  const astra=new MockAgent('astra',{initial:mk('AUTO-A','astra','4px'),convergeTo:{'tokens.radius.md.$value':'8px'}});
-  const fable=new MockAgent('fable',{initial:mk('AUTO-F','fable','12px'),convergeTo:{'tokens.radius.md.$value':'8px'}});
+  const astra=new MockAgent('astra',{initial:mk('AUTO-A','astra','4px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
+  const fable=new MockAgent('fable',{initial:mk('AUTO-F','fable','12px'),convergeTo:{'tokens.radius.md.$value':'10px'}});
   const run=await service.generateCandidateFromBrief({brief:'Premium analytics product',criteria:['accessibility','consistency'],astra,fable},'secret','secret');
   assert.equal(run.status,'CONSENSUS');assert.equal(run.initial.length,2);assert.equal(run.critiques.length,2);assert.equal(service.getConsensusStatus(run.candidateHash,'secret','secret').source,'agent-consensus');
   assert.equal(astra.seenInitialContexts.length,1);assert.equal(fable.seenInitialContexts.length,1);assert.equal('proposal' in astra.seenInitialContexts[0],false);
@@ -31,7 +31,7 @@ test('deterministic candidate evaluation rejects unsupported or non-leaf changes
 });
 
 test('release requires a credential distinct from ordinary admin authorization',async()=>{
-  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'8px'}],tradeoffs:[],unresolved:[]});
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});
   service.createProposal('RA',mk('RA','astra'),'admin','admin');service.createProposal('RF',mk('RF','fable'),'admin','admin');const c=await service.startConsensusRound('RA','RF','admin','admin');service.approveCandidate(c.candidateHash,'astra','admin','admin');service.approveCandidate(c.candidateHash,'fable','admin','admin');assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin',undefined,'human-secret'),/Separate human approval credential/);assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin','admin','admin'),/Separate human approval credential/);assert.equal(service.publishRelease(c.candidateHash,true,'admin','admin','human-secret','human-secret').status,'released');
 });
 test('candidate evaluation rejects an object inside a dimension token value',async()=>{
@@ -41,6 +41,22 @@ test('candidate evaluation rejects an object inside a dimension token value',asy
   const result=service.evaluateProposal('BAD-VALUE','admin','admin');
   assert.equal(result.valid,false);
   assert.ok(result.deterministicErrors.some(error=>error.includes('STYLE-TOKEN-004')));
+});
+test('candidate evaluation rejects a shadow name instead of a CSS shadow value',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const proposal={id:'BAD-SHADOW',author:'astra',baseVersion:'0.1.0',summary:'invalid shadow',changes:[{path:'tokens.elevation.md.$value',value:"'lg'"}],tradeoffs:[],unresolved:[]};
+  service.createProposal('BAD-SHADOW',proposal,'admin','admin');
+  const result=service.evaluateProposal('BAD-SHADOW','admin','admin');
+  assert.equal(result.valid,false);
+  assert.ok(result.deterministicErrors.some(error=>error.includes('STYLE-TOKEN-004')));
+});
+test('candidate evaluation rejects changes that leave the canonical value unchanged',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const proposal={id:'NO-OP',author:'astra',baseVersion:'0.1.0',summary:'unchanged',changes:[{path:'tokens.color.red.600.$value',value:'#DC2626'}],tradeoffs:[],unresolved:[]};
+  service.createProposal('NO-OP',proposal,'admin','admin');
+  const result=service.evaluateProposal('NO-OP','admin','admin');
+  assert.equal(result.valid,false);
+  assert.ok(result.deterministicErrors.some(error=>error.includes('does not change')));
 });
 test('governed candidate can add a complete token leaf and a component token mapping',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
@@ -70,7 +86,7 @@ test('governed additions reject missing parents, unsafe keys, and incomplete tok
 test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
   const mk=(id,author,value)=>({id,author,baseVersion:'0.1.0',summary:'radius',changes:[{path:'tokens.radius.md.$value',value}],tradeoffs:[],unresolved:[]});
-  service.createProposal('GV-A',mk('GV-A','astra','8px'),'admin','admin');
+  service.createProposal('GV-A',mk('GV-A','astra','10px'),'admin','admin');
   service.createProposal('GV-F',mk('GV-F','fable','12px'),'admin','admin');
   assert.throws(()=>service.getGovernanceActivity(undefined,'admin'),/Unauthorized/);
   const conflict=await service.startConsensusRound('GV-A','GV-F','admin','admin');
@@ -82,7 +98,7 @@ test('operator governance view records conflict, candidate, approval, and readin
   assert.deepEqual(view.recentRuns[0].conflictPaths,['tokens.radius.md.$value']);
   assert.equal(view.candidates.length,0);
   assert.equal(JSON.stringify(view).includes('12px'),false);
-  service.createProposal('GV-F2',mk('GV-F2','fable','8px'),'admin','admin');
+  service.createProposal('GV-F2',mk('GV-F2','fable','10px'),'admin','admin');
   const ready=await service.startConsensusRound('GV-A','GV-F2','admin','admin');
   assert.equal(ready.status,'candidate_ready');
   assert.throws(()=>service.getConsensusStatus(ready.candidateHash,undefined,'admin'),/Unauthorized/);
