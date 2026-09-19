@@ -1,0 +1,7 @@
+# Deterministic compliance checks
+
+`check_style_compliance` accepts source text up to 200,000 characters. For an HTML document it checks `<style>` blocks and quoted inline `style` attributes. For a CSS fragment it checks the supplied text. It compares hex and pixel literals with values resolved from the canonical `/spec` token graph. CSS comments and quoted CSS strings are ignored.
+
+The result includes `status` (`pass`, `fail`, or `not_checked`), `compliant`, source `line` and `column` for each finding, `warnings`, `checksPerformed`, and `limitations`. `not_checked` has `compliant: false`: an HTML document with no CSS must never be reported as a style pass. `pass` means only that the listed deterministic checks found no violation in the scanned source.
+
+This checker does not parse all CSS or inspect JavaScript style objects, rendered output, interaction states, contrast, or accessibility. It does not judge whether a literal token value was used through its semantic alias. Use the canonical validator for spec integrity and browser/accessibility checks for UI behavior. The public v0.1.0 deployment retains its original checker until a separately approved release is deployed.
