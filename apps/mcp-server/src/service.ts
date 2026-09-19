@@ -2,12 +2,13 @@ import { evaluateSpec } from '../../../packages/evaluator/src/index.js';
 import { approve, approvalsMatch, mergeProposals, runConsensus, sha256, type Approval, type Candidate, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
 import { deepClone, getPath, isRecord, setPath } from '../../../packages/style-spec/src/index.js';
 import { checkStyleCompliance } from '../../../packages/compliance/src/index.js';
+import { compareSnapshots, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
 
 export interface SpecBundle { manifest: Record<string,unknown>; principles: unknown; tokens: Record<string,unknown>; components: Record<string,unknown>[]; patterns: unknown[]; antiPatterns: unknown; accessibility: Record<string,unknown>; decisions: Record<string,string>; }
 export class StyleService {
  private proposals=new Map<string,DesignProposal>();
  private candidates=new Map<string,{candidate:Candidate;status:'candidate'|'released';approvals:Approval[];source:'manual'|'agent-consensus'}>();
- constructor(private bundle:SpecBundle){}
+ constructor(private bundle:SpecBundle, private snapshots:ReadonlyMap<string,StyleSnapshot>=new Map()){}
  getManifest(){return this.bundle.manifest;}
  getDesignTokens(scope?:string){ if(!scope)return this.bundle.tokens; const v=getPath(this.bundle.tokens,scope); if(v===undefined)throw new Error(`Unknown token scope: ${scope}`); return v; }
  getComponentRules(component:string){const found=this.bundle.components.find(c=>c.id===component);if(!found)throw new Error(`Unknown component: ${component}`);return found;}
@@ -31,7 +32,11 @@ export class StyleService {
  getConsensusStatus(candidateHash:string){const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');return {candidateHash,status:c.status,source:c.source,approvals:c.approvals.map(a=>a.actor)};}
  approveCandidate(candidateHash:string,actor:'astra'|'fable',authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');c.approvals=c.approvals.filter(a=>a.actor!==actor);c.approvals.push(approve(actor,candidateHash));return {candidateHash,actor,approved:true};}
  publishRelease(candidateHash:string,humanApproved:boolean,authToken:string|undefined,expectedToken:string|undefined,humanApprovalToken?:string,expectedHumanApprovalToken?:string){this.authorize(authToken,expectedToken);const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');if(!humanApproved)throw new Error('Human approval required');if(!expectedHumanApprovalToken||humanApprovalToken!==expectedHumanApprovalToken)throw new Error('Separate human approval credential required');if(!approvalsMatch(candidateHash,c.approvals))throw new Error('Astra and Fable approvals required');c.status='released';return {candidateHash,status:'released'};}
- compareSpecVersions(fromVersion:string,toVersion:string){const current=String(this.bundle.manifest.version??'');if(fromVersion===current&&toVersion===current)return {fromVersion,toVersion,changes:[]};return {fromVersion,toVersion,availableVersions:[current],message:'Only the current canonical version is bundled in v0.1.0; historical manifests can be added under releases/.'};}
+ compareSpecVersions(fromVersion:string,toVersion:string){
+   const from=this.snapshots.get(fromVersion),to=this.snapshots.get(toVersion);
+   if(from&&to)return compareSnapshots(from,to);
+   return {fromVersion,toVersion,availableVersions:[...this.snapshots.keys()].sort(),currentCanonicalVersion:String(this.bundle.manifest.version??''),message:'One or both requested immutable StyleSpec snapshots are unavailable.'};
+ }
  private evaluateCandidate(candidate:Candidate):string[]{
    if(candidate.baseVersion!==String(this.bundle.manifest.version??''))return [`Candidate baseVersion ${candidate.baseVersion} does not match canonical version ${String(this.bundle.manifest.version??'')}`];
    const draft={tokens:deepClone(this.bundle.tokens),components:Object.fromEntries(this.bundle.components.map(c=>[String(c.id),deepClone(c)]))};const errors:string[]=[];

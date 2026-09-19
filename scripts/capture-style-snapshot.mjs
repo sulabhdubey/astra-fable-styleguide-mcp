@@ -1,0 +1,27 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const ref = process.argv[2];
+if (!ref || !/^(?:[0-9a-f]{40}|v\d+\.\d+\.\d+|HEAD)$/.test(ref)) throw new Error('Provide a release tag, full commit SHA, or HEAD as the sole argument');
+const git = (...args) => execFileSync('git', args, { maxBuffer: 1024 * 1024 });
+const sourceCommit = git('rev-parse', '--verify', `${ref}^{commit}`).toString().trim();
+const paths = git('ls-tree', '-r', '--name-only', ref, '--', 'spec').toString().trim().split(/\r?\n/).filter(Boolean);
+if (!paths.includes('spec/manifest.json') || paths.some(path => !/^spec\/[A-Za-z0-9_./-]+\.json$/.test(path))) throw new Error('Ref has an invalid or incomplete /spec tree');
+const files = Object.create(null);
+for (const path of paths) files[path.slice('spec/'.length)] = JSON.parse(git('show', `${ref}:${path}`).toString());
+const version = files['manifest.json']?.version;
+if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Snapshot manifest has no valid version');
+const manifestPath = join('releases', 'manifest.json');
+const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+if (!Array.isArray(manifest.releases) || manifest.releases.some(entry => entry.version === version)) throw new Error(`Release ${version} already has a snapshot`);
+const name = `${version}-style-spec.json`;
+const bytes = Buffer.from(JSON.stringify({ version, files }, null, 2) + '\n');
+const sha256 = createHash('sha256').update(bytes).digest('hex');
+const entry = { version, path: name, sha256, sourceCommit };
+await writeFile(join('releases', name), bytes, { flag: 'wx' });
+manifest.releases.push(entry);
+manifest.releases.sort((a, b) => a.version.localeCompare(b.version, undefined, { numeric: true }));
+await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+console.log(JSON.stringify({ version, files: paths.length, sha256, sourceCommit }));

@@ -60,6 +60,8 @@ The next compliance implementation reports source locations and explicit coverag
 
 For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIPT_CLIENT.md).
 
+Historical comparisons use [immutable `/spec` snapshots](./docs/VERSIONING.md).
+
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)
 - Build requirements: [`BUILD_SPEC.md`](./BUILD_SPEC.md)
