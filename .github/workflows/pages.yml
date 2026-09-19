@@ -40,8 +40,8 @@ jobs:
             echo "The released commit must be reachable from main" >&2
             exit 1
           fi
-          gh release download "$RELEASE_TAG" --pattern "release-evidence-${version}.json" --dir "$RUNNER_TEMP"
-          node - "$RUNNER_TEMP/release-evidence-${version}.json" "$release_sha" "$version" <<'NODE'
+          gh release download "$RELEASE_TAG" --pattern "${version}-build-evidence.json" --dir "$RUNNER_TEMP"
+          node - "$RUNNER_TEMP/${version}-build-evidence.json" "$release_sha" "$version" <<'NODE'
           const fs = require('node:fs');
           const [path, sha, version] = process.argv.slice(2);
           const evidence = JSON.parse(fs.readFileSync(path, 'utf8'));
