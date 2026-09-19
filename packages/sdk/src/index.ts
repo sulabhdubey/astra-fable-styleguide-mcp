@@ -3,6 +3,8 @@ import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/cli
 export interface StyleMcpClientOptions {
   endpoint: string;
   fetchImpl?: typeof fetch;
+  /** Auto probes server/discover; legacy uses the initialize handshake directly. */
+  protocolMode?: 'auto' | 'legacy';
 }
 
 export type PublicStyleTool =
@@ -15,10 +17,11 @@ export type PublicStyleTool =
   | 'check_style_compliance'
   | 'compare_spec_versions';
 
-const PUBLIC_STYLE_TOOLS: ReadonlySet<string> = new Set<PublicStyleTool>([
+export const PUBLIC_STYLE_TOOL_NAMES: readonly PublicStyleTool[] = [
   'get_style_manifest', 'get_design_tokens', 'get_component_rules', 'search_style_spec',
   'explain_style_decision', 'validate_tokens', 'check_style_compliance', 'compare_spec_versions',
-]);
+];
+const PUBLIC_STYLE_TOOLS: ReadonlySet<string> = new Set(PUBLIC_STYLE_TOOL_NAMES);
 
 export interface StyleComplianceReport {
   /** Present on v0.2 servers; absent on the released v0.1 server. */
@@ -35,6 +38,7 @@ export interface StyleComplianceReport {
 export class StyleConstitutionClient {
   private readonly url: URL;
   private readonly fetchImpl: typeof fetch;
+  private readonly protocolMode: 'auto' | 'legacy';
   private connection: Client | undefined;
   private transport: StreamableHTTPClientTransport | undefined;
   private connecting: Promise<void> | undefined;
@@ -43,9 +47,11 @@ export class StyleConstitutionClient {
     this.url = new URL(options.endpoint);
     if (!['http:', 'https:'].includes(this.url.protocol)) throw new Error('MCP endpoint must use HTTP or HTTPS');
     this.fetchImpl = options.fetchImpl ?? fetch;
+    this.protocolMode = options.protocolMode ?? 'auto';
   }
 
   endpoint(): string { return this.url.href; }
+  protocolEra() { return this.connection?.getProtocolEra(); }
 
   async health(): Promise<unknown> {
     const response = await this.fetchImpl(new URL('/health', this.url));
@@ -57,7 +63,7 @@ export class StyleConstitutionClient {
     if (this.connection) return;
     if (this.connecting) return this.connecting;
     this.connecting = (async () => {
-      const client = new Client({ name: 'style-constitution-ts-client', version: '0.1.0' }, { versionNegotiation: { mode: 'auto' } });
+      const client = new Client({ name: 'style-constitution-ts-client', version: '0.1.0' }, { versionNegotiation: { mode: this.protocolMode } });
       const transport = new StreamableHTTPClientTransport(this.url, { fetch: this.fetchImpl });
       try {
         await client.connect(transport);

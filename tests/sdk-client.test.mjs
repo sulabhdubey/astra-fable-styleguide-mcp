@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { createServer } from 'node:net';
-import { StyleConstitutionClient } from '../packages/sdk/dist/index.js';
+import { PUBLIC_STYLE_TOOL_NAMES, StyleConstitutionClient } from '../packages/sdk/dist/index.js';
 
 async function freePort() {
   const server = createServer();
@@ -22,6 +22,7 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
   let stderr = '';
   child.stderr.on('data', chunk => { stderr += String(chunk); });
   const client = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp` });
+  const legacyClient = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp`, protocolMode: 'legacy' });
   try {
     let ready = false;
     const deadline = Date.now() + 15000;
@@ -31,8 +32,9 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     }
     assert.equal(ready, true, `Server did not become ready: ${stderr.slice(-1000)}`);
     await client.connect();
+    assert.equal(client.protocolEra(), 'modern');
     const { tools } = await client.listTools();
-    assert.equal(tools.length, 8);
+    assert.deepEqual(tools.map(tool => tool.name).sort(), [...PUBLIC_STYLE_TOOL_NAMES].sort());
     assert.equal((await client.getStyleManifest()).version, '0.1.0');
     assert.ok(await client.getDesignTokens('space'));
     assert.equal((await client.getComponentRules('button')).id, 'button');
@@ -45,7 +47,19 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     assert.equal(report.violations[0].ruleId, 'STYLE-SPACE-001');
     await assert.rejects(client.callReadTool('publish_release'), /outside the public read API/);
     await assert.rejects(client.getComponentRules('no-such-component'), /Unknown component/);
+    await legacyClient.connect();
+    assert.equal(legacyClient.protocolEra(), 'legacy');
+    assert.deepEqual((await legacyClient.listTools()).tools.map(tool => tool.name).sort(), [...PUBLIC_STYLE_TOOL_NAMES].sort());
+    assert.equal((await legacyClient.getStyleManifest()).version, '0.1.0');
+    const probe = JSON.parse(execFileSync(process.execPath, ['scripts/probe-mcp.mjs', client.endpoint()], {
+      cwd: process.cwd(), encoding: 'utf8', timeout: 10000,
+    }));
+    assert.equal(probe.protocolEra, 'modern');
+    assert.equal(probe.version, '0.1.0');
+    assert.equal(probe.expectedToolNamesOnly, true);
+    assert.deepEqual(probe.toolNames, [...PUBLIC_STYLE_TOOL_NAMES].sort());
   } finally {
+    await legacyClient.close();
     await client.close();
     child.kill('SIGTERM');
   }
