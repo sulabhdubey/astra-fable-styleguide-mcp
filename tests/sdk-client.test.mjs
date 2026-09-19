@@ -14,6 +14,7 @@ async function freePort() {
 
 test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout: 20000 }, async () => {
   const port = await freePort();
+  const endpoint = `http://127.0.0.1:${port}/mcp`;
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/mcp-server/src/official-server.ts'], {
     cwd: process.cwd(),
     stdio: ['ignore', 'ignore', 'pipe'],
@@ -21,8 +22,8 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
   });
   let stderr = '';
   child.stderr.on('data', chunk => { stderr += String(chunk); });
-  const client = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp` });
-  const legacyClient = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp`, protocolMode: 'legacy' });
+  const client = new StyleConstitutionClient({ endpoint });
+  const legacyClient = new StyleConstitutionClient({ endpoint, protocolMode: 'legacy' });
   try {
     let ready = false;
     const deadline = Date.now() + 15000;
