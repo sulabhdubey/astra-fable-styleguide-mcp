@@ -1,6 +1,7 @@
 import { evaluateSpec } from '../../../packages/evaluator/src/index.js';
 import { approve, approvalsMatch, mergeProposals, runConsensus, sha256, type Approval, type Candidate, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
-import { deepClone, flattenTokenLeaves, getPath, isRecord, resolveToken, setPath } from '../../../packages/style-spec/src/index.js';
+import { deepClone, getPath, isRecord, setPath } from '../../../packages/style-spec/src/index.js';
+import { checkStyleCompliance } from '../../../packages/compliance/src/index.js';
 
 export interface SpecBundle { manifest: Record<string,unknown>; principles: unknown; tokens: Record<string,unknown>; components: Record<string,unknown>[]; patterns: unknown[]; antiPatterns: unknown; accessibility: Record<string,unknown>; decisions: Record<string,string>; }
 export class StyleService {
@@ -13,13 +14,7 @@ export class StyleService {
  search(query:string){const q=query.toLowerCase();const hits:{kind:string;id:string;value:unknown}[]=[];for(const c of this.bundle.components)if(JSON.stringify(c).toLowerCase().includes(q))hits.push({kind:'component',id:String(c.id),value:c});for(const [k,v] of Object.entries(this.bundle.decisions))if((k+v).toLowerCase().includes(q))hits.push({kind:'decision',id:k,value:v});return hits.slice(0,25);}
  explainDecision(id:string){const v=this.bundle.decisions[id];if(!v)throw new Error(`Unknown decision: ${id}`);return {id,text:v};}
  validate(){return evaluateSpec({manifest:this.bundle.manifest,tokens:this.bundle.tokens,components:this.bundle.components,accessibility:this.bundle.accessibility as {contrastPairs?:any[]}});}
- checkStyleCompliance(input:string){
-   const allowed=new Set(flattenTokenLeaves(this.bundle.tokens).map(({path})=>{try{return resolveToken(this.bundle.tokens,path)}catch{return null}}).filter(v=>typeof v==='string'));
-   const violations:{ruleId:string;message:string;match:string}[]=[];
-   for(const m of input.matchAll(/#[0-9a-fA-F]{6}\b/g)) if(!allowed.has(m[0].toUpperCase())&&!allowed.has(m[0])) violations.push({ruleId:'STYLE-COLOR-001',message:'Arbitrary hex color is outside the canonical tokens',match:m[0]});
-   for(const m of input.matchAll(/\b(\d+)px\b/g)){const v=`${m[1]}px`;if(!allowed.has(v)&&Number(m[1])!==1)violations.push({ruleId:'STYLE-SPACE-001',message:'Raw pixel value is not present in the approved token set',match:v});}
-   return {compliant:violations.length===0,violations,warnings:[],suggestedFixes:violations.map(v=>`Replace ${v.match} with an approved semantic token.`)};
- }
+ checkStyleCompliance(input:string){return checkStyleCompliance(input,this.bundle.tokens);}
  createProposal(id:string,payload:DesignProposal,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);if(this.proposals.has(id))throw new Error('Proposal already exists');if(payload.id!==id)throw new Error('Proposal id mismatch');this.proposals.set(id,deepClone(payload));return {id,status:'open'};}
  getProposal(id:string){const p=this.proposals.get(id);return p?deepClone(p):undefined;}
  evaluateProposal(id:string,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const proposal=this.proposals.get(id);if(!proposal)throw new Error('Unknown proposal');const paths=new Set<string>();const duplicatePaths=proposal.changes.filter(c=>paths.has(c.path)||!paths.add(c.path));const candidate={baseVersion:proposal.baseVersion,changes:proposal.changes};const deterministicErrors=this.evaluateCandidate(candidate);return {id,valid:proposal.changes.length>0&&duplicatePaths.length===0&&deterministicErrors.length===0,duplicatePaths:duplicatePaths.map(c=>c.path),deterministicErrors,baseline:this.validate()};}

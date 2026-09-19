@@ -56,6 +56,8 @@ For a client that accepts a Streamable HTTP MCP URL, configure the server URL as
 
 See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for deployment settings and verification commands, and [`docs/CLIENT_TRIALS.md`](./docs/CLIENT_TRIALS.md) for actual Codex CLI, Cursor CLI, and MCP Inspector results. Cursor CLI required explicit per-tool approval for its noninteractive trial; the example server configuration alone does not grant tool access.
 
+The next compliance implementation reports source locations and explicit coverage limits. See [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) for its result contract.
+
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)
 - Build requirements: [`BUILD_SPEC.md`](./BUILD_SPEC.md)
