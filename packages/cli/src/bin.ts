@@ -21,6 +21,7 @@ async function validate(root: string): Promise<number> {
   let patterns: unknown[];
   try {
     manifest = await readJson(join(root, 'spec', 'manifest.json'));
+    await readJson(join(root, 'spec', 'principles.json'));
     for (const tokenFile of await readDirectory(root, 'tokens')) {
       if (typeof tokenFile !== 'object' || tokenFile === null || Array.isArray(tokenFile)) {
         throw new Error('Token file must contain a JSON object');

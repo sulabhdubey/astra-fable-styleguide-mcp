@@ -31,6 +31,13 @@ test('packed stylecon validates a clean consumer spec and reports a broken targe
     assert.equal(clean.status, 0, `${clean.stdout}\n${clean.stderr}`);
     assert.match(clean.stdout, /StyleSpec valid/);
 
+    const principlesPath = join(consumer, 'spec', 'principles.json');
+    await rm(principlesPath);
+    const incomplete = spawnSync(process.execPath, [command, 'validate'], { cwd: consumer, encoding: 'utf8' });
+    assert.equal(incomplete.status, 2, `${incomplete.stdout}\n${incomplete.stderr}`);
+    assert.match(incomplete.stderr, /principles\.json/);
+    await cp(join(projectRoot, 'spec', 'principles.json'), principlesPath);
+
     const buttonPath = join(consumer, 'spec', 'components', 'button.json');
     const button = JSON.parse(await readFile(buttonPath, 'utf8'));
     button.accessibility.minimumTarget = '24px';
