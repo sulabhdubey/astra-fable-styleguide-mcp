@@ -62,6 +62,8 @@ For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIP
 
 Historical comparisons use [immutable `/spec` snapshots](./docs/VERSIONING.md).
 
+See the [v0.2.0 implementation plan](./docs/V0.2_PLAN.md) for remaining work and release criteria.
+
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)
 - Build requirements: [`BUILD_SPEC.md`](./BUILD_SPEC.md)
