@@ -18,7 +18,7 @@ test('Anthropic Messages invoker sends configured model/key and parses text bloc
   try{const agent=new AnthropicAdapter('fable','model-f',createAnthropicInvoker({apiKey:'test-key',endpoint:'https://example.test/v1/messages'}));const out=await agent.generateProposal({brief:'A sufficiently detailed product brief',criteria:['consistency'],baseVersion:'0.1.0'});assert.equal(out.author,'fable');assert.equal(out.changes.length,1);assert.equal(seen.url,'https://example.test/v1/messages');assert.equal(seen.init.headers['x-api-key'],'test-key');assert.equal(JSON.parse(seen.init.body).model,'model-f');}finally{globalThis.fetch=prior;}
 });
 
-test('local Ollama invoker uses JSON mode without a provider key',async()=>{
+test('local Ollama invoker uses a required-field schema without a provider key',async()=>{
   let seen;
   const fetchImpl=async(url,init)=>{seen={url,init};return new Response(JSON.stringify({response:JSON.stringify(proposalJson)}),{status:200,headers:{'content-type':'application/json'}});};
   const agent=new OllamaAdapter('astra','local-model',createOllamaInvoker({fetchImpl,timeoutMs:5000,numPredict:300}));
@@ -26,11 +26,45 @@ test('local Ollama invoker uses JSON mode without a provider key',async()=>{
   assert.equal(result.author,'astra');
   assert.equal(String(seen.url),'http://127.0.0.1:11434/api/generate');
   assert.equal(seen.init.headers.authorization,undefined);
-  assert.deepEqual(JSON.parse(seen.init.body).format,'json');
+  assert.equal(JSON.parse(seen.init.body).format.type,'object');
+  assert.deepEqual(JSON.parse(seen.init.body).format.properties.changes.items.required,['path','value']);
   assert.equal(JSON.parse(seen.init.body).stream,false);
   assert.equal(JSON.parse(seen.init.body).model,'local-model');
   assert.throws(()=>createOllamaInvoker({endpoint:'https://paid.example/api/generate'}),/must be local/);
   assert.ok(createConfiguredAgent('fable',{FABLE_PROVIDER:'ollama',FABLE_MODEL:'another-local-model'}) instanceof OllamaAdapter);
+});
+
+test('local Ollama critique schema limits accepted paths to the reviewed proposal',async()=>{
+  let body;
+  const path='tokens.radius.md.$value';
+  const fetchImpl=async(_url,init)=>{body=JSON.parse(init.body);return new Response(JSON.stringify({response:JSON.stringify({reviews:{[path]:{verdict:'accept',reason:'Matches the brief'}}})}),{status:200,headers:{'content-type':'application/json'}});};
+  const invoke=createOllamaInvoker({fetchImpl});
+  const critique=await invoke({role:'fable',model:'local-model',task:'critique',payload:{proposal:{changes:[{path,value:'12px'}]},context:{brief:'Softer settings controls'}}});
+  assert.deepEqual(body.format.properties.reviews.required,[path]);
+  assert.deepEqual(body.format.properties.reviews.properties[path].properties.verdict.enum,['accept','warning','blocking']);
+  assert.deepEqual(critique,{objections:[],acceptedPaths:[path]});
+});
+
+test('local Ollama critique verdict cannot accept and block the same path',async()=>{
+  const path='tokens.radius.md.$value';
+  const fetchImpl=async()=>new Response(JSON.stringify({response:JSON.stringify({reviews:{[path]:{verdict:'blocking',reason:'Needs a revision'}}})}),{status:200,headers:{'content-type':'application/json'}});
+  const invoke=createOllamaInvoker({fetchImpl});
+  const critique=await invoke({role:'astra',model:'local-model',task:'critique',payload:{proposal:{changes:[{path,value:'12px'}]},context:{brief:'Softer settings controls'}}});
+  assert.deepEqual(critique,{objections:[{path,reason:'Needs a revision',severity:'blocking'}],acceptedPaths:[]});
+});
+
+test('local Ollama proposal schema lists existing canonical change paths',async()=>{
+  let body;
+  const fetchImpl=async(_url,init)=>{body=JSON.parse(init.body);return new Response(JSON.stringify({response:JSON.stringify(proposalJson)}),{status:200,headers:{'content-type':'application/json'}});};
+  const agent=new OllamaAdapter('astra','local-model',createOllamaInvoker({fetchImpl}));
+  const referenceSpec={tokens:{radius:{md:{$value:'8px'}}},components:{button:{id:'button',tokens:{radius:'{radius.md}'}}}};
+  await agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec});
+  assert.deepEqual(body.format.properties.changes.items.properties.path.enum,['tokens.radius.md.$value','components.button.tokens.radius']);
+});
+
+test('provider proposal rejects an unknown path before cross-review',async()=>{
+  const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes:[{path:'tokens/radius/md/$value',value:'12px'}]}));
+  await assert.rejects(agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec:{tokens:{radius:{md:{$value:'8px'}}}}}),/Unknown proposal change path/);
 });
 
 test('provider failure leaves governed proposal state untouched',async()=>{

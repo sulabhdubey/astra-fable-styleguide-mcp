@@ -50,7 +50,7 @@ test('unknown semantic token references fail while canonical and app-local varia
   const source = '<style>\n/* var(--semantic-text-missing) */\n.x { color: var(--semantic-text-primary); background: var(--semantic-surface-priamry); border-color: var(--app-brand); }\n</style>';
   const result = checkStyleCompliance(source, tokens);
   assert.equal(result.status, 'fail');
-  assert.deepEqual(result.violations.map(v => [v.ruleId, v.match, v.line]), [['STYLE-TOKEN-001', 'var(--semantic-surface-priamry', 3]]);
+  assert.deepEqual(result.violations.map(v => [v.ruleId, v.match, v.line]), [['STYLE-CSS-TOKEN-001', 'var(--semantic-surface-priamry', 3]]);
   assert.ok(result.checksPerformed.some(check => check.includes('semantic token')));
   assert.ok(result.limitations.some(limit => limit.includes('app-local')));
 });
