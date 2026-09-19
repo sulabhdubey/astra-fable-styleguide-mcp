@@ -90,21 +90,26 @@ test('governed candidate can extend accessibility rules, contrast pairs, and a f
   const base={baseVersion:b.manifest.version,summary:'input error guidance',tradeoffs:[],unresolved:[]};
   const rule={id:'STYLE-A11Y-099',name:'Error identification',requirement:'Describe detected input errors in text.'};
   const pair={id:'STYLE-A11Y-100',foreground:'semantic.text.danger',background:'semantic.surface.primary',minimum:4.5};
-  const originalGuidance=b.components.find(component=>component.id==='input').accessibility;
+  const input=b.components.find(component=>component.id==='input');
+  const originalGuidance=input.accessibility;
   const guidancePath=originalGuidance.errorTextRequired===undefined?'components.input.accessibility.errorTextRequired':'components.input.accessibility.errorAssociation';
   const guidanceValue=originalGuidance.errorTextRequired===undefined?true:'Identify the field and associate its error text with the control.';
   service.createProposal('DOMAIN-A',{...base,id:'DOMAIN-A',author:'astra',changes:[
     {path:'accessibility.rules',value:[...b.accessibility.rules,rule]},
     {path:'patterns.form.rules',value:[...form.rules,'Identify each affected field in error text.']},
+    {path:'components.input.contentRules',value:[...input.contentRules,'Describe the correction needed.']},
+    {path:'components.input.do',value:[...input.do,'Associate the error text with the field.']},
+    {path:'components.input.dont',value:[...input.dont,'Do not rely on color alone.']},
   ]},'admin','admin');
   service.createProposal('DOMAIN-F',{...base,id:'DOMAIN-F',author:'fable',changes:[
     {path:'accessibility.contrastPairs',value:[...b.accessibility.contrastPairs,pair]},
     {path:guidancePath,value:guidanceValue},
+    {path:'components.input.accessibility.ruleIds',value:[...input.accessibility.ruleIds,rule.id]},
   ]},'admin','admin');
   const result=await service.startConsensusRound('DOMAIN-A','DOMAIN-F','admin','admin');
   assert.equal(result.status,'candidate_ready',JSON.stringify(result));
-  assert.equal(result.candidate.changes.length,4);
-  assert.equal(service.getConsensusStatus(result.candidateHash,'admin','admin').changeCount,4);
+  assert.equal(result.candidate.changes.length,8);
+  assert.equal(service.getConsensusStatus(result.candidateHash,'admin','admin').changeCount,8);
   assert.deepEqual(service.getComponentRules('input').accessibility,originalGuidance);
 });
 
@@ -116,6 +121,10 @@ test('governed accessibility and pattern changes reject dropped rules and malfor
   for(const [id,path,value] of [
     ['DROP-RULE','accessibility.rules',b.accessibility.rules.slice(1)],
     ['DROP-PATTERN','patterns.form.rules',form.rules.slice(1)],
+    ['DROP-COMP-RULE','components.input.accessibility.ruleIds',b.components.find(component=>component.id==='input').accessibility.ruleIds.slice(1)],
+    ['DROP-CONTENT','components.input.contentRules',[]],
+    ['DROP-DO','components.input.do',[]],
+    ['DROP-DONT','components.input.dont',[]],
     ['BAD-PAIR','accessibility.contrastPairs',[...b.accessibility.contrastPairs,{id:'STYLE-A11Y-100',foreground:'missing.token',background:'semantic.surface.primary',minimum:4.5}]],
     ['BAD-ACCESS','components.input.accessibility.errorTextRequired','yes'],
   ]){

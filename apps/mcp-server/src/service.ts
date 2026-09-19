@@ -76,6 +76,7 @@ export class StyleService {
    for(const change of candidate.changes){
      const accessibilityList=change.path==='accessibility.rules'||change.path==='accessibility.contrastPairs';
      const patternRules=/^patterns\.[A-Za-z0-9_-]+\.rules$/.test(change.path);
+     const componentRules=/^components\.[A-Za-z0-9_-]+\.(accessibility\.ruleIds|contentRules|do|dont)$/.test(change.path);
      const componentGuidance=/^components\.[A-Za-z0-9_-]+\.accessibility\.(errorTextRequired|errorAssociation)$/.test(change.path);
      if(!(change.path.startsWith('tokens.')||change.path.startsWith('components.')||accessibilityList||patternRules)){errors.push(`Unsupported change path: ${change.path}`);continue;}
      const existing=getPath(draft,change.path);
@@ -84,9 +85,9 @@ export class StyleService {
        else if(existing!==undefined||!isRecord(change.value)||typeof change.value.$type!=='string'||!('$value' in change.value)){errors.push(`New token path requires a complete unused leaf: ${change.path}`);continue;}
      }else if(change.path.startsWith('components.')&&existing===undefined&&!componentGuidance&&(!/^components\.[^.]+\.tokens\.[^.]+$/.test(change.path)||tokenReference(change.value)===null)){
        errors.push(`New component token mapping requires a token reference: ${change.path}`);continue;
-     }else if(accessibilityList||patternRules){
+     }else if(accessibilityList||patternRules||componentRules){
        const nextEntries=change.value;
-       if(!Array.isArray(existing)||!Array.isArray(nextEntries)||nextEntries.length<=existing.length||existing.some((item,index)=>canonicalize(item)!==canonicalize(nextEntries[index]))){errors.push(`Governed rule additions must preserve existing entries: ${change.path}`);continue;}
+       if(!Array.isArray(existing)||!Array.isArray(nextEntries)||nextEntries.length<=existing.length||existing.some((item,index)=>canonicalize(item)!==canonicalize(nextEntries[index]))){errors.push(`Governed list additions must preserve existing entries: ${change.path}`);continue;}
      }
      if(existing!==undefined&&canonicalize(existing)===canonicalize(change.value)){errors.push(`Candidate change does not change canonical value: ${change.path}`);continue;}
      try{if(existing===undefined)addPath(draft as unknown as Record<string,unknown>,change.path,change.value);else setPath(draft as unknown as Record<string,unknown>,change.path,change.value);}catch(error){errors.push(error instanceof Error?error.message:String(error));}
