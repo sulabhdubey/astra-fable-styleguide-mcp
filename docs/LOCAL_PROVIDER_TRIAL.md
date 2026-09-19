@@ -20,5 +20,11 @@ These runs used a worktree with uncommitted adapter code and are **observed expl
 | gemma3:4b / llama3.2:3b, 1 | `DEADLOCK` | Both first proposals set `tokens.radius.md.$value` to `12px`, then cross critique and revision diverged to `10px` versus `12px`; no candidate. |
 | gemma3:4b / llama3.2:3b, 2 | `DEADLOCK` | A critique invented `components.button.tokens.background`; deterministic evaluation rejected that path; no candidate. |
 | qwen2.5:7b-instruct / mistral:7b, 1 | Error before candidate | A proposal omitted the required `value`. The adapter now rejects this with a specific validation error. |
+| qwen2.5:7b-instruct / llama3.1:8b, 1 | Error before candidate | Before structured output, critique accepted an unproposed path. |
+| qwen2.5:7b-instruct / llama3.1:8b, 1 | Error before candidate | With required-field schemas, critique both accepted and blocked the same path. |
+| qwen2.5:7b-instruct / llama3.1:8b, 1 | `INVALID` | With one verdict per path, a proposal used slash notation and deterministic evaluation rejected it. |
+| qwen2.5:7b-instruct / llama3.1:8b, 2 | `DEADLOCK` | With existing-path enums, proposals used valid paths but disagreed on the value shape. No candidate was created. |
 
 Some model critiques claimed that the radius change affected contrast without evidence. Treat those as model assertions, not verified accessibility findings. A provider-backed successful consensus candidate, stronger critique grounding, and a release-grade repeat remain open work.
+
+These observations drove stricter local output schemas and a discovered evaluator gap: a token leaf's declared `$type` was not enforcing the shape of its `$value`. That evaluator repair is separate required work before any provider result can count as a valid release candidate.

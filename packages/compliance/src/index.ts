@@ -1,7 +1,7 @@
 import { flattenTokenLeaves, resolveToken } from '../../style-spec/src/index.js';
 
 export interface ComplianceViolation {
-  ruleId: 'STYLE-COLOR-001' | 'STYLE-SPACE-001' | 'STYLE-TOKEN-001';
+  ruleId: 'STYLE-COLOR-001' | 'STYLE-SPACE-001' | 'STYLE-CSS-TOKEN-001';
   message: string;
   match: string;
   line: number;
@@ -104,7 +104,7 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
       if (!allowed.has(match[0]!.toLowerCase())) emit('STYLE-SPACE-001', 'Raw pixel value is not present in the approved token set', match);
     }
     for (const match of source.matchAll(/var\(\s*(--semantic-[\w-]+)/g)) {
-      if (!semanticNames.has(match[1]!)) emit('STYLE-TOKEN-001', 'Unknown canonical semantic token reference', match);
+      if (!semanticNames.has(match[1]!)) emit('STYLE-CSS-TOKEN-001', 'Unknown canonical semantic token reference', match);
     }
   }
   violations.sort((a, b) => a.line - b.line || a.column - b.column || a.ruleId.localeCompare(b.ruleId));

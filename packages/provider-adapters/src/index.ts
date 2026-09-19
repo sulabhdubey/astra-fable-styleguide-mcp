@@ -1,5 +1,5 @@
 import type { Critique, DesignAgent, DesignContext, DesignProposal } from '../../consensus-engine/src/index.js';
-import { deepClone, getPath, isRecord } from '../../style-spec/src/index.js';
+import { deepClone, flattenTokenLeaves, getPath, isRecord } from '../../style-spec/src/index.js';
 
 export interface ProviderConfig { provider: string; model: string; }
 export type AgentTask='proposal'|'critique'|'revision';
@@ -7,10 +7,11 @@ export type AgentInvoker = (request:{role:string;model:string;task:AgentTask;pay
 
 function assertString(value:unknown,label:string):string{if(typeof value!=='string'||!value.trim())throw new Error(`Provider returned invalid ${label}`);return value;}
 function assertStringArray(value:unknown,label:string):string[]{if(!Array.isArray(value)||value.some(v=>typeof v!=='string'))throw new Error(`Provider returned invalid ${label}`);return value as string[];}
-function normalizeProposal(value:unknown,role:string,baseVersion:string,previousId?:string):DesignProposal{
+function normalizeProposal(value:unknown,role:string,baseVersion:string,referenceSpec?:unknown,previousId?:string):DesignProposal{
   if(!isRecord(value))throw new Error('Provider proposal must be an object');
   const rawChanges=value.changes;if(!Array.isArray(rawChanges)||rawChanges.length===0)throw new Error('Provider proposal must contain at least one change');
   const changes=rawChanges.map((change,i)=>{if(!isRecord(change))throw new Error(`Invalid change at ${i}`);if(!('value' in change)||change.value===undefined)throw new Error(`Provider returned invalid changes[${i}].value`);return {path:assertString(change.path,`changes[${i}].path`),value:deepClone(change.value),...(typeof change.rationale==='string'?{rationale:change.rationale}:{})};});
+  if(referenceSpec!==undefined)for(const change of changes)if(getPath(referenceSpec,change.path)===undefined)throw new Error(`Unknown proposal change path: ${change.path}`);
   return {id:previousId??(typeof value.id==='string'&&value.id?value.id:`PROP-${role}-${crypto.randomUUID()}`),author:role,baseVersion,summary:assertString(value.summary,'summary'),changes,tradeoffs:Array.isArray(value.tradeoffs)?assertStringArray(value.tradeoffs,'tradeoffs'):[],unresolved:Array.isArray(value.unresolved)?assertStringArray(value.unresolved,'unresolved'):[]};
 }
 function normalizeCritique(value:unknown,role:string,proposal:DesignProposal,referenceSpec:unknown):Critique{
@@ -27,9 +28,9 @@ function normalizeCritique(value:unknown,role:string,proposal:DesignProposal,ref
 
 export class ConfigurableAgent implements DesignAgent {
   constructor(public id:string, private config:ProviderConfig, private invoke:AgentInvoker){}
-  async generateProposal(context:Readonly<DesignContext>):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'proposal',payload:context}),this.id,context.baseVersion);}
+  async generateProposal(context:Readonly<DesignContext>):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'proposal',payload:context}),this.id,context.baseVersion,context.referenceSpec);}
   async critiqueProposal(proposal:Readonly<DesignProposal>,context:Readonly<DesignContext>):Promise<Critique>{return normalizeCritique(await this.invoke({role:this.id,model:this.config.model,task:'critique',payload:{proposal,context}}),this.id,proposal,context.referenceSpec);}
-  async reviseProposal(proposal:Readonly<DesignProposal>,critique:Readonly<Critique>,context:Readonly<DesignContext>,round:number):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'revision',payload:{proposal,critique,context,round}}),this.id,context.baseVersion,proposal.id);}
+  async reviseProposal(proposal:Readonly<DesignProposal>,critique:Readonly<Critique>,context:Readonly<DesignContext>,round:number):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'revision',payload:{proposal,critique,context,round}}),this.id,context.baseVersion,context.referenceSpec,proposal.id);}
 }
 
 export class OpenAIAdapter extends ConfigurableAgent {constructor(id:string,model:string,invoke:AgentInvoker){super(id,{provider:'openai',model},invoke);}}
@@ -43,6 +44,57 @@ function taskPrompt(request:{role:string;model:string;task:AgentTask;payload:unk
   return shared+`TASK: Revise your own proposal in response to the counterpart critique. Preserve useful accepted choices, resolve blocking objections where justified, and actively seek convergence without sacrificing deterministic requirements. JSON shape: {"summary":"...","changes":[{"path":"...","value":<json>,"rationale":"..."}],"tradeoffs":["..."],"unresolved":["..."]}. INPUT: ${JSON.stringify(request.payload)}`;
 }
 function stripJsonFences(text:string):string{const t=text.trim();const m=/^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);return (m?.[1]??t).trim();}
+function ollamaCritiquePaths(payload:unknown):string[]{
+  const proposal=isRecord(payload)?payload.proposal:undefined;
+  const changes=isRecord(proposal)?proposal.changes:undefined;
+  const paths=Array.isArray(changes)?[...new Set(changes.filter(isRecord).map(change=>change.path).filter((path):path is string=>typeof path==='string'))]:[];
+  if(paths.length===0||paths.length>50)throw new Error('Ollama critique requires 1 to 50 proposed change paths');
+  return paths;
+}
+function ollamaChangePaths(request:{task:AgentTask;payload:unknown}):string[]{
+  const context=request.task==='revision'&&isRecord(request.payload)?request.payload.context:request.payload;
+  const referenceSpec=isRecord(context)?context.referenceSpec:undefined;
+  if(!isRecord(referenceSpec))return [];
+  const paths:string[]=[];
+  if(isRecord(referenceSpec.tokens))for(const {path} of flattenTokenLeaves(referenceSpec.tokens))paths.push(`tokens.${path}.$value`);
+  const collect=(value:unknown,prefix:string):void=>{
+    if(isRecord(value)){for(const [key,child] of Object.entries(value))if(key!=='id'&&!['__proto__','prototype','constructor'].includes(key))collect(child,`${prefix}.${key}`);}
+    else paths.push(prefix);
+  };
+  if(isRecord(referenceSpec.components))for(const [id,component] of Object.entries(referenceSpec.components))collect(component,`components.${id}`);
+  if(paths.length>500)throw new Error('Ollama change-path schema exceeds 500 paths');
+  return paths;
+}
+function ollamaFormat(request:{task:AgentTask;payload:unknown}):Record<string,unknown>{
+  const stringArray={type:'array',items:{type:'string'}};
+  if(request.task==='critique'){
+    const paths=ollamaCritiquePaths(request.payload);
+    const verdict={type:'object',properties:{verdict:{type:'string',enum:['accept','warning','blocking']},reason:{type:'string'}},required:['verdict','reason'],additionalProperties:false};
+    return {type:'object',properties:{reviews:{type:'object',properties:Object.fromEntries(paths.map(path=>[path,verdict])),required:paths,additionalProperties:false}},required:['reviews'],additionalProperties:false};
+  }
+  const paths=ollamaChangePaths(request);
+  const pathSchema=paths.length?{type:'string',enum:paths}:{type:'string'};
+  return {type:'object',properties:{summary:{type:'string'},changes:{type:'array',minItems:1,items:{type:'object',properties:{path:pathSchema,value:{},rationale:{type:'string'}},required:['path','value']}},tradeoffs:stringArray,unresolved:stringArray},required:['summary','changes','tradeoffs','unresolved']};
+}
+function ollamaPrompt(request:{role:string;model:string;task:AgentTask;payload:unknown}):string{
+  if(request.task!=='critique')return taskPrompt(request);
+  const paths=ollamaCritiquePaths(request.payload);
+  return `You are the ${request.role.toUpperCase()} role. Review the counterpart proposal independently against the brief and referenceSpec. Return only a JSON object with a reviews object. Use exactly these keys: ${JSON.stringify(paths)}. For each key provide {"verdict":"accept|warning|blocking","reason":"..."}. Choose accept if the proposed change meets the brief and no concrete concern exists. Use blocking only for a specific correction; do not invent accessibility failures. A path has one verdict only. INPUT: ${JSON.stringify(request.payload)}`;
+}
+function parseOllamaCritique(value:unknown,paths:string[]):unknown{
+  if(!isRecord(value)||!isRecord(value.reviews))throw new Error('Ollama critique must contain reviews');
+  const reviews=value.reviews;
+  if(Object.keys(reviews).some(path=>!paths.includes(path)))throw new Error('Ollama critique contains an unproposed path');
+  const objections:{path:string;reason:string;severity:'warning'|'blocking'}[]=[],acceptedPaths:string[]=[];
+  for(const path of paths){
+    const review=reviews[path];
+    if(!isRecord(review))throw new Error(`Ollama critique omitted path: ${path}`);
+    if(review.verdict==='accept')acceptedPaths.push(path);
+    else if(review.verdict==='warning'||review.verdict==='blocking')objections.push({path,reason:assertString(review.reason,`review reason for ${path}`),severity:review.verdict});
+    else throw new Error(`Invalid Ollama critique verdict for ${path}`);
+  }
+  return {objections,acceptedPaths};
+}
 function parseProviderJson(text:string):unknown{try{return JSON.parse(stripJsonFences(text));}catch(error){throw new Error(`Provider did not return valid JSON: ${error instanceof Error?error.message:String(error)}`);}}
 function openAIText(data:unknown):string{
   if(!isRecord(data))throw new Error('Invalid OpenAI response');
@@ -69,11 +121,12 @@ export function createOllamaInvoker(config:{endpoint?:string;timeoutMs?:number;n
   if(!Number.isInteger(numPredict)||numPredict<100||numPredict>4096)throw new Error('Ollama numPredict must be 100 to 4096');
   const requestFetch=config.fetchImpl??fetch;
   return async request=>{
-    const response=await requestFetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:request.model,prompt:taskPrompt(request),format:'json',stream:false,options:{temperature:0,num_predict:numPredict}}),signal:AbortSignal.timeout(timeoutMs)});
+    const response=await requestFetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:request.model,prompt:ollamaPrompt(request),format:ollamaFormat(request),stream:false,options:{temperature:0,num_predict:numPredict}}),signal:AbortSignal.timeout(timeoutMs)});
     if(!response.ok)throw new Error(`Ollama provider error ${response.status}`);
     const data:unknown=await response.json();
     if(!isRecord(data)||typeof data.response!=='string')throw new Error('Ollama response contained no text output');
-    return parseProviderJson(data.response);
+    const parsed=parseProviderJson(data.response);
+    return request.task==='critique'?parseOllamaCritique(parsed,ollamaCritiquePaths(request.payload)):parsed;
   };
 }
 
