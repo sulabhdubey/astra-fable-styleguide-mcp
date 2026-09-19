@@ -34,6 +34,14 @@ test('release requires a credential distinct from ordinary admin authorization',
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.1.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'8px'}],tradeoffs:[],unresolved:[]});
   service.createProposal('RA',mk('RA','astra'),'admin','admin');service.createProposal('RF',mk('RF','fable'),'admin','admin');const c=await service.startConsensusRound('RA','RF','admin','admin');service.approveCandidate(c.candidateHash,'astra','admin','admin');service.approveCandidate(c.candidateHash,'fable','admin','admin');assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin',undefined,'human-secret'),/Separate human approval credential/);assert.equal(service.publishRelease(c.candidateHash,true,'admin','admin','human-secret','human-secret').status,'released');
 });
+test('candidate evaluation rejects an object inside a dimension token value',async()=>{
+  const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const proposal={id:'BAD-VALUE',author:'astra',baseVersion:'0.1.0',summary:'invalid token value',changes:[{path:'tokens.radius.md.$value',value:{$type:'dimension',$value:'12px'}}],tradeoffs:[],unresolved:[]};
+  service.createProposal('BAD-VALUE',proposal,'admin','admin');
+  const result=service.evaluateProposal('BAD-VALUE','admin','admin');
+  assert.equal(result.valid,false);
+  assert.ok(result.deterministicErrors.some(error=>error.includes('STYLE-TOKEN-004')));
+});
 
 test('operator governance view records conflict, candidate, approval, and readiness without exposing proposal values',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
