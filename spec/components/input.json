@@ -27,16 +27,20 @@
     "border": "{semantic.border.default}",
     "radius": "{radius.md}",
     "padding": "{space.3}",
-    "focusRing": "{semantic.focus.ring}"
+    "focusRing": "{semantic.focus.ring}",
+    "errorForeground": "{semantic.text.danger}",
+    "invalidBorder": "{semantic.border.danger}"
   },
   "accessibility": {
     "ruleIds": [
       "STYLE-A11Y-001",
-      "STYLE-A11Y-003"
+      "STYLE-A11Y-003",
+      "STYLE-A11Y-006"
     ],
     "keyboard": "Standard text-input behavior.",
     "focusVisible": true,
-    "labelRequired": true
+    "labelRequired": true,
+    "errorAssociation": "For an automatically detected error, show a visible message that names the affected field and states the needed correction. Set aria-invalid=\"true\" on that control and append the message element's ID to aria-describedby, preserving existing supporting-text references."
   },
   "contentRules": [
     "Labels describe the requested value."

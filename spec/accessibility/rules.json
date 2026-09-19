@@ -15,6 +15,11 @@
       "id": "STYLE-A11Y-003",
       "name": "Programmatic labels",
       "requirement": "Inputs have programmatically associated labels."
+    },
+    {
+      "id": "STYLE-A11Y-006",
+      "name": "Invalid input feedback",
+      "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
     }
   ],
   "contrastPairs": [
@@ -35,6 +40,18 @@
       "foreground": "semantic.text.secondary",
       "background": "semantic.surface.primary",
       "minimum": 4.5
+    },
+    {
+      "id": "STYLE-A11Y-007",
+      "foreground": "semantic.text.danger",
+      "background": "semantic.surface.primary",
+      "minimum": 4.5
+    },
+    {
+      "id": "STYLE-A11Y-008",
+      "foreground": "semantic.border.danger",
+      "background": "semantic.surface.primary",
+      "minimum": 3
     }
   ]
 }

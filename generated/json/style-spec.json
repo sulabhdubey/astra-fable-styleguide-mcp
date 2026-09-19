@@ -2,11 +2,10 @@
   "manifest": {
     "$schema": "../packages/schemas/style-manifest.schema.json",
     "name": "Style Constitution",
-    "version": "0.1.0",
-    "status": "released",
+    "version": "0.2.0",
+    "status": "candidate",
     "schemaVersion": "1.0",
-    "updatedAt": "2026-09-18",
-    "releaseCommit": "95024fff6891312d736e0e2040c471bfe803e9c7",
+    "updatedAt": "2026-09-19",
     "principles": [
       "clarity",
       "accessibility",
@@ -281,6 +280,10 @@
         "default": {
           "$type": "color",
           "$value": "{color.slate.200}"
+        },
+        "danger": {
+          "$type": "color",
+          "$value": "{color.red.600}"
         }
       },
       "action": {
@@ -581,16 +584,20 @@
         "border": "{semantic.border.default}",
         "radius": "{radius.md}",
         "padding": "{space.3}",
-        "focusRing": "{semantic.focus.ring}"
+        "focusRing": "{semantic.focus.ring}",
+        "errorForeground": "{semantic.text.danger}",
+        "invalidBorder": "{semantic.border.danger}"
       },
       "accessibility": {
         "ruleIds": [
           "STYLE-A11Y-001",
-          "STYLE-A11Y-003"
+          "STYLE-A11Y-003",
+          "STYLE-A11Y-006"
         ],
         "keyboard": "Standard text-input behavior.",
         "focusVisible": true,
-        "labelRequired": true
+        "labelRequired": true,
+        "errorAssociation": "For an automatically detected error, show a visible message that names the affected field and states the needed correction. Set aria-invalid=\"true\" on that control and append the message element's ID to aria-describedby, preserving existing supporting-text references."
       },
       "contentRules": [
         "Labels describe the requested value."
@@ -844,7 +851,8 @@
         "Group related fields with headings.",
         "Keep labels visible.",
         "Place validation near the affected field.",
-        "Use one primary submit action."
+        "Use one primary submit action.",
+        "For each automatically detected invalid field, place its associated corrective error message adjacent to the control."
       ],
       "ruleIds": [
         "STYLE-PATTERN-002"
@@ -868,6 +876,11 @@
         "id": "STYLE-A11Y-003",
         "name": "Programmatic labels",
         "requirement": "Inputs have programmatically associated labels."
+      },
+      {
+        "id": "STYLE-A11Y-006",
+        "name": "Invalid input feedback",
+        "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
       }
     ],
     "contrastPairs": [
@@ -888,6 +901,18 @@
         "foreground": "semantic.text.secondary",
         "background": "semantic.surface.primary",
         "minimum": 4.5
+      },
+      {
+        "id": "STYLE-A11Y-007",
+        "foreground": "semantic.text.danger",
+        "background": "semantic.surface.primary",
+        "minimum": 4.5
+      },
+      {
+        "id": "STYLE-A11Y-008",
+        "foreground": "semantic.border.danger",
+        "background": "semantic.surface.primary",
+        "minimum": 3
       }
     ]
   }

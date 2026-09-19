@@ -36,6 +36,10 @@
       "default": {
         "$type": "color",
         "$value": "{color.slate.200}"
+      },
+      "danger": {
+        "$type": "color",
+        "$value": "{color.red.600}"
       }
     },
     "action": {

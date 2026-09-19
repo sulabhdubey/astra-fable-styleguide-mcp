@@ -15,6 +15,18 @@ test('accessibility and pattern records reject duplicate ids and malformed rule 
 test('broken token reference is rejected',()=>{const r=validateTokenGraph({a:{$value:'{missing.x}'}});assert.ok(r.some(i=>i.code==='STYLE-TOKEN-001'));});
 test('circular token reference is rejected',()=>{const r=validateTokenGraph({a:{$value:'{b}'},b:{$value:'{a}'}});assert.ok(r.some(i=>i.code==='STYLE-TOKEN-002'));});
 test('contrast math detects weak pair',()=>{assert.ok(contrastRatio('#777777','#FFFFFF')<4.5);});
+test('candidate danger text contrast rule rejects the observed low-contrast red',async()=>{
+  const bundle=await loadBundle();
+  bundle.tokens.color.red['600'].$value='#E53E3E';
+  const result=evaluateSpec(bundle);
+  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-007'&&issue.severity==='error'),JSON.stringify(result.issues));
+});
+test('candidate invalid border contrast rule rejects a low-contrast state cue',async()=>{
+  const bundle=await loadBundle();
+  bundle.tokens.semantic.border.danger.$value='{color.slate.200}';
+  const result=evaluateSpec(bundle);
+  assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-008'&&issue.severity==='error'),JSON.stringify(result.issues));
+});
 test('declared dimension token rejects an object value',()=>{
   const issues=validateTokenGraph({radius:{md:{$type:'dimension',$value:{$type:'dimension',$value:'12px'}}}});
   assert.ok(issues.some(issue=>issue.code==='STYLE-TOKEN-004'&&issue.path==='radius.md'),JSON.stringify(issues));

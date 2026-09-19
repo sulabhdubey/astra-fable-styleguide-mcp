@@ -5,7 +5,8 @@
     "Group related fields with headings.",
     "Keep labels visible.",
     "Place validation near the affected field.",
-    "Use one primary submit action."
+    "Use one primary submit action.",
+    "For each automatically detected invalid field, place its associated corrective error message adjacent to the control."
   ],
   "ruleIds": [
     "STYLE-PATTERN-002"
