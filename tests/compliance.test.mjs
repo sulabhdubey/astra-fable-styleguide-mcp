@@ -34,3 +34,13 @@ test('resolved token values pass and raw CSS still gets checked', async () => {
   assert.deepEqual(result.violations, []);
   assert.deepEqual(checkStyleCompliance('.x{content:"<foo>";padding:27px}', tokens).violations.map(v => v.match), ['27px']);
 });
+
+test('large invalid input has bounded findings and still fails', async () => {
+  const { tokens } = await loadBundle();
+  const result = checkStyleCompliance(`.x{${'margin:27px;'.repeat(2000)}}`, tokens);
+  assert.equal(result.status, 'fail');
+  assert.equal(result.compliant, false);
+  assert.equal(result.violations.length, 200);
+  assert.equal(result.truncated, true);
+  assert.ok(result.warnings.some(v => v.includes('capped')));
+});
