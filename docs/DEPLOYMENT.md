@@ -4,7 +4,7 @@
 Enable Pages with **GitHub Actions** as the source. `.github/workflows/pages.yml` builds the Astro site from `/spec` and deploys `apps/docs/dist`.
 
 ## MCP service
-The public `v0.1.0` MCP service runs on Vercel Hobby at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. The production deployment uses the released `v0.1.0` source at commit `4874c7d3b338c69b48435509be122bab495263b6` and the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset.
+The public `v0.1.0` MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. The production deployment uses the released `v0.1.0` source at commit `4874c7d3b338c69b48435509be122bab495263b6` and the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset.
 
 Set these production environment variables:
 

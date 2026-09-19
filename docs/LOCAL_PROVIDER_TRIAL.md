@@ -13,7 +13,7 @@ The arguments are output path, maximum rounds (1 to 3), Astra model, and Fable m
 
 ## Exploratory observations, 2026-09-19
 
-These runs used a worktree with uncommitted adapter code and are **observed exploratory evidence**, not release validation. Raw outputs are retained locally with the operator. No paid provider call was made.
+These runs used a worktree with uncommitted adapter code and are **observed exploratory evidence**, not release validation. Raw outputs are not included in this repository. No paid provider call was made.
 
 | Models and rounds | Result | Observed issue |
 | --- | --- | --- |

@@ -6,6 +6,8 @@
 
 Astra + Fable Style Constitution turns design rules into a versioned, machine-readable contract. Two provider-independent agent roles propose and critique changes; deterministic checks resolve measurable questions; exact candidate hashes prevent fake consensus; humans retain release authority by default.
 
+The project idea was inspired by Tibo's post on X.
+
 ## What it gives you
 - A canonical StyleSpec under `/spec`.
 - Independent Astra/Fable proposal and cross-review workflow, including an optional one-call product-brief-to-candidate path.
@@ -32,7 +34,7 @@ pnpm verify
 ## Production MCP
 The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance visibility is process-local and uses a shared admin credential; see [GOVERNANCE.md](GOVERNANCE.md).
 
-The released `v0.1.0` server is publicly available on Vercel Hobby:
+The released `v0.1.0` server is publicly available:
 
 | Endpoint | URL |
 | --- | --- |
