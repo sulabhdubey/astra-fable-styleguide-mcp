@@ -106,6 +106,8 @@ createServer((req,res)=>{
  if(path==='/health'&&req.method==='GET'){res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({ok:true,version:bundle.manifest.version,protocol:'2026-07-28'}));return;}
  if(path==='/version'&&req.method==='GET'){res.writeHead(200,{'content-type':'application/json'}).end(JSON.stringify({version:bundle.manifest.version}));return;}
  if(host==='127.0.0.1'){if(!validateHost(req,res)||!validateOrigin(req,res))return;} else if(!publicHeadersAllowed(req,res))return;
+ if(path==='/'&&req.method==='GET'){res.writeHead(302,{'location':'https://sulabhdubey.github.io/astra-fable-styleguide-mcp/','cache-control':'no-store'}).end();return;}
+ if(path==='/mcp'&&req.method==='GET'&&String(req.headers.accept??'').includes('text/html')){res.writeHead(302,{'location':'https://github.com/sulabhdubey/astra-fable-styleguide-mcp#production-mcp','cache-control':'no-store'}).end();return;}
  if(!path.startsWith('/mcp')){res.writeHead(404).end();return;}
  if(!req.method){res.writeHead(400).end('Missing HTTP method');return;}
  if(!req.url){res.writeHead(400).end('Missing request URL');return;}

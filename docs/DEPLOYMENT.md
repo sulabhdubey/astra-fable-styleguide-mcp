@@ -24,6 +24,8 @@ curl -i https://astra-fable-styleguide-mcp.vercel.app/health
 curl -i https://astra-fable-styleguide-mcp.vercel.app/version
 ```
 
+Opening the deployment root in a browser redirects to the human documentation. A browser visit to `/mcp` redirects to the client setup instructions, while protocol clients continue to use the same endpoint. Configure an MCP client with `https://astra-fable-styleguide-mcp.vercel.app/mcp`.
+
 An MCP `server/discover` request with the `2026-07-28` version header, method header, and client metadata should advertise `2026-07-28`. The SDK also supports older clients through the legacy `initialize` handshake, which negotiates a 2025 revision. Public `tools/list` must contain only the eight read and compliance tools listed in the README.
 
 For another Node 22-capable container host, use the root `Dockerfile`. The service exposes `/health`, `/version`, and `/mcp`.
