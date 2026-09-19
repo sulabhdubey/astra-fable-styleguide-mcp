@@ -59,7 +59,10 @@ test('local Ollama proposal schema lists existing canonical change paths',async(
   const agent=new OllamaAdapter('astra','local-model',createOllamaInvoker({fetchImpl}));
   const referenceSpec={tokens:{radius:{md:{$value:'8px'}}},components:{button:{id:'button',tokens:{radius:'{radius.md}'}}}};
   await agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec});
-  assert.deepEqual(body.format.properties.changes.items.properties.path.enum,['tokens.radius.md.$value','components.button.tokens.radius']);
+  const pathSchema=body.format.properties.changes.items.properties.path;
+  assert.deepEqual(pathSchema.anyOf[0].enum,['tokens.radius.md.$value','components.button.tokens.radius']);
+  assert.match('tokens.semantic.border.invalid',new RegExp(pathSchema.anyOf[1].pattern));
+  assert.match('components.button.tokens.invalidBorder',new RegExp(pathSchema.anyOf[1].pattern));
 });
 
 test('provider accepts governed accessibility additions and Ollama exposes their paths',async()=>{
@@ -70,13 +73,40 @@ test('provider accepts governed accessibility additions and Ollama exposes their
   const agent=new OllamaAdapter('astra','local-model',createOllamaInvoker({fetchImpl}));
   const result=await agent.generateProposal({brief:'Add explicit field error guidance',criteria:['accessibility'],baseVersion:'0.1.0',referenceSpec});
   assert.equal(result.changes[0].path,'accessibility.rules');
-  const paths=body.format.properties.changes.items.properties.path.enum;
+  const paths=body.format.properties.changes.items.properties.path.anyOf[0].enum;
   for(const path of ['accessibility.rules','accessibility.contrastPairs','patterns.form.rules','components.input.accessibility.errorTextRequired','components.input.accessibility.errorAssociation'])assert.ok(paths.includes(path),path);
 });
 
 test('provider proposal rejects an unknown path before cross-review',async()=>{
   const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes:[{path:'tokens/radius/md/$value',value:'12px'}]}));
   await assert.rejects(agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec:{tokens:{radius:{md:{$value:'8px'}}}}}),/Unknown proposal change path/);
+});
+
+test('provider accepts a complete new semantic token and component mapping',async()=>{
+  const referenceSpec={tokens:{semantic:{border:{default:{$type:'color',$value:'{color.slate.200}'}}}},components:{input:{id:'input',tokens:{border:'{semantic.border.default}'}}}};
+  const changes=[
+    {path:'tokens.semantic.border.invalid',value:{$type:'color',$value:'{color.red.600}'}},
+    {path:'components.input.tokens.invalidBorder',value:'{semantic.border.invalid}'}
+  ];
+  const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes}));
+  const result=await agent.generateProposal({brief:'Define invalid input state',criteria:['semantic tokens'],baseVersion:'0.1.0',referenceSpec});
+  assert.deepEqual(result.changes.map(change=>change.path),changes.map(change=>change.path));
+});
+
+test('provider rejects incomplete, nested, and unsafe new paths',async()=>{
+  const referenceSpec={tokens:{semantic:{border:{default:{$type:'color',$value:'{color.slate.200}'}}}},components:{input:{id:'input',tokens:{border:'{semantic.border.default}'}}}};
+  for(const change of [
+    {path:'tokens.semantic.border.invalid',value:'{color.red.600}'},
+    {path:'tokens.semantic.border.invalid.$value',value:'{color.red.600}'},
+    {path:'tokens.semantic.border.__proto__',value:{$type:'color',$value:'red'}},
+    {path:'tokens.semantic.border.constructor',value:{$type:'color',$value:'red'}},
+    {path:'tokens.semantic.border.default.extra',value:{$type:'color',$value:'red'}},
+    {path:'components.input.tokens.invalidBorder',value:'#ff0000'},
+    {path:'components.missing.tokens.invalidBorder',value:'{semantic.border.invalid}'}
+  ]){
+    const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes:[change]}));
+    await assert.rejects(agent.generateProposal({brief:'Define invalid input state',criteria:['semantic tokens'],baseVersion:'0.1.0',referenceSpec}),/Unknown proposal change path/,change.path);
+  }
 });
 
 test('provider failure leaves governed proposal state untouched',async()=>{

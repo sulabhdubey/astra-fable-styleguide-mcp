@@ -7,13 +7,24 @@ export type AgentInvoker = (request:{role:string;model:string;task:AgentTask;pay
 
 function assertString(value:unknown,label:string):string{if(typeof value!=='string'||!value.trim())throw new Error(`Provider returned invalid ${label}`);return value;}
 function assertStringArray(value:unknown,label:string):string[]{if(!Array.isArray(value)||value.some(v=>typeof v!=='string'))throw new Error(`Provider returned invalid ${label}`);return value as string[];}
+function permittedNewPath(referenceSpec:unknown,path:string,value:unknown):boolean{
+  if(path.split('.').some(segment=>['__proto__','prototype','constructor'].includes(segment)))return false;
+  const token=/^tokens(?:\.[A-Za-z][A-Za-z0-9_-]*){2,}$/.exec(path);
+  if(token){
+    const parent=path.slice(0,path.lastIndexOf('.'));
+    const parentValue=getPath(referenceSpec,parent);
+    return isRecord(parentValue)&&!('$value' in parentValue)&&isRecord(value)&&typeof value.$type==='string'&&value.$type.trim().length>0&&'$value' in value;
+  }
+  const mapping=/^components\.([A-Za-z0-9_-]+)\.tokens\.([A-Za-z0-9_-]+)$/.exec(path);
+  return Boolean(mapping&&isRecord(getPath(referenceSpec,`components.${mapping[1]}.tokens`))&&typeof value==='string'&&/^\{[A-Za-z0-9_.-]+\}$/.test(value));
+}
 function normalizeProposal(value:unknown,role:string,baseVersion:string,referenceSpec?:unknown,previousId?:string):DesignProposal{
   if(!isRecord(value))throw new Error('Provider proposal must be an object');
   const rawChanges=value.changes;if(!Array.isArray(rawChanges)||rawChanges.length===0)throw new Error('Provider proposal must contain at least one change');
   const changes=rawChanges.map((change,i)=>{if(!isRecord(change))throw new Error(`Invalid change at ${i}`);if(!('value' in change)||change.value===undefined)throw new Error(`Provider returned invalid changes[${i}].value`);return {path:assertString(change.path,`changes[${i}].path`),value:deepClone(change.value),...(typeof change.rationale==='string'?{rationale:change.rationale}:{})};});
   if(referenceSpec!==undefined)for(const change of changes){
     const guidance=/^components\.([A-Za-z0-9_-]+)\.accessibility\.(errorTextRequired|errorAssociation)$/.exec(change.path);
-    if(getPath(referenceSpec,change.path)===undefined&&!(guidance&&isRecord(getPath(referenceSpec,`components.${guidance[1]}.accessibility`))))throw new Error(`Unknown proposal change path: ${change.path}`);
+    if(getPath(referenceSpec,change.path)===undefined&&!(guidance&&isRecord(getPath(referenceSpec,`components.${guidance[1]}.accessibility`)))&&!permittedNewPath(referenceSpec,change.path,change.value))throw new Error(`Unknown proposal change path: ${change.path}`);
   }
   return {id:previousId??(typeof value.id==='string'&&value.id?value.id:`PROP-${role}-${crypto.randomUUID()}`),author:role,baseVersion,summary:assertString(value.summary,'summary'),changes,tradeoffs:Array.isArray(value.tradeoffs)?assertStringArray(value.tradeoffs,'tradeoffs'):[],unresolved:Array.isArray(value.unresolved)?assertStringArray(value.unresolved,'unresolved'):[]};
 }
@@ -41,7 +52,7 @@ export class AnthropicAdapter extends ConfigurableAgent {constructor(id:string,m
 export class OllamaAdapter extends ConfigurableAgent {constructor(id:string,model:string,invoke:AgentInvoker){super(id,{provider:'ollama',model},invoke);}}
 
 function taskPrompt(request:{role:string;model:string;task:AgentTask;payload:unknown}):string{
-  const shared=`You are the ${request.role.toUpperCase()} role in a governed two-agent design-system consensus process. Your counterpart is independent. Return ONLY one valid JSON object, with no Markdown fences and no commentary. Never claim a test ran. Prefer accessibility, semantic tokens, consistency, maintainability, and explicit tradeoffs. Use existing paths in referenceSpec. Permitted design paths include tokens.*, components.<id>.*, accessibility.rules, accessibility.contrastPairs, and patterns.<id>.rules. You may add components.<id>.accessibility.errorTextRequired or errorAssociation when the component already has an accessibility object. For accessibility and pattern lists, preserve every existing entry in its original order and append new entries. Do not modify version/status/governance. When changing an existing token leaf, target its .$value path.\n`;
+  const shared=`You are the ${request.role.toUpperCase()} role in a governed two-agent design-system consensus process. Your counterpart is independent. Return ONLY one valid JSON object, with no Markdown fences and no commentary. Never claim a test ran. Prefer accessibility, semantic tokens, consistency, maintainability, and explicit tradeoffs. Use existing paths in referenceSpec or add a complete token leaf under an existing token group with both $type and $value. A new component token mapping under an existing component.tokens object must reference a token. Permitted design paths include tokens.*, components.<id>.*, accessibility.rules, accessibility.contrastPairs, and patterns.<id>.rules. You may add components.<id>.accessibility.errorTextRequired or errorAssociation when the component already has an accessibility object. For accessibility and pattern lists, preserve every existing entry in its original order and append new entries. Do not modify version/status/governance. When changing an existing token leaf, target its .$value path.\n`;
   if(request.task==='proposal')return shared+`TASK: Produce an independent proposal before seeing the counterpart's proposal. JSON shape: {"summary":"...","changes":[{"path":"tokens....$value","value":<json>,"rationale":"..."}],"tradeoffs":["..."],"unresolved":["..."]}. Include at least one change and keep the proposal focused. INPUT: ${JSON.stringify(request.payload)}`;
   if(request.task==='critique')return shared+`TASK: Critique the counterpart proposal against the product brief, criteria, and referenceSpec. JSON shape: {"objections":[{"path":"...","reason":"...","severity":"blocking|warning"}],"acceptedPaths":["..."]}. Objection paths must occur in the proposed changes or exist in referenceSpec. acceptedPaths must come from the proposed changes and must not include a path with a blocking objection. Blocking objections should explain a concrete correction or measurable concern; do not invent accessibility failures. INPUT: ${JSON.stringify(request.payload)}`;
   return shared+`TASK: Revise your own proposal in response to the counterpart critique. Preserve useful accepted choices, resolve blocking objections where justified, and actively seek convergence without sacrificing deterministic requirements. JSON shape: {"summary":"...","changes":[{"path":"...","value":<json>,"rationale":"..."}],"tradeoffs":["..."],"unresolved":["..."]}. INPUT: ${JSON.stringify(request.payload)}`;
@@ -81,7 +92,8 @@ function ollamaFormat(request:{task:AgentTask;payload:unknown}):Record<string,un
     return {type:'object',properties:{reviews:{type:'object',properties:Object.fromEntries(paths.map(path=>[path,verdict])),required:paths,additionalProperties:false}},required:['reviews'],additionalProperties:false};
   }
   const paths=ollamaChangePaths(request);
-  const pathSchema=paths.length?{type:'string',enum:paths}:{type:'string'};
+  const newLeafPattern='^(?:tokens(?:\\.[A-Za-z][A-Za-z0-9_-]*){2,}|components\\.[A-Za-z0-9_-]+\\.tokens\\.[A-Za-z0-9_-]+)$';
+  const pathSchema=paths.length?{anyOf:[{type:'string',enum:paths},{type:'string',pattern:newLeafPattern}]}:{type:'string'};
   return {type:'object',properties:{summary:{type:'string'},changes:{type:'array',minItems:1,items:{type:'object',properties:{path:pathSchema,value:{},rationale:{type:'string'}},required:['path','value']}},tradeoffs:stringArray,unresolved:stringArray},required:['summary','changes','tradeoffs','unresolved']};
 }
 function ollamaPrompt(request:{role:string;model:string;task:AgentTask;payload:unknown}):string{
