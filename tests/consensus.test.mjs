@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {runConsensus,approve,approvalsMatch,approvalsStillValid,canRelease,sha256} from '../dist/packages/consensus-engine/src/index.js';
+import {runConsensus,mergeProposals,approve,approvalsMatch,approvalsStillValid,canRelease,sha256} from '../dist/packages/consensus-engine/src/index.js';
 import {MockAgent} from '../dist/packages/provider-adapters/src/index.js';
 const context={brief:'A serious analytics UI',criteria:['accessibility','consistency'],baseVersion:'0.1.0'};
 function proposal(id,author,value){return {id,author,baseVersion:'0.1.0',summary:'x',changes:[{path:'tokens.radius',value}],tradeoffs:[],unresolved:[]};}
@@ -18,3 +18,16 @@ test('a change made after a clear critique needs another cross-review',async()=>
 test('deadlock terminates at configured round limit',async()=>{const a=new MockAgent('astra',{initial:proposal('A','astra','8px')});const f=new MockAgent('fable',{initial:proposal('F','fable','12px')});const r=await runConsensus({astra:a,fable:f,context,maxRounds:2});assert.equal(r.status,'DEADLOCK');assert.equal(r.rounds,2);assert.ok(r.conflicts.length>0);});
 test('same hash approvals and human gate are enforced',async()=>{const candidate={baseVersion:'0.1.0',changes:[{path:'a',value:1}]};const hash=await sha256(candidate);const approvals=[approve('astra',hash),approve('fable',hash)];assert.equal(approvalsMatch(hash,approvals),true);assert.equal(canRelease({candidateHash:hash,approvals,humanApproved:false}),false);assert.equal(canRelease({candidateHash:hash,approvals,humanApproved:true}),true);});
 test('candidate mutation invalidates approvals',async()=>{const c={baseVersion:'0.1.0',changes:[{path:'a',value:1}]};const h=await sha256(c);const approvals=[approve('astra',h),approve('fable',h)];const mutated={...c,changes:[{path:'a',value:2}]};assert.equal(await approvalsStillValid(mutated,approvals),false);});
+test('parent and child change paths conflict across independent roles',()=>{
+  const a={...proposal('A','astra',1),changes:[{path:'components.input.accessibility.errorAssociation',value:'Associate the error.'}]};
+  const f={...proposal('F','fable',1),changes:[{path:'components.input.accessibility',value:{errorAssociation:'Different guidance'}}]};
+  const merged=mergeProposals(a,f);
+  assert.equal(merged.conflicts.length,1);
+  assert.equal(merged.conflicts[0].path,'components.input.accessibility');
+});
+test('duplicate paths inside one role do not disappear during merge',()=>{
+  const a={...proposal('A','astra',1),changes:[{path:'tokens.radius.md.$value',value:'10px'},{path:'tokens.radius.md.$value',value:'12px'}]};
+  const f={...proposal('F','fable',1),changes:[{path:'tokens.color.red.600.$value',value:'#B91C1C'}]};
+  const merged=mergeProposals(a,f);
+  assert.ok(merged.conflicts.some(conflict=>conflict.path==='tokens.radius.md.$value'));
+});

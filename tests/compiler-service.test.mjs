@@ -30,6 +30,24 @@ test('deterministic candidate evaluation rejects unsupported or non-leaf changes
   service.createProposal('BAD',bad,'secret','secret');const result=service.evaluateProposal('BAD','secret','secret');assert.equal(result.valid,false);assert.match(result.deterministicErrors[0],/Unsupported change path/);
 });
 
+test('governed candidate rejects whole component object replacement and overlapping paths',async()=>{
+  const b=await loadBundle();
+  const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});
+  const accessibility=b.components.find(component=>component.id==='input').accessibility;
+  const parent={path:'components.input.accessibility',value:{...accessibility,errorAssociation:'Associate a visible error message with the input.'}};
+  const child={path:'components.input.accessibility.errorAssociation',value:'Use aria-describedby.'};
+  const base={author:'astra',baseVersion:'0.1.0',summary:'invalid structure',tradeoffs:[],unresolved:[]};
+  for(const [id,changes,reason] of [
+    ['OBJECT-REPLACE',[parent],/object replacement/i],
+    ['OVERLAP',[parent,child],/overlap/i]
+  ]){
+    service.createProposal(id,{...base,id,changes},'admin','admin');
+    const result=service.evaluateProposal(id,'admin','admin');
+    assert.equal(result.valid,false,id);
+    assert.ok(result.deterministicErrors.some(error=>reason.test(error)),id);
+  }
+});
+
 test('release requires a credential distinct from ordinary admin authorization',async()=>{
   const b=await loadBundle();const service=new StyleService({...b,principles:{},patterns:[],antiPatterns:{},decisions:{}});const mk=(id,author)=>({id,author,baseVersion:'0.2.0',summary:'same',changes:[{path:'tokens.radius.md.$value',value:'12px'}],tradeoffs:[],unresolved:[]});
   service.createProposal('RA',mk('RA','astra'),'admin','admin');service.createProposal('RF',mk('RF','fable'),'admin','admin');const c=await service.startConsensusRound('RA','RF','admin','admin');service.approveCandidate(c.candidateHash,'astra','admin','admin');service.approveCandidate(c.candidateHash,'fable','admin','admin');assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin',undefined,'human-secret'),/Separate human approval credential/);assert.throws(()=>service.publishRelease(c.candidateHash,true,'admin','admin','admin','admin'),/Separate human approval credential/);assert.equal(service.publishRelease(c.candidateHash,true,'admin','admin','human-secret','human-secret').status,'released');
