@@ -25,6 +25,12 @@ These runs used a worktree with uncommitted adapter code and are **observed expl
 | qwen2.5:7b-instruct / llama3.1:8b, 1 | `INVALID` | With one verdict per path, a proposal used slash notation and deterministic evaluation rejected it. |
 | qwen2.5:7b-instruct / llama3.1:8b, 2 | `DEADLOCK` | With existing-path enums, proposals used valid paths but disagreed on the value shape. No candidate was created. |
 
-Some model critiques claimed that the radius change affected contrast without evidence. Treat those as model assertions, not verified accessibility findings. A provider-backed successful consensus candidate, stronger critique grounding, and a release-grade repeat remain open work.
+Some model critiques claimed that the radius change affected contrast without evidence. Treat those as model assertions, not verified accessibility findings. Stronger critique grounding and a release-grade repeat remain open work.
 
-These observations drove stricter local output schemas and a discovered evaluator gap: a token leaf's declared `$type` was not enforcing the shape of its `$value`. That evaluator repair is separate required work before any provider result can count as a valid release candidate.
+These observations drove stricter local output schemas and an evaluator repair: a token leaf's declared `$type` now constrains the shape of its `$value`. The later integration proof below ran after that repair.
+
+## Bounded integration proof, 2026-09-19
+
+On clean development commit `d6224bd918be07d56e21f7a1eed686a6581026b5`, a one-round local run using `gemma3:4b` and `llama3.2:3b` returned `CONSENSUS`. Both models independently proposed `tokens.radius.md.$value = "12px"`, then each reviewed and accepted the other's proposal. Deterministic evaluation returned no errors or conflicts. The resulting candidate SHA-256 was `005dce68960de90bf8a452643ecfc506e386bd96030021282bdc312d6a585a3e`; recomputing the hash from the recorded candidate matched. The tracked worktree and `/spec` remained unchanged, and no release was published. No paid provider call was made.
+
+The trial brief explicitly requested this path and value. This is evidence that two distinct local providers can complete the governed integration path, not evidence that they independently discovered a useful design change or that the proposed radius is suitable for v0.2.0. The candidate has no human release approval and is not a v0.2.0 canonical spec proposal.
