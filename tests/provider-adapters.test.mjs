@@ -82,6 +82,18 @@ test('provider proposal rejects an unknown path before cross-review',async()=>{
   await assert.rejects(agent.generateProposal({brief:'Softer settings controls',criteria:['consistency'],baseVersion:'0.1.0',referenceSpec:{tokens:{radius:{md:{$value:'8px'}}}}}),/Unknown proposal change path/);
 });
 
+test('provider rejects whole component replacements and overlapping change paths before cross-review',async()=>{
+  const referenceSpec={components:{input:{id:'input',accessibility:{focusVisible:true}}}};
+  for(const changes of [
+    [{path:'components.input.accessibility',value:{focusVisible:true,errorAssociation:'Associated text'}}],
+    [{path:'components.input.accessibility.errorAssociation',value:'Associated text'},{path:'components.input.accessibility.errorAssociation',value:'Other text'}],
+    [{path:'components.input.accessibility',value:'a'},{path:'components.input.accessibility-foo',value:'b'},{path:'components.input.accessibility.errorAssociation',value:'c'}]
+  ]){
+    const agent=new ConfigurableAgent('fable',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes}));
+    await assert.rejects(agent.generateProposal({brief:'Improve input errors',criteria:['accessibility'],baseVersion:'0.1.0',referenceSpec}),/component object replacement|overlapping change paths/i);
+  }
+});
+
 test('provider accepts a complete new semantic token and component mapping',async()=>{
   const referenceSpec={tokens:{semantic:{border:{default:{$type:'color',$value:'{color.slate.200}'}}}},components:{input:{id:'input',tokens:{border:'{semantic.border.default}'}}}};
   const changes=[

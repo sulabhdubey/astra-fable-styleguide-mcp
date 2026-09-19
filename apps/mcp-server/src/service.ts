@@ -73,6 +73,13 @@ export class StyleService {
  private evaluateCandidate(candidate:Candidate):string[]{
    if(candidate.baseVersion!==String(this.bundle.manifest.version??''))return [`Candidate baseVersion ${candidate.baseVersion} does not match canonical version ${String(this.bundle.manifest.version??'')}`];
    const draft={tokens:deepClone(this.bundle.tokens),components:Object.fromEntries(this.bundle.components.map(c=>[String(c.id),deepClone(c)])),accessibility:deepClone(this.bundle.accessibility),patterns:Object.fromEntries(this.bundle.patterns.filter(isRecord).map(p=>[String(p.id),deepClone(p)]))};const errors:string[]=[];
+   const paths=new Set<string>();
+   for(const change of candidate.changes){if(paths.has(change.path))errors.push(`Candidate change paths overlap: ${change.path}`);paths.add(change.path);}
+   for(const path of paths)for(let dot=path.lastIndexOf('.');dot>0;dot=path.lastIndexOf('.',dot-1)){
+     const parent=path.slice(0,dot);
+     if(paths.has(parent))errors.push(`Candidate change paths overlap: ${parent} and ${path}`);
+   }
+   if(errors.length)return errors;
    for(const change of candidate.changes){
      const accessibilityList=change.path==='accessibility.rules'||change.path==='accessibility.contrastPairs';
      const patternRules=/^patterns\.[A-Za-z0-9_-]+\.rules$/.test(change.path);
@@ -80,6 +87,7 @@ export class StyleService {
      const componentGuidance=/^components\.[A-Za-z0-9_-]+\.accessibility\.(errorTextRequired|errorAssociation)$/.test(change.path);
      if(!(change.path.startsWith('tokens.')||change.path.startsWith('components.')||accessibilityList||patternRules)){errors.push(`Unsupported change path: ${change.path}`);continue;}
      const existing=getPath(draft,change.path);
+     if(change.path.startsWith('components.')&&isRecord(existing)){errors.push(`Component object replacement is not supported: ${change.path}`);continue;}
      if(change.path.startsWith('tokens.')){
        if(change.path.endsWith('.$value')){if(existing===undefined){errors.push(`Unknown token value path: ${change.path}`);continue;}}
        else if(existing!==undefined||!isRecord(change.value)||typeof change.value.$type!=='string'||!('$value' in change.value)){errors.push(`New token path requires a complete unused leaf: ${change.path}`);continue;}
