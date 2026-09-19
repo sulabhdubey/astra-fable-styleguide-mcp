@@ -45,12 +45,17 @@ test('large invalid input has bounded findings and still fails', async () => {
   assert.ok(result.warnings.some(v => v.includes('capped')));
 });
 
-test('unknown semantic token references fail while canonical and app-local variables pass', async () => {
+test('unknown canonical token references fail while valid and app-local variables pass', async () => {
   const { tokens } = await loadBundle();
-  const source = '<style>\n/* var(--semantic-text-missing) */\n.x { color: var(--semantic-text-primary); background: var(--semantic-surface-priamry); border-color: var(--app-brand); }\n</style>';
+  const source = '<style>\n/* var(--semantic-text-missing) */\n.x { color: var(--semantic-text-primary); background: var(--semantic-surface-priamry); border-color: var(--app-brand); padding: var(--space-4); margin: var(--space-999); border-radius: var(--radius-mdd); outline-color: var(--color-blue-999); }\n</style>';
   const result = checkStyleCompliance(source, tokens);
   assert.equal(result.status, 'fail');
-  assert.deepEqual(result.violations.map(v => [v.ruleId, v.match, v.line]), [['STYLE-CSS-TOKEN-001', 'var(--semantic-surface-priamry', 3]]);
-  assert.ok(result.checksPerformed.some(check => check.includes('semantic token')));
+  assert.deepEqual(result.violations.map(v => [v.ruleId, v.match, v.line]), [
+    ['STYLE-CSS-TOKEN-001', 'var(--semantic-surface-priamry', 3],
+    ['STYLE-CSS-TOKEN-001', 'var(--space-999', 3],
+    ['STYLE-CSS-TOKEN-001', 'var(--radius-mdd', 3],
+    ['STYLE-CSS-TOKEN-001', 'var(--color-blue-999', 3],
+  ]);
+  assert.ok(result.checksPerformed.some(check => check.includes('Canonical token')));
   assert.ok(result.limitations.some(limit => limit.includes('app-local')));
 });

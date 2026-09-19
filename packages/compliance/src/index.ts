@@ -75,14 +75,17 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
   const maxFindings = 200;
   const starts = lineStarts(input);
   const allowed = new Set<string>();
-  const semanticNames = new Set<string>();
+  const canonicalNames = new Set<string>();
+  const canonicalRoots = new Set<string>();
   for (const { path } of flattenTokenLeaves(tokens)) {
-    if (path.startsWith('semantic.')) semanticNames.add(`--${path.replace(/\./g, '-')}`);
+    canonicalNames.add(`--${path.replace(/\./g, '-')}`);
+    canonicalRoots.add(path.split('.')[0]!);
     try {
       const value = resolveToken(tokens, path);
       if (typeof value === 'string') allowed.add(value.toLowerCase());
     } catch { /* Canonical validation reports invalid references separately. */ }
   }
+  const canonicalPrefixes = [...canonicalRoots].map(root => `--${root}-`);
   const spans = sourceSpans(input);
   const violations: ComplianceViolation[] = [];
   let truncated = false;
@@ -103,8 +106,10 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
     for (const match of source.matchAll(/(?<![\w.-])\d+(?:\.\d+)?px\b/g)) {
       if (!allowed.has(match[0]!.toLowerCase())) emit('STYLE-SPACE-001', 'Raw pixel value is not present in the approved token set', match);
     }
-    for (const match of source.matchAll(/var\(\s*(--semantic-[\w-]+)/g)) {
-      if (!semanticNames.has(match[1]!)) emit('STYLE-CSS-TOKEN-001', 'Unknown canonical semantic token reference', match);
+    for (const match of source.matchAll(/var\(\s*(--[\w-]+)/g)) {
+      const name = match[1]!;
+      const isCanonicalNamespace = canonicalRoots.has(name.slice(2)) || canonicalPrefixes.some(prefix => name.startsWith(prefix));
+      if (isCanonicalNamespace && !canonicalNames.has(name)) emit('STYLE-CSS-TOKEN-001', 'Unknown canonical token reference', match);
     }
   }
   violations.sort((a, b) => a.line - b.line || a.column - b.column || a.ruleId.localeCompare(b.ruleId));
@@ -117,8 +122,8 @@ export function checkStyleCompliance(input: string, tokens: Record<string, unkno
     truncated,
     violations,
     warnings,
-    suggestedFixes: [...new Set(violations.map(v => `Replace ${v.match} with an approved semantic token.`))],
-    checksPerformed: ['Canonical hex color literals', 'Pixel literals against resolved token values', 'Canonical semantic token references in CSS var()'],
-    limitations: ['Textual CSS scan only; does not parse all CSS, JavaScript style objects, visual output, interaction states, contrast, or accessibility.', 'Only the canonical --semantic-* namespace is checked; app-local CSS variables are outside this check.'],
+    suggestedFixes: [...new Set(violations.map(v => `Replace ${v.match} with an approved canonical token.`))],
+    checksPerformed: ['Canonical hex color literals', 'Pixel literals against resolved token values', 'Canonical token references in CSS var()'],
+    limitations: ['Textual CSS scan only; does not parse all CSS, JavaScript style objects, visual output, interaction states, contrast, or accessibility.', 'Only namespaces derived from canonical token roots are checked; app-local CSS variables are outside this check.'],
   };
 }
