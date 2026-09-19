@@ -24,8 +24,8 @@ test('local audit survives restart, detects edits, and contains no proposal valu
     assert.throws(() => service.createProposal('CIRCULAR', circular, 'admin-private-credential', 'admin-private-credential'), /circular/i);
     assert.equal(ledger.status().eventCount, 0);
     const base = { baseVersion: '0.1.0', summary: 'private proposal text', tradeoffs: [], unresolved: [] };
-    service.createProposal('AUD-A', { ...base, id: 'AUD-A', author: 'astra', changes: [{ path: 'tokens.radius.md.$value', value: '8px' }] }, 'admin-private-credential', 'admin-private-credential');
-    service.createProposal('AUD-F', { ...base, id: 'AUD-F', author: 'fable', changes: [{ path: 'tokens.radius.md.$value', value: '8px' }] }, 'admin-private-credential', 'admin-private-credential');
+    service.createProposal('AUD-A', { ...base, id: 'AUD-A', author: 'astra', changes: [{ path: 'tokens.radius.md.$value', value: '12px' }] }, 'admin-private-credential', 'admin-private-credential');
+    service.createProposal('AUD-F', { ...base, id: 'AUD-F', author: 'fable', changes: [{ path: 'tokens.radius.md.$value', value: '12px' }] }, 'admin-private-credential', 'admin-private-credential');
     const round = await service.startConsensusRound('AUD-A', 'AUD-F', 'admin-private-credential', 'admin-private-credential');
     assert.equal(round.status, 'candidate_ready');
     assert.throws(() => service.approveCandidate(round.candidateHash, 'astra', 'admin-private-credential', 'admin-private-credential'), /Role approval credential/);
@@ -47,7 +47,7 @@ test('local audit survives restart, detects edits, and contains no proposal valu
     const digest = value => createHash('sha256').update(value).digest('hex');
     assert.deepEqual(runEvent.proposalIdHashes, [digest('AUD-A'), digest('AUD-F')]);
     assert.equal(runEvent.source, 'manual');
-    assert.equal(bytes.includes('8px'), false);
+    assert.equal(bytes.includes('12px'), false);
     assert.equal(bytes.includes('private proposal text'), false);
     assert.equal(bytes.includes('private-credential'), false);
     assert.equal(new AuditLedger(path).status().headHash, ledger.status().headHash);

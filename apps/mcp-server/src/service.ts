@@ -1,6 +1,6 @@
 import { evaluateSpec } from '../../../packages/evaluator/src/index.js';
 import { approve, approvalsMatch, mergeProposals, runConsensus, sha256, type Approval, type Candidate, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
-import { addPath, deepClone, getPath, isRecord, setPath, tokenReference } from '../../../packages/style-spec/src/index.js';
+import { addPath, canonicalize, deepClone, getPath, isRecord, setPath, tokenReference } from '../../../packages/style-spec/src/index.js';
 import { checkStyleCompliance } from '../../../packages/compliance/src/index.js';
 import { compareSnapshots, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
 import { auditIdentifier, type AuditEvent } from '../../../packages/governance-audit/src/index.js';
@@ -82,6 +82,7 @@ export class StyleService {
      }else if(existing===undefined&&(!/^components\.[^.]+\.tokens\.[^.]+$/.test(change.path)||tokenReference(change.value)===null)){
        errors.push(`New component token mapping requires a token reference: ${change.path}`);continue;
      }
+     if(existing!==undefined&&canonicalize(existing)===canonicalize(change.value)){errors.push(`Candidate change does not change canonical value: ${change.path}`);continue;}
      try{if(existing===undefined)addPath(draft as unknown as Record<string,unknown>,change.path,change.value);else setPath(draft as unknown as Record<string,unknown>,change.path,change.value);}catch(error){errors.push(error instanceof Error?error.message:String(error));}
    }
    if(errors.length)return errors;
