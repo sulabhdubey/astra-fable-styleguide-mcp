@@ -84,12 +84,25 @@ export function resolveToken(root: unknown, path: string, stack: string[] = []):
   return resolveToken(root, ref, [...stack, path]);
 }
 
+function valueMatchesType(type:string,value:JsonValue):boolean{
+  if(type==='number')return typeof value==='number'&&Number.isFinite(value);
+  if(type==='cubicBezier')return Array.isArray(value)&&value.length===4&&value.every(item=>typeof item==='number'&&Number.isFinite(item));
+  if(type==='dimension')return typeof value==='string'&&/^-?(?:\d+|\d*\.\d+)(?:px|rem|em|%)$/.test(value);
+  if(type==='duration')return typeof value==='string'&&/^-?(?:\d+|\d*\.\d+)(?:ms|s)$/.test(value);
+  if(type==='color')return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);
+  if(['fontFamily','shadow','string'].includes(type))return typeof value==='string'&&value.trim().length>0;
+  return false;
+}
+
 export function validateTokenGraph(root: unknown): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   for (const { path, token } of flattenTokenLeaves(root)) {
     const ref = tokenReference(token.$value);
     if (ref && getPath(root, ref) === undefined) issues.push({ code:'STYLE-TOKEN-001', path, message:`Missing token reference ${ref}`, severity:'error' });
-    try { resolveToken(root, path); } catch (error) {
+    try {
+      const resolved=resolveToken(root,path);
+      if(typeof token.$type==='string'&&!valueMatchesType(token.$type,resolved))issues.push({code:'STYLE-TOKEN-004',path,message:`Resolved value does not match declared token type ${token.$type}`,severity:'error'});
+    } catch (error) {
       issues.push({ code:'STYLE-TOKEN-002', path, message:error instanceof Error ? error.message : String(error), severity:'error' });
     }
   }
