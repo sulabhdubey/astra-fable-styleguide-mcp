@@ -5,7 +5,8 @@ import { createMcpHandler, McpServer } from '@modelcontextprotocol/server';
 import { localhostHostValidation, localhostOriginValidation, toNodeHandler } from '@modelcontextprotocol/node';
 import * as z from 'zod/v4';
 import { StyleService, type SpecBundle } from './service.js';
-import { mergeObjects } from '../../../packages/style-spec/src/index.js';
+import { canonicalize, mergeObjects } from '../../../packages/style-spec/src/index.js';
+import { verifySnapshot, type SnapshotIndexEntry, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
 import { createConfiguredAgent } from '../../../packages/provider-adapters/src/index.js';
 
 async function json(path:string){return JSON.parse(await readFile(path,'utf8')) as Record<string,unknown>;}
@@ -19,7 +20,36 @@ async function loadBundle():Promise<SpecBundle>{
  for(const name of (decisionIndex.decisions as string[])) decisions[name]=await text(resolve(cwd,'decisions',name));
  return {manifest:await json(resolve(spec,'manifest.json')),principles:await json(resolve(spec,'principles.json')),tokens,components,patterns,antiPatterns:await json(resolve(spec,'anti-patterns/common.json')),accessibility:await json(resolve(spec,'accessibility/rules.json')),decisions};
 }
-const bundle=await loadBundle(); const service=new StyleService(bundle);
+async function loadSpecFiles(dir:string,prefix=''):Promise<Record<string,unknown>>{
+ const files:Record<string,unknown>={};
+ for(const entry of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){
+   if(entry.isDirectory())Object.assign(files,await loadSpecFiles(resolve(dir,entry.name),`${prefix}${entry.name}/`));
+   else if(entry.isFile()&&entry.name.endsWith('.json'))files[`${prefix}${entry.name}`]=await json(resolve(dir,entry.name));
+ }
+ return files;
+}
+async function loadSnapshots():Promise<Map<string,StyleSnapshot>>{
+ const cwd=process.cwd(),index=await json(resolve(cwd,'releases/manifest.json'));
+ if(!Array.isArray(index.releases))throw new Error('Invalid release snapshot index');
+ const snapshots=new Map<string,StyleSnapshot>();
+ for(const raw of index.releases){
+   if(!raw||typeof raw!=='object')throw new Error('Invalid release snapshot entry');
+   const entry=raw as Record<string,unknown>;
+   const version=entry.version,path=entry.path;
+   if(typeof version!=='string'||!/^\d+\.\d+\.\d+$/.test(version)||path!==`${version}-style-spec.json`)throw new Error('Invalid release snapshot metadata');
+   if(snapshots.has(version))throw new Error(`Duplicate release snapshot: ${version}`);
+   const bytes=await readFile(resolve(cwd,'releases',path));
+   const snapshot=verifySnapshot(entry as unknown as SnapshotIndexEntry,bytes);
+   snapshots.set(version,snapshot);
+ }
+ const files=await loadSpecFiles(resolve(cwd,'spec'));
+ const version=String((files['manifest.json'] as Record<string,unknown>).version??'');
+ const current:StyleSnapshot={version,files};
+ const historical=snapshots.get(version);
+ if(historical&&canonicalize(historical.files)!==canonicalize(current.files))throw new Error(`Canonical /spec differs from immutable snapshot ${version}; bump the version before changing /spec`);
+ return snapshots;
+}
+const bundle=await loadBundle(); const service=new StyleService(bundle,await loadSnapshots());
 const asText=(data:unknown)=>({content:[{type:'text' as const,text:JSON.stringify(data,null,2)}]});
 const bearer=(ctx:any)=>ctx.http?.req?.headers.get('authorization')?.replace(/^Bearer\s+/i,'');
 const humanApproval=(ctx:any)=>ctx.http?.req?.headers.get('x-human-approval-token')??undefined;
@@ -37,7 +67,7 @@ function buildServer(){
  server.registerTool('explain_style_decision',{description:'Explain an ADR by id/filename',inputSchema:z.object({id:z.string()})},async({id})=>asText(service.explainDecision(id)));
  server.registerTool('validate_tokens',{description:'Run deterministic validation of the canonical StyleSpec'},async()=>asText(service.validate()));
  server.registerTool('check_style_compliance',{description:'Check CSS in supplied source for canonical color and pixel literals; returns source locations and explicit coverage limits',inputSchema:z.object({input:z.string().max(200000)})},async({input})=>asText(service.checkStyleCompliance(input)));
- server.registerTool('compare_spec_versions',{description:'Compare known StyleSpec versions',inputSchema:z.object({fromVersion:z.string(),toVersion:z.string()})},async({fromVersion,toVersion})=>asText(service.compareSpecVersions(fromVersion,toVersion)));
+ server.registerTool('compare_spec_versions',{description:'Compare known immutable StyleSpec snapshots',inputSchema:z.object({fromVersion:z.string(),toVersion:z.string()})},async({fromVersion,toVersion})=>asText(service.compareSpecVersions(fromVersion,toVersion)));
  if(process.env.MCP_ENABLE_WRITES==='true'){
    server.registerTool('create_style_proposal',{description:'Create a governed style proposal (admin only)',inputSchema:z.object({id:z.string(),proposalJson:z.string()})},async({id,proposalJson},ctx)=>asText(service.createProposal(id,JSON.parse(proposalJson),bearer(ctx),adminToken)));
    server.registerTool('evaluate_style_proposal',{description:'Evaluate a stored style proposal (admin only)',inputSchema:z.object({id:z.string()})},async({id},ctx)=>asText(service.evaluateProposal(id,bearer(ctx),adminToken)));

@@ -36,6 +36,10 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     assert.equal((await client.getStyleManifest()).version, '0.1.0');
     assert.ok(await client.getDesignTokens('space'));
     assert.equal((await client.getComponentRules('button')).id, 'button');
+    const sameVersion = await client.compareSpecVersions('0.1.0', '0.1.0');
+    assert.equal(sameVersion.totalChanges, 0);
+    const unavailable = await client.compareSpecVersions('0.1.0', '0.2.0');
+    assert.deepEqual(unavailable.availableVersions, ['0.1.0']);
     const report = await client.checkStyleCompliance('.x{padding:13px}');
     assert.equal(report.status, 'fail');
     assert.equal(report.violations[0].ruleId, 'STYLE-SPACE-001');

@@ -1,3 +1,10 @@
 {
-  "releases": []
+  "releases": [
+    {
+      "version": "0.1.0",
+      "path": "0.1.0-style-spec.json",
+      "sha256": "2b39b0e85132f3d5467bf6e09b502d00a9d5cd74ea838caaa53a30a68009f64c",
+      "sourceCommit": "4874c7d3b338c69b48435509be122bab495263b6"
+    }
+  ]
 }
