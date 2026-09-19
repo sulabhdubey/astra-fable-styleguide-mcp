@@ -14,6 +14,7 @@ async function freePort() {
 
 test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout: 20000 }, async () => {
   const port = await freePort();
+  const endpoint = `http://127.0.0.1:${port}/mcp`;
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/mcp-server/src/official-server.ts'], {
     cwd: process.cwd(),
     stdio: ['ignore', 'ignore', 'pipe'],
@@ -21,8 +22,8 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
   });
   let stderr = '';
   child.stderr.on('data', chunk => { stderr += String(chunk); });
-  const client = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp` });
-  const legacyClient = new StyleConstitutionClient({ endpoint: `http://127.0.0.1:${port}/mcp`, protocolMode: 'legacy' });
+  const client = new StyleConstitutionClient({ endpoint });
+  const legacyClient = new StyleConstitutionClient({ endpoint, protocolMode: 'legacy' });
   try {
     let ready = false;
     const deadline = Date.now() + 15000;
@@ -31,6 +32,14 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.equal(ready, true, `Server did not become ready: ${stderr.slice(-1000)}`);
+    const browserVisit = await fetch(`http://127.0.0.1:${port}/`, { redirect: 'manual' });
+    assert.equal(browserVisit.status, 302);
+    assert.equal(browserVisit.headers.get('location'), 'https://sulabhdubey.github.io/astra-fable-styleguide-mcp/');
+    const browserMcpVisit = await fetch(endpoint, { headers: { accept: 'text/html' }, redirect: 'manual' });
+    assert.equal(browserMcpVisit.status, 302);
+    assert.equal(browserMcpVisit.headers.get('location'), 'https://github.com/sulabhdubey/astra-fable-styleguide-mcp#production-mcp');
+    const protocolGet = await fetch(endpoint, { headers: { accept: 'application/json' }, redirect: 'manual' });
+    assert.equal(protocolGet.status, 405);
     await client.connect();
     assert.equal(client.protocolEra(), 'modern');
     const { tools } = await client.listTools();
