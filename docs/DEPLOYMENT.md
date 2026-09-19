@@ -1,7 +1,7 @@
 # Deployment
 
 ## GitHub Pages
-Enable Pages with **GitHub Actions** as the source. `.github/workflows/pages.yml` builds the Astro site from `/spec` and deploys `apps/docs/dist`.
+Enable Pages with **GitHub Actions** as the source. `.github/workflows/pages.yml` deploys only through a manual dispatch on `main` with a published, stable release tag such as `v0.2.0`. It verifies that the tag commit is reachable from `main` and that the attached release evidence names that exact commit with completed checks. It then builds the Astro site from the tag's `/spec` and deploys `apps/docs/dist`. A merge to `main` does not change the public documentation site.
 
 ## MCP service
 The public `v0.1.0` MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. The production deployment uses the released `v0.1.0` source at commit `4874c7d3b338c69b48435509be122bab495263b6` and the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset.
@@ -32,4 +32,4 @@ For a public internet deployment, terminate TLS at the platform/reverse proxy, s
 
 ## Future release gate
 
-The GitHub Release Gate runs only through a manual workflow dispatch. It requires the intended version and the exact approved commit SHA; the job checks that SHA against its checkout before verification and publication. The `release-approval` environment remains the separate human approval step. A green main-branch build or Vercel preview does not publish a new release. The v0.1.0 Vercel production branch remains pinned until a later deployment is explicitly approved.
+The GitHub Release Gate runs only through a manual workflow dispatch. It requires the intended version and the exact approved commit SHA; the job checks that SHA against its checkout before verification and publication. The `release-approval` environment remains the separate human approval step. After the approved GitHub Release is published, dispatch Pages with its tag and verify the live site. A green main-branch build or Vercel preview does not publish a new release. The v0.1.0 Vercel production branch remains pinned until a later deployment is explicitly approved.
