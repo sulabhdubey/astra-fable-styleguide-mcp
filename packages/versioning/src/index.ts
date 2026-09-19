@@ -10,8 +10,9 @@ export interface SnapshotIndexEntry { version: string; path: string; sha256: str
 
 export function verifySnapshot(entry: SnapshotIndexEntry, bytes: Uint8Array): StyleSnapshot {
   if (!/^\d+\.\d+\.\d+$/.test(entry.version) || entry.path !== `${entry.version}-style-spec.json` || !/^[0-9a-f]{64}$/.test(entry.sha256) || !/^[0-9a-f]{40}$/.test(entry.sourceCommit)) throw new Error('Invalid release snapshot metadata');
-  if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) throw new Error(`Snapshot hash mismatch: ${entry.version}`);
-  const snapshot = JSON.parse(Buffer.from(bytes).toString()) as StyleSnapshot;
+  const canonicalBytes = Buffer.from(Buffer.from(bytes).toString().replace(/\r\n/g, '\n'));
+  if (createHash('sha256').update(canonicalBytes).digest('hex') !== entry.sha256) throw new Error(`Snapshot hash mismatch: ${entry.version}`);
+  const snapshot = JSON.parse(canonicalBytes.toString()) as StyleSnapshot;
   if (snapshot.version !== entry.version || !isRecord(snapshot.files) || !isRecord(snapshot.files['manifest.json']) || snapshot.files['manifest.json'].version !== entry.version) throw new Error(`Invalid snapshot contents: ${entry.version}`);
   return snapshot;
 }
