@@ -4,7 +4,7 @@
 Enable Pages with **GitHub Actions** as the source. `.github/workflows/pages.yml` deploys only through a manual dispatch on `main` with a published, stable release tag such as `v0.2.0`. It verifies that the tag commit is reachable from `main` and that the attached release evidence names that exact commit with completed checks. It then builds the Astro site from the tag's `/spec` and deploys `apps/docs/dist`. A merge to `main` does not change the public documentation site.
 
 ## MCP service
-The public `v0.1.0` MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. The production deployment uses the released `v0.1.0` source at commit `4874c7d3b338c69b48435509be122bab495263b6` and the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset.
+The public MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. At the time this guide was updated (2026-09-20), production served v0.2.0 from commit `7c1f77ecbf880f59d33e94759ff9976a32c975b1` on `release/v0.2.0`, using the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset. Check `/version` and the Vercel deployment source for the current version and commit.
 
 Set these production environment variables:
 
@@ -30,8 +30,8 @@ An MCP `server/discover` request with the `2026-07-28` version header, method he
 
 For another Node 22-capable container host, use the root `Dockerfile`. The service exposes `/health`, `/version`, and `/mcp`.
 
-For a public internet deployment, terminate TLS at the platform/reverse proxy, set allowed host/origin policy, and add OAuth/resource-server authentication before enabling any mutation tools. Public v0.1.0 operation is intentionally read-oriented.
+For a public internet deployment, terminate TLS at the platform/reverse proxy, set allowed host/origin policy, and add OAuth/resource-server authentication before enabling any mutation tools. Public operation is intentionally read-oriented.
 
 ## Future release gate
 
-The GitHub Release Gate runs only through a manual workflow dispatch. It requires the intended version and the exact approved commit SHA; the job checks that SHA against its checkout before verification and publication. The `release-approval` environment remains the separate human approval step. After the approved GitHub Release is published, dispatch Pages with its tag and verify the live site. A green main-branch build or Vercel preview does not publish a new release. The v0.1.0 Vercel production branch remains pinned until a later deployment is explicitly approved.
+The GitHub Release Gate runs only through a manual workflow dispatch. It requires the intended version and the exact approved commit SHA; the job checks that SHA against its checkout before verification and publication. The `release-approval` environment remains the separate human approval step. After the approved GitHub Release is published, dispatch Pages with its tag and verify the live site. A green main-branch build or Vercel preview does not publish a new release. The Vercel production branch is controlled separately from the GitHub Release and changes only with an explicitly approved production deployment.
