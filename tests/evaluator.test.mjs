@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {loadBundle,loadJson} from './helpers.mjs';
-import {evaluateSpec,contrastRatio} from '../dist/packages/evaluator/src/index.js';import {validateTokenGraph,getPath,setPath,addPath} from '../dist/packages/style-spec/src/index.js';
+import {evaluateSpec,contrastRatio} from '../dist/packages/evaluator/src/index.js';import {validateTokenGraph,getPath,setPath,addPath,mergeObjects} from '../dist/packages/style-spec/src/index.js';
 test('canonical spec passes deterministic evaluation',async()=>{const b=await loadBundle();const r=evaluateSpec(b);assert.equal(r.valid,true,JSON.stringify(r.issues));});
 test('accessibility and pattern records reject duplicate ids and malformed rule lists',async()=>{
   const bundle=await loadBundle();
@@ -26,6 +26,42 @@ test('candidate invalid border contrast rule rejects a low-contrast state cue',a
   bundle.tokens.semantic.border.danger.$value='{color.slate.200}';
   const result=evaluateSpec(bundle);
   assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-008'&&issue.severity==='error'),JSON.stringify(result.issues));
+});
+test('button target rule rejects missing and undersized targets',async()=>{
+  for(const target of [undefined,'24px','forty pixels']){
+    const bundle=await loadBundle();
+    const button=bundle.components.find(component=>component.id==='button');
+    if(target===undefined)delete button.accessibility.minimumTarget;
+    else button.accessibility.minimumTarget=target;
+    const result=evaluateSpec(bundle);
+    assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-009'&&issue.path==='components.button.accessibility.minimumTarget'),JSON.stringify(result.issues));
+  }
+});
+test('button focus ring rule rejects an absent or low-contrast mapped token',async()=>{
+  for(const ring of [undefined,'{semantic.border.default}']){
+    const bundle=await loadBundle();
+    const button=bundle.components.find(component=>component.id==='button');
+    if(ring===undefined)delete button.tokens.focusRing;
+    else button.tokens.focusRing=ring;
+    const result=evaluateSpec(bundle);
+    assert.ok(result.issues.some(issue=>issue.code==='STYLE-A11Y-010'&&issue.path==='components.button.tokens.focusRing'),JSON.stringify(result.issues));
+  }
+});
+test('dialog contract rejects missing naming, focus, and Escape declarations',async()=>{
+  for(const [field,value,ruleId] of [
+    ['accessibleNameSource',undefined,'STYLE-A11Y-011'],
+    ['initialFocus',undefined,'STYLE-A11Y-012'],
+    ['focusTrap',false,'STYLE-A11Y-012'],
+    ['returnFocusToTrigger',false,'STYLE-A11Y-012'],
+    ['escapeDismissal',undefined,'STYLE-A11Y-013'],
+  ]){
+    const bundle=await loadBundle();
+    const dialog=bundle.components.find(component=>component.id==='dialog');
+    if(value===undefined)delete dialog.accessibility[field];
+    else dialog.accessibility[field]=value;
+    const result=evaluateSpec(bundle);
+    assert.ok(result.issues.some(issue=>issue.code===ruleId&&issue.path===`components.dialog.accessibility.${field}`),JSON.stringify(result.issues));
+  }
 });
 test('declared dimension token rejects an object value',()=>{
   const issues=validateTokenGraph({radius:{md:{$type:'dimension',$value:{$type:'dimension',$value:'12px'}}}});
@@ -54,4 +90,15 @@ test('path writes reject empty segments rather than changing a different path',(
   const root={tokens:{semantic:{}}};
   assert.throws(()=>addPath(root,'tokens.semantic..new',{$type:'color',$value:'#FFFFFF'}),/empty segment/);
   assert.equal(getPath(root,'tokens.semantic.new'),undefined);
+});
+test('token merging rejects prototype keys without changing inherited objects',()=>{
+  const tokens={};
+  try{
+    assert.throws(()=>mergeObjects(tokens,JSON.parse('{"__proto__":{"styleconPolluted":"yes"}}')),/Unsafe object key/);
+    assert.throws(()=>mergeObjects(tokens,JSON.parse('{"safe":{"nested":{"constructor":{"styleconPolluted":"yes"}}}}')),/Unsafe object key/);
+    assert.equal({}.styleconPolluted,undefined);
+    assert.deepEqual(tokens,{});
+  }finally{
+    delete Object.prototype.styleconPolluted;
+  }
 });

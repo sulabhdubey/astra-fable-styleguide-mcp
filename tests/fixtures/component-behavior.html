@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Component behavior fixtures</title>
+  <link rel="stylesheet" href="../../generated/css/tokens.css">
+  <style>
+    body { background: var(--semantic-surface-primary); color: var(--semantic-text-primary); font-family: system-ui; padding: 2rem; }
+    section { margin-block: 2rem; }
+    button { cursor: pointer; }
+    .good-button { min-inline-size: var(--size-control-md); min-block-size: var(--size-control-md); background: var(--semantic-action-primary-background); color: var(--semantic-action-primary-foreground); border: 0; }
+    .good-button:focus-visible { outline: 3px solid var(--semantic-focus-ring); outline-offset: 2px; }
+    .bad-button { box-sizing: border-box; inline-size: 24px; block-size: 24px; padding: 0; outline: none; }
+    dialog { padding: 1.5rem; }
+    #bad-dialog { border: 1px solid; padding: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Component behavior fixtures</h1>
+  <section aria-label="Button examples">
+    <button id="good-button" class="good-button">Go</button>
+    <button id="bad-button" class="bad-button">Go</button>
+  </section>
+  <section aria-label="Dialog examples">
+    <button id="open-good-dialog" class="good-button">Open conforming dialog</button>
+    <dialog id="good-dialog" aria-labelledby="good-dialog-title">
+      <h2 id="good-dialog-title">Review change</h2>
+      <p>Confirm or cancel this example action.</p>
+      <button id="good-cancel">Cancel</button>
+      <button id="good-confirm">Confirm</button>
+    </dialog>
+    <button id="open-bad-dialog" class="bad-button">!</button>
+    <div id="bad-dialog" role="dialog" hidden>
+      <p>Unnamed dialog with no focus management.</p>
+      <button id="bad-close">Close</button>
+    </div>
+  </section>
+  <script>
+    const goodTrigger = document.querySelector('#open-good-dialog');
+    const goodDialog = document.querySelector('#good-dialog');
+    goodTrigger.addEventListener('click', () => {
+      goodDialog.showModal();
+      document.querySelector('#good-cancel').focus();
+    });
+    goodDialog.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const first = document.querySelector('#good-cancel');
+      const last = document.querySelector('#good-confirm');
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+    goodDialog.addEventListener('close', () => goodTrigger.focus());
+    for (const id of ['good-cancel', 'good-confirm']) {
+      document.getElementById(id).addEventListener('click', () => goodDialog.close());
+    }
+    document.querySelector('#open-bad-dialog').addEventListener('click', () => {
+      document.querySelector('#bad-dialog').hidden = false;
+    });
+    document.querySelector('#bad-close').addEventListener('click', () => {
+      document.querySelector('#bad-dialog').hidden = true;
+    });
+  </script>
+</body>
+</html>

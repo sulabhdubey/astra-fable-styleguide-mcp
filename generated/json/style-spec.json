@@ -2,10 +2,10 @@
   "manifest": {
     "$schema": "../packages/schemas/style-manifest.schema.json",
     "name": "Style Constitution",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "status": "released",
     "schemaVersion": "1.0",
-    "updatedAt": "2026-09-19",
+    "updatedAt": "2026-09-20",
     "principles": [
       "clarity",
       "accessibility",
@@ -429,7 +429,9 @@
       "accessibility": {
         "ruleIds": [
           "STYLE-A11Y-001",
-          "STYLE-A11Y-002"
+          "STYLE-A11Y-002",
+          "STYLE-A11Y-009",
+          "STYLE-A11Y-010"
         ],
         "keyboard": "Enter and Space activate the button.",
         "focusVisible": true,
@@ -536,11 +538,18 @@
       },
       "accessibility": {
         "ruleIds": [
-          "STYLE-A11Y-001"
+          "STYLE-A11Y-001",
+          "STYLE-A11Y-011",
+          "STYLE-A11Y-012",
+          "STYLE-A11Y-013"
         ],
         "focusVisible": true,
         "keyboard": "Escape closes when dismissal is allowed; focus is trapped while open.",
-        "focusTrap": true
+        "focusTrap": true,
+        "accessibleNameSource": "visible-title",
+        "initialFocus": "inside-dialog",
+        "returnFocusToTrigger": true,
+        "escapeDismissal": "when-allowed"
       },
       "contentRules": [
         "Title states the decision or task."
@@ -881,6 +890,31 @@
         "id": "STYLE-A11Y-006",
         "name": "Invalid input feedback",
         "requirement": "Automatically detected input errors identify the affected field in visible text, describe the needed correction, and are programmatically associated with the control. Invalid styling preserves visible focus."
+      },
+      {
+        "id": "STYLE-A11Y-009",
+        "name": "Button target size",
+        "requirement": "Buttons declare a minimum target of at least 40px in both dimensions. This is a product rule, not a claim that WCAG requires 40px."
+      },
+      {
+        "id": "STYLE-A11Y-010",
+        "name": "Button focus ring contrast",
+        "requirement": "A button's mapped focus ring color has at least 3:1 contrast against the primary surface. Check other adjacent surfaces in rendered use."
+      },
+      {
+        "id": "STYLE-A11Y-011",
+        "name": "Dialog accessible name",
+        "requirement": "A dialog is programmatically named by its visible title."
+      },
+      {
+        "id": "STYLE-A11Y-012",
+        "name": "Dialog focus management",
+        "requirement": "Opening a dialog moves focus inside it, keeps focus inside while open, and returns focus to its trigger on close."
+      },
+      {
+        "id": "STYLE-A11Y-013",
+        "name": "Dialog Escape dismissal",
+        "requirement": "Escape closes a dialog when dismissal is allowed. Any non-dismissible exception must be explicit in the implementation."
       }
     ],
     "contrastPairs": [

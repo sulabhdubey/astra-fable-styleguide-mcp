@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Button and dialog trial</title>
+  <style>
+    :root {
+      --border-width-hairline: 1px;
+      --border-width-strong: 2px;
+      --border-style-default: solid;
+      --elevation-none: none;
+      --elevation-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+      --elevation-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+      --motion-fast: 120ms;
+      --motion-normal: 200ms;
+      --motion-easing-standard: 0.2, 0, 0, 1;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --semantic-surface-primary: #FFFFFF;
+      --semantic-surface-subtle: #F8FAFC;
+      --semantic-text-primary: #0F172A;
+      --semantic-text-secondary: #475569;
+      --semantic-border-default: #E2E8F0;
+      --semantic-action-primary-background: #1D4ED8;
+      --semantic-action-primary-backgroundHover: #1E40AF;
+      --semantic-action-primary-foreground: #FFFFFF;
+      --semantic-focus-ring: #2563EB;
+      --size-control-md: 40px;
+      --typography-fontFamily-sans: ui-sans-serif, system-ui, sans-serif;
+      --typography-fontSize-200: 14px;
+      --typography-fontSize-300: 16px;
+      --typography-fontSize-500: 24px;
+      --typography-lineHeight-tight: 1.2;
+      --typography-lineHeight-normal: 1.5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: var(--typography-fontFamily-sans);
+      font-size: var(--typography-fontSize-300);
+      line-height: var(--typography-lineHeight-normal);
+      color: var(--semantic-text-primary);
+      background: var(--semantic-surface-subtle);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--size-control-md);
+      min-height: var(--size-control-md);
+      padding-inline: var(--space-4);
+      border: none;
+      border-radius: var(--radius-md);
+      font: inherit;
+      font-size: var(--typography-fontSize-200);
+      cursor: pointer;
+    }
+
+    .button:focus {
+      outline: none;
+    }
+
+    .button:focus-visible {
+      outline: 3px solid var(--semantic-focus-ring);
+      outline-offset: 2px;
+    }
+
+    .button--primary {
+      background: var(--semantic-action-primary-background);
+      color: var(--semantic-action-primary-foreground);
+    }
+
+    .button--primary:hover {
+      background: var(--semantic-action-primary-backgroundHover);
+    }
+
+    .button--secondary {
+      background: var(--semantic-surface-primary);
+      color: var(--semantic-text-primary);
+      border: var(--border-width-hairline) var(--border-style-default) var(--semantic-border-default);
+    }
+
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.48);
+      place-items: center;
+      padding: var(--space-6);
+    }
+
+    .dialog-overlay.is-open {
+      display: grid;
+    }
+
+    .dialog-surface {
+      width: min(100%, 420px);
+      background: var(--semantic-surface-primary);
+      color: var(--semantic-text-primary);
+      border: var(--border-width-hairline) var(--border-style-default) var(--semantic-border-default);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      box-shadow: var(--elevation-md);
+    }
+
+    .dialog-surface:focus {
+      outline: none;
+    }
+
+    .dialog-surface:focus-visible {
+      outline: 3px solid var(--semantic-focus-ring);
+      outline-offset: 2px;
+    }
+
+    .dialog-title {
+      margin: 0 0 var(--space-4);
+      font-size: var(--typography-fontSize-500);
+      line-height: var(--typography-lineHeight-tight);
+    }
+
+    .dialog-body {
+      margin: 0 0 var(--space-5);
+      color: var(--semantic-text-secondary);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-4);
+    }
+  </style>
+</head>
+<body>
+  <button type="button" class="button button--primary" id="open-dialog">
+    Create project
+  </button>
+
+  <div class="dialog-overlay" id="overlay" hidden>
+    <div
+      class="dialog-surface"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+      id="dialog"
+      tabindex="-1"
+    >
+      <h2 class="dialog-title" id="dialog-title">Create project</h2>
+      <p class="dialog-body" id="dialog-body">
+        Start a new project from this workspace. Confirm to continue or cancel to stay here.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="button button--secondary" id="cancel-action">Cancel</button>
+        <button type="button" class="button button--primary" id="confirm-action">Create project</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var trigger = document.getElementById("open-dialog");
+      var overlay = document.getElementById("overlay");
+      var dialog = document.getElementById("dialog");
+      var cancel = document.getElementById("cancel-action");
+      var confirm = document.getElementById("confirm-action");
+      var lastTrigger = null;
+      var open = false;
+
+      function focusables() {
+        return [cancel, confirm];
+      }
+
+      function openDialog() {
+        lastTrigger = document.activeElement === trigger ? trigger : trigger;
+        open = true;
+        overlay.hidden = false;
+        overlay.classList.add("is-open");
+        dialog.focus();
+      }
+
+      function closeDialog() {
+        open = false;
+        overlay.classList.remove("is-open");
+        overlay.hidden = true;
+        if (lastTrigger) lastTrigger.focus();
+      }
+
+      trigger.addEventListener("click", openDialog);
+      cancel.addEventListener("click", closeDialog);
+      confirm.addEventListener("click", closeDialog);
+
+      overlay.addEventListener("click", function (event) {
+        if (event.target === overlay) closeDialog();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (!open) return;
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDialog();
+          return;
+        }
+
+        if (event.key !== "Tab") return;
+
+        var nodes = focusables();
+        var first = nodes[0];
+        var last = nodes[nodes.length - 1];
+        var active = document.activeElement;
+
+        if (event.shiftKey) {
+          if (active === first || active === dialog || !dialog.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (active === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
