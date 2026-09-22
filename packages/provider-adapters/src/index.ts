@@ -1,4 +1,5 @@
 import type { Critique, DesignAgent, DesignContext, DesignProposal } from '../../consensus-engine/src/index.js';
+import { sha256 } from '../../consensus-engine/src/index.js';
 import { deepClone, flattenTokenLeaves, getPath, isRecord } from '../../style-spec/src/index.js';
 
 export interface ProviderConfig { provider: string; model: string; }
@@ -31,6 +32,11 @@ function normalizeProposal(value:unknown,role:string,baseVersion:string,referenc
   if(referenceSpec!==undefined)for(const change of changes){
     const guidance=/^components\.([A-Za-z0-9_-]+)\.accessibility\.(errorTextRequired|errorAssociation)$/.exec(change.path);
     const existing=getPath(referenceSpec,change.path);
+    if(change.path.startsWith('tokens.')&&isRecord(existing))throw new Error(`Change an existing token through its .$value path: ${change.path}`);
+    if(change.path.startsWith('tokens.')&&change.path.endsWith('.$value')){
+      const leaf=getPath(referenceSpec,change.path.slice(0,-7));
+      if(isRecord(leaf)&&leaf.$type==='dimension'&&(typeof change.value!=='string'||!(/^-?(?:\d+|\d*\.\d+)(?:px|rem|em|%)$/.test(change.value)||/^\{[A-Za-z0-9_.-]+\}$/.test(change.value))))throw new Error(`A dimension token needs a dimension string or token reference: ${change.path}`);
+    }
     if(change.path.startsWith('components.')&&isRecord(existing))throw new Error(`Provider proposed a component object replacement: ${change.path}`);
     if(existing===undefined&&!(guidance&&isRecord(getPath(referenceSpec,`components.${guidance[1]}.accessibility`)))&&!permittedNewPath(referenceSpec,change.path,change.value))throw new Error(`Unknown proposal change path: ${change.path}`);
   }
@@ -45,14 +51,14 @@ function normalizeCritique(value:unknown,role:string,proposal:DesignProposal,ref
   for(const objection of objections)if(!proposedPaths.has(objection.path)&&getPath(referenceSpec,objection.path)===undefined)throw new Error(`Unknown critique path: ${objection.path}`);
   for(const path of acceptedPaths)if(!proposedPaths.has(path))throw new Error(`Accepted path was not proposed: ${path}`);
   for(const objection of objections)if(objection.severity==='blocking'&&acceptedPaths.includes(objection.path))throw new Error(`Contradictory critique for path: ${objection.path}`);
-  return {reviewer:role,proposalId:proposal.id,objections,acceptedPaths};
+  return {reviewer:role,proposalId:proposal.id,objections:objections.map(o=>({...o,evidenceKind:'unverified'})),acceptedPaths,evidenceKind:'unverified'};
 }
 
 export class ConfigurableAgent implements DesignAgent {
   constructor(public id:string, private config:ProviderConfig, private invoke:AgentInvoker){}
   async generateProposal(context:Readonly<DesignContext>):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'proposal',payload:context}),this.id,context.baseVersion,context.referenceSpec);}
-  async critiqueProposal(proposal:Readonly<DesignProposal>,context:Readonly<DesignContext>):Promise<Critique>{return normalizeCritique(await this.invoke({role:this.id,model:this.config.model,task:'critique',payload:{proposal,context}}),this.id,proposal,context.referenceSpec);}
-  async reviseProposal(proposal:Readonly<DesignProposal>,critique:Readonly<Critique>,context:Readonly<DesignContext>,round:number):Promise<DesignProposal>{return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'revision',payload:{proposal,critique,context,round}}),this.id,context.baseVersion,context.referenceSpec,proposal.id);}
+  async critiqueProposal(proposal:Readonly<DesignProposal>,context:Readonly<DesignContext>):Promise<Critique>{const critique=normalizeCritique(await this.invoke({role:this.id,model:this.config.model,task:'critique',payload:{proposal,context}}),this.id,proposal,context.referenceSpec);return {...critique,candidateHash:await sha256({baseVersion:proposal.baseVersion,changes:proposal.changes})};}
+  async reviseProposal(proposal:Readonly<DesignProposal>,critique:Readonly<Critique>,context:Readonly<DesignContext>,round:number):Promise<DesignProposal>{if(critique.candidateHash&&critique.candidateHash!==await sha256({baseVersion:proposal.baseVersion,changes:proposal.changes}))throw new Error('Stale critique: candidate changed after review');return normalizeProposal(await this.invoke({role:this.id,model:this.config.model,task:'revision',payload:{proposal,critique,context,round}}),this.id,context.baseVersion,context.referenceSpec,proposal.id);}
 }
 
 export class OpenAIAdapter extends ConfigurableAgent {constructor(id:string,model:string,invoke:AgentInvoker){super(id,{provider:'openai',model},invoke);}}

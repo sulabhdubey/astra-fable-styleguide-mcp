@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Workspace preferences</title>
+  <link rel="stylesheet" href="/tokens.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--semantic-surface-primary); color: var(--semantic-text-primary); font: 1rem/1.6 system-ui,sans-serif; }
+    main { max-width: 48rem; margin: auto; padding: var(--space-7) var(--space-5); }
+    header { border-bottom: 1px solid var(--semantic-border-default); padding-bottom: var(--space-6); margin-bottom: var(--space-7); }
+    .eyebrow { font-size: .8rem; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { font-size: clamp(2rem,6vw,3rem); line-height: 1.15; margin-block: var(--space-4); }
+    h2 { margin-top: 0; line-height: 1.3; }
+    p { margin-block: var(--space-4); }
+    .muted { color: var(--semantic-text-secondary); }
+    .card { padding: var(--space-6); border: 1px solid var(--semantic-border-default); border-radius: var(--radius-lg); margin-block: var(--space-6); }
+    label { display: block; font-weight: 600; }
+    input[type=text] { width: 100%; margin-top: var(--space-2); padding: var(--space-3); border: 1px solid var(--semantic-border-default); border-radius: var(--radius-md); background: var(--semantic-surface-primary); color: inherit; font: inherit; }
+    input[aria-invalid=true] { border-color: var(--semantic-border-danger); }
+    .error { color: var(--semantic-text-danger); }
+    .toggle { display: flex; align-items: center; gap: var(--space-3); min-height: var(--size-control-md); cursor: pointer; }
+    .toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--semantic-action-primary-background); }
+    button { min-width: var(--size-control-md); min-height: var(--size-control-md); padding: var(--space-2) var(--space-4); border: 1px solid var(--semantic-border-default); border-radius: var(--radius-md); font: inherit; cursor: pointer; color: inherit; background: var(--semantic-surface-primary); }
+    button.primary { background: var(--semantic-action-primary-background); color: var(--semantic-action-primary-foreground); border-color: transparent; }
+    button.primary:hover { background: var(--semantic-action-primary-backgroundHover); }
+    :focus-visible { outline: 3px solid var(--semantic-focus-ring); outline-offset: 3px; }
+    .actions { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: flex-end; margin-top: var(--space-6); }
+    dialog { color: inherit; background: var(--semantic-surface-primary); border: 1px solid var(--semantic-border-default); border-radius: var(--radius-lg); padding: var(--space-6); max-width: min(30rem,calc(100% - 2rem)); }
+    dialog::backdrop { background: rgb(15 23 42 / .55); }
+    [hidden] { display: none !important; }
+    #status { min-height: 1.6em; }
+    @media (max-width: 30rem) { main { padding: var(--space-6) var(--space-4); } .card { padding: var(--space-5); } }
+  </style>
+</head>
+<body>
+  <main>
+    <header><span class="eyebrow">Workspace / Preferences</span><h1>A quieter workday.</h1><p class="muted">Choose how your workspace keeps you up to date.</p></header>
+    <form id="settings" novalidate>
+      <section class="card" aria-labelledby="workspace-heading">
+        <h2 id="workspace-heading">Your workspace</h2>
+        <label for="workspace">Workspace name</label>
+        <input id="workspace" type="text" value="Studio" maxlength="60" aria-describedby="workspace-hint workspace-error" required>
+        <p id="workspace-hint" class="muted">Used in your activity summary. Between 2 and 60 characters.</p>
+        <p id="workspace-error" class="error" role="alert" hidden>Enter a workspace name with at least 2 characters.</p>
+      </section>
+      <section class="card" aria-labelledby="updates-heading"><h2 id="updates-heading">Stay in the loop</h2>
+        <label class="toggle"><input id="digest" type="checkbox" checked> Weekly activity summary</label>
+        <p class="muted">One summary of changes, decisions, and the work ahead.</p>
+      </section>
+      <div class="actions"><button id="reset" type="button">Reset changes</button><button id="save" class="primary" type="submit">Review changes</button></div>
+    </form>
+    <p id="status" role="status" aria-live="polite">Preferences are saved for this session only.</p>
+    <dialog id="confirm" aria-labelledby="confirm-title">
+      <h2 id="confirm-title">Save workspace preferences?</h2><p id="summary"></p>
+      <div class="actions"><button id="cancel" type="button">Keep editing</button><button id="apply" class="primary" type="button">Save preferences</button></div>
+    </dialog>
+  </main>
+  <script>
+    const form = document.querySelector('#settings');
+    const workspace = document.querySelector('#workspace');
+    const digest = document.querySelector('#digest');
+    const error = document.querySelector('#workspace-error');
+    const modal = document.querySelector('#confirm');
+    const trigger = document.querySelector('#save');
+    const cancel = document.querySelector('#cancel');
+    const apply = document.querySelector('#apply');
+    const status = document.querySelector('#status');
+    let saved = { name: 'Studio', digest: true };
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const valid = workspace.value.trim().length >= 2;
+      error.hidden = valid; workspace.setAttribute('aria-invalid', String(!valid));
+      if (!valid) { workspace.focus(); return; }
+      document.querySelector('#summary').textContent = `${workspace.value.trim()}: weekly activity summary ${digest.checked ? 'enabled' : 'disabled'}.`;
+      modal.showModal(); cancel.focus();
+    });
+    modal.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      if (event.shiftKey && document.activeElement === cancel) { event.preventDefault(); apply.focus(); }
+      else if (!event.shiftKey && document.activeElement === apply) { event.preventDefault(); cancel.focus(); }
+    });
+    modal.addEventListener('close', () => trigger.focus());
+    cancel.addEventListener('click', () => modal.close());
+    apply.addEventListener('click', () => {
+      saved = { name: workspace.value.trim(), digest: digest.checked };
+      workspace.value = saved.name;
+      status.textContent = `Preferences saved for ${saved.name}. Weekly summary ${saved.digest ? 'enabled' : 'disabled'}.`;
+      modal.close();
+    });
+    document.querySelector('#reset').addEventListener('click', () => {
+      workspace.value = saved.name; digest.checked = saved.digest;
+      error.hidden = true; workspace.removeAttribute('aria-invalid');
+      status.textContent = 'Unsaved changes reset.';
+    });
+  </script>
+</body>
+</html>

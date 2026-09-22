@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "files": ["index.html"],
+  "journey": {"buttons":["#reset","#save"],"trigger":"#save","dialog":"#confirm","name":"Save workspace preferences?","dialogButtons":["#cancel","#apply"],"close":"#cancel"},
+  "form": {"input":"#workspace","submit":"#save","invalidValue":"A","validValue":"Design studio"},
+  "closePaths": ["#cancel","#apply"],
+  "targetPaths": {"#reset":"index.html","#save":"index.html","#cancel":"index.html","#apply":"index.html","#workspace":"index.html","dialog":"index.html","page":"index.html"}
+}
