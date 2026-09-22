@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>Observation controls</title>
+<section id="observation-controls">
+<h2>Verifier regression controls</h2>
+<p id="control-hint">Static help</p><p role="status" id="visible-status">Waiting</p>
+<div style="visibility:hidden"><p role="status" id="hidden-status">Hidden waiting</p></div>
+<div style="opacity:0"><p role="status" id="transparent-status">Transparent waiting</p></div>
+<div aria-hidden="true"><p role="status" id="inaccessible-status">Unannounced waiting</p></div>
+<button id="multi-status" aria-busy="true" aria-describedby="control-hint visible-status">Multiple references</button>
+<button id="hidden-state" aria-busy="true" aria-describedby="hidden-status">Hidden</button>
+<button id="transparent-state" aria-busy="true" aria-describedby="transparent-status">Transparent</button>
+<button id="inaccessible-state" aria-busy="true" aria-describedby="inaccessible-status">Inaccessible</button>
+<button id="missing-state" aria-busy="true" aria-describedby="missing-status">Missing</button>
+<label for="described-input">Described field</label><input id="described-input" aria-invalid="true" aria-describedby="control-hint control-error">
+<label for="error-input">Error message field</label><input id="error-input" aria-invalid="true" aria-errormessage="control-error">
+<p id="control-error">Enter at least two characters.</p>
+<label for="hidden-error-input">Hidden error field</label><input id="hidden-error-input" aria-invalid="true" aria-errormessage="hidden-status">
+</section>

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "files": ["index.html"],
+  "journey": {"buttons":["#review"],"trigger":"#review","dialog":"#review-dialog","name":"Confirm display name","dialogButtons":["#back","#confirm-name"],"close":"#back"},
+  "form": {"input":"#display-name","submit":"#review","invalidValue":"","validValue":"Studio member"},
+  "states": [{"selector":"#export","kind":"disabled"},{"selector":"#sync","kind":"loading"}],
+  "closePaths": ["#back","#confirm-name"],
+  "targetPaths": {"#review":"index.html","#back":"index.html","#confirm-name":"index.html","#display-name":"index.html","#export":"index.html","#sync":"index.html","dialog":"index.html","page":"index.html"}
+}

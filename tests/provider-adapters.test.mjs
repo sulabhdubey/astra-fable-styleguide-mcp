@@ -6,6 +6,27 @@ import {loadBundle} from './helpers.mjs';
 
 const proposalJson={summary:'Focused system',changes:[{path:'tokens.radius.md.$value',value:'8px',rationale:'Consistent radius'}],tradeoffs:[],unresolved:[]};
 
+test('provider rejects observed wrong token paths and dimension types before critique',async()=>{
+  const context={brief:'Softer settings controls',criteria:[],baseVersion:'0.3.0',referenceSpec:{tokens:{radius:{md:{$type:'dimension',$value:'8px'}}}}};
+  for(const change of [{path:'tokens.radius.md',value:{$type:'dimension',$value:'10px'}},{path:'tokens.radius.md.$value',value:12},{path:'tokens.radius.md.$value',value:{value:'12px'}}]) {
+    const agent=new ConfigurableAgent('astra',{provider:'mock',model:'mock'},async()=>({...proposalJson,changes:[change]}));
+    await assert.rejects(agent.generateProposal(context),/existing token|dimension token/);
+  }
+});
+
+test('provider critique claims remain unverified and bind to the actual reviewed candidate', async () => {
+  const { sha256 } = await import('../dist/packages/consensus-engine/src/index.js');
+  const proposal = { ...proposalJson, id: 'p', author: 'astra', baseVersion: '0.3.0' };
+  const agent = new ConfigurableAgent('fable', { provider: 'mock', model: 'mock' }, async () => ({
+    candidateHash: 'forged', evidenceKind: 'observed', objections: [{path:'tokens.radius.md.$value',reason:'Claimed test failure',severity:'blocking',evidenceKind:'observed'}], acceptedPaths: []
+  }));
+  const critique = await agent.critiqueProposal(proposal, { brief: 'Review radius', criteria: [], baseVersion: '0.3.0' });
+  assert.equal(critique.candidateHash, await sha256({ baseVersion: proposal.baseVersion, changes: proposal.changes }));
+  assert.equal(critique.evidenceKind, 'unverified');
+  assert.equal(critique.objections[0].evidenceKind, 'unverified');
+  await assert.rejects(agent.reviseProposal({ ...proposal, changes: [{path:'tokens.radius.md.$value',value:'12px'}] }, critique, {brief:'Review radius',criteria:[],baseVersion:'0.3.0'}, 1), /Stale critique/);
+});
+
 test('OpenAI Responses invoker sends configured model/key and parses JSON text output',async()=>{
   const prior=globalThis.fetch;let seen;
   globalThis.fetch=async(url,init)=>{seen={url,init};return new Response(JSON.stringify({output_text:JSON.stringify(proposalJson)}),{status:200,headers:{'content-type':'application/json'}});};

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Member profile</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:var(--semantic-surface-primary);color:var(--semantic-text-primary);font:1rem/1.5 system-ui,sans-serif}
+main{max-width:40rem;margin:auto;padding:var(--space-6) var(--space-4)}h1{font-size:2.5rem;line-height:1.1}label{display:block;font-weight:600}input{display:block;width:100%;padding:var(--space-3);margin-block:var(--space-2);border:1px solid var(--semantic-border-default);border-radius:var(--radius-md);font:inherit}
+button{min-height:40px;padding:var(--space-2) var(--space-4);border:1px solid var(--semantic-border-default);border-radius:var(--radius-md);background:var(--semantic-surface-primary);color:inherit;font:inherit;cursor:pointer}
+#review{min-height:var(--size-control-md);padding:var(--space-2) var(--space-4)}
+:focus-visible{outline:3px solid var(--semantic-focus-ring);outline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-block:var(--space-5)}.primary{background:var(--semantic-action-primary-background);color:var(--semantic-action-primary-foreground)}
+.error{color:var(--semantic-text-danger)}dialog{max-width:min(28rem,calc(100% - 2rem));padding:var(--space-5);border:1px solid var(--semantic-border-default);border-radius:var(--radius-lg);background:var(--semantic-surface-primary)}dialog::backdrop{background:rgb(15 23 42 / .5)}[hidden]{display:none!important}button:disabled{cursor:not-allowed}section{border-top:1px solid var(--semantic-border-default);margin-top:var(--space-6);padding-top:var(--space-5)}
+</style></head><body><main><p>MEMBERS / PROFILE</p><h1>How your team sees you.</h1><p>Set the name shown beside your work.</p>
+<form id="profile" novalidate><label for="display-name">Display name</label><input id="display-name" value="Studio member" maxlength="60" aria-describedby="name-error"><p id="name-error" class="error" role="alert" hidden>Enter a display name with at least two characters.</p><div class="actions"><button id="review" class="primary">Review name</button></div></form>
+<p id="result" role="status">Changes last for this page session.</p>
+<section><h2>Connection states</h2><p>These controls demonstrate unavailable and pending states.</p><div class="actions"><button id="export" disabled>Export unavailable</button><button id="sync" disabled aria-busy="true" aria-describedby="sync-status">Sync pending</button></div><p id="sync-status" role="status">Waiting for a connection. No background request is running.</p></section>
+<dialog id="review-dialog" aria-labelledby="review-title"><h2 id="review-title">Confirm display name</h2><p id="name-preview"></p><div class="actions"><button id="back" type="button">Keep editing</button><button id="confirm-name" type="button">Use this name</button></div></dialog>
+</main><script>
+const form=document.querySelector('#profile'),input=document.querySelector('#display-name'),error=document.querySelector('#name-error'),dialog=document.querySelector('#review-dialog'),trigger=document.querySelector('#review'),back=document.querySelector('#back'),confirm=document.querySelector('#confirm-name');
+form.addEventListener('submit',event=>{event.preventDefault();const invalid=input.value.trim().length<2;error.hidden=!invalid;input.setAttribute('aria-invalid',String(invalid));if(invalid){input.focus();return;}document.querySelector('#name-preview').textContent=input.value.trim();dialog.showModal();back.focus();});
+back.addEventListener('click',()=>dialog.close());confirm.addEventListener('click',()=>{document.querySelector('#result').textContent='Display name updated: '+input.value.trim();dialog.close();});dialog.addEventListener('close',()=>trigger.focus());
+dialog.addEventListener('keydown',event=>{if(event.key!=='Tab')return;if(event.shiftKey&&document.activeElement===back){event.preventDefault();confirm.focus();}else if(!event.shiftKey&&document.activeElement===confirm){event.preventDefault();back.focus();}});
+</script></body></html>

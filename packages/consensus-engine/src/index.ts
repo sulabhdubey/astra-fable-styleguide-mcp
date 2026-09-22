@@ -3,8 +3,8 @@ import { canonicalize, deepClone, deepFreeze } from '../../style-spec/src/index.
 export interface DesignContext { brief: string; criteria: string[]; baseVersion: string; referenceSpec?: unknown; }
 export interface Change { path: string; value: unknown; rationale?: string; }
 export interface DesignProposal { id: string; author: string; baseVersion: string; summary: string; changes: Change[]; tradeoffs: string[]; unresolved: string[]; }
-export interface Objection { path: string; reason: string; severity: 'warning'|'blocking'; }
-export interface Critique { reviewer: string; proposalId: string; objections: Objection[]; acceptedPaths: string[]; }
+export interface Objection { path: string; reason: string; severity: 'warning'|'blocking'; evidenceKind?: 'unverified'; }
+export interface Critique { reviewer: string; proposalId: string; objections: Objection[]; acceptedPaths: string[]; candidateHash?: string; evidenceKind?: 'unverified'; }
 export interface DesignAgent { id: string; generateProposal(context: Readonly<DesignContext>): Promise<DesignProposal>; critiqueProposal(proposal: Readonly<DesignProposal>, context: Readonly<DesignContext>): Promise<Critique>; reviseProposal(proposal: Readonly<DesignProposal>, critique: Readonly<Critique>, context: Readonly<DesignContext>, round: number): Promise<DesignProposal>; }
 export interface Conflict { path: string; astra: unknown; fable: unknown; }
 export interface Candidate { baseVersion: string; changes: Change[]; }
