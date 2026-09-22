@@ -79,4 +79,3 @@ export const journeys = {
   codex: { buttons: ['#open-dialog'], trigger: '#open-dialog', dialog: '#example-dialog', name: 'Review your changes', dialogButtons: ['#cancel-dialog', '#continue-dialog'], close: '#cancel-dialog' },
   grok: { buttons: ['#open-dialog'], trigger: '#open-dialog', dialog: '#dialog', name: 'Create project', dialogButtons: ['#cancel-action', '#confirm-action'], close: '#cancel-action' },
 };
-
