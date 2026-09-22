@@ -1,4 +1,6 @@
 name: CI
+permissions:
+  contents: read
 on:
   push:
     branches: [main]
@@ -16,6 +18,13 @@ jobs:
       - run: pnpm lint:eslint
       - run: pnpm typecheck:full
       - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/test-installed-cli.mjs
+      - run: node packages/cli/dist/stylecon.mjs check examples/profile --format sarif --output "$RUNNER_TEMP/stylecon.sarif"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stylecon-example-report
+          path: ${{ runner.temp }}/stylecon.sarif
       - run: pnpm validate
       - run: pnpm generate
       - run: pnpm build:docs
