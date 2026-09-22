@@ -4,6 +4,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 
 const projectRoot = resolve(import.meta.dirname, '..');
 const packageRoot = join(projectRoot, 'packages', 'cli');
@@ -11,7 +12,7 @@ const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'np
 const runNpm = (args, cwd) => spawnSync(
   process.platform === 'win32' ? process.execPath : 'npm',
   process.platform === 'win32' ? [npmCli, ...args] : args,
-  { cwd, encoding: 'utf8' }
+  { cwd, encoding: 'utf8', env: { ...process.env, npm_config_cache: join(cwd, '.npm-cache') } }
 );
 
 test('packed stylecon validates a clean consumer spec and reports a broken target', async () => {
@@ -20,7 +21,18 @@ test('packed stylecon validates a clean consumer spec and reports a broken targe
     const pack = runNpm(['pack', packageRoot, '--pack-destination', temp, '--json'], temp);
     assert.equal(pack.status, 0, pack.stderr);
     const [{ filename }] = JSON.parse(pack.stdout);
-    const install = runNpm(['install', '--offline', '--ignore-scripts', join(temp, filename)], temp);
+    // Seed the consumer from the locked, installed dependencies, without relying
+    // on an unrelated npm cache (pnpm and npm do not share one).
+    const require = createRequire(import.meta.url);
+    const playwrightManifest = require.resolve('playwright/package.json');
+    const playwrightRequire = createRequire(playwrightManifest);
+    const dependencyArchives = [];
+    for (const manifest of [playwrightManifest, playwrightRequire.resolve('playwright-core/package.json')]) {
+      const dependencyPack = runNpm(['pack', dirname(manifest), '--pack-destination', temp, '--json'], temp);
+      assert.equal(dependencyPack.status, 0, dependencyPack.stderr);
+      dependencyArchives.push(join(temp, JSON.parse(dependencyPack.stdout)[0].filename));
+    }
+    const install = runNpm(['install', '--offline', '--ignore-scripts', '--omit=optional', ...dependencyArchives, join(temp, filename)], temp);
     assert.equal(install.status, 0, install.stderr);
     const installed = JSON.parse(await readFile(join(temp, 'node_modules', '@styleconstitution', 'cli', 'package.json'), 'utf8'));
     assert.equal(installed.bin.stylecon, 'dist/stylecon.mjs');

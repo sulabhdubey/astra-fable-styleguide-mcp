@@ -1,7 +1,6 @@
 {
   "name": "@styleconstitution/cli",
   "version": "0.4.0",
-  "private": true,
   "type": "module",
   "bin": {
     "stylecon": "dist/stylecon.mjs"
@@ -10,9 +9,12 @@
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/bin.ts --bundle --platform=node --target=node22 --format=esm --banner:js=\"#!/usr/bin/env node\" --outfile=dist/stylecon.mjs"
+    "build": "node build.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
   }
 }

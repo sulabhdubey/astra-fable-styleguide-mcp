@@ -7,7 +7,9 @@ import { appendProductChecks } from '../packages/browser-verification/src/produc
 
 export async function setInput(tab,selector,value) {
   const input=tab.playwright.locator(selector);
-  if(value==='') {await input.press('ControlOrMeta+A');await input.press('Backspace');}
+  const tag=await tab.playwright.evaluate(selector=>document.querySelector(selector)?.tagName,selector);
+  if(tag==='SELECT') await input.selectOption(value);
+  else if(value==='') {await input.press('ControlOrMeta+A');await input.press('Backspace');}
   else await input.fill(value);
   const actual=await tab.playwright.evaluate(selector=>document.querySelector(selector)?.value,selector);
   if(actual!==value) throw new Error('Browser input setup failed; no product finding may be inferred');

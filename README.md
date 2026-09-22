@@ -1,12 +1,26 @@
 # Astra + Fable Style Constitution
 
-**Two independent design agents. One governed design standard. Available to humans and machines through MCP.**
-
-![Architecture](./architecture.png)
+**Check a supported UI against declared design rules, review a source-bound repair, and verify the result.**
 
 Astra + Fable Style Constitution turns design rules into a versioned, machine-readable contract. Two provider-independent agent roles propose and critique changes; deterministic checks resolve measurable questions; exact candidate hashes prevent fake consensus; humans retain release authority by default.
 
 The project idea was inspired by Tibo's post on X.
+
+## Start here
+
+Use Node 22.12+ and pnpm 10.34.5. From a checkout of this revision:
+
+```sh
+pnpm install --frozen-lockfile && pnpm build
+pnpm stylecon browser-install
+pnpm stylecon check examples/profile
+```
+
+The standalone checker runs isolated Chromium on a configured static project.
+It supports light-DOM button/dialog journeys and native form error checks.
+The public design-rule MCP is `https://astra-fable-styleguide-mcp.vercel.app/mcp`;
+it does not access your local files. See [Start Here](docs/START_HERE.md) and the
+[broken → repaired demo](docs/DEMO.md). These CLI additions are not in the v0.4.0 tag.
 
 ## What it gives you
 - A canonical StyleSpec under `/spec`.
@@ -33,7 +47,11 @@ pnpm verify
 
 ## Validate a local StyleSpec
 
-The v0.3 CLI implements `stylecon validate` only. From this repository, run `pnpm build` and then `pnpm stylecon validate`. The command reads the `/spec` directory in the current working directory; use `--root <directory>` to select another project. It exits 0 for a valid spec, 1 for rule violations, and 2 for a missing or unreadable spec or invalid command. The CLI package is not published to a registry.
+Run `pnpm stylecon validate` to validate the `/spec` directory in the current working directory, or use `--root <directory>`. This is distinct from `stylecon check <project>`, which observes a configured UI. Use `--help` for commands. The CLI can be packed and installed locally; it is not yet published to npm.
+
+## Architecture
+
+![Architecture](./architecture.png)
 
 ## Production MCP
 The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance remains process-local, with optional local audit evidence and separate role approval credentials; see [GOVERNANCE.md](GOVERNANCE.md).

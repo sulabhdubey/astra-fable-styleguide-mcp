@@ -1,0 +1,30 @@
+---
+import Layout from '../layouts.astro';
+const repo='https://github.com/sulabhdubey/astra-fable-styleguide-mcp/blob/main/docs/';
+const base=import.meta.env.BASE_URL;
+---
+<Layout title="Start here · Style Constitution">
+  <p class="pill">Developer quickstart</p>
+  <h1>From a rule to a checked repair.</h1>
+  <p class="muted">Connect your coding agent to shared design rules. Use the experimental local verifier when you need evidence from a supported interface.</p>
+  <h2>1. Connect the design-rule MCP</h2>
+  <pre><code>https://astra-fable-styleguide-mcp.vercel.app/mcp</code></pre>
+  <p>Add this as a Streamable HTTP server in your MCP client. No service account or provider key is required. Your agent may have its own model costs.</p>
+  <blockquote>Read the manifest and button/dialog rules. Cite their rule IDs and separate declared rules from anything you have measured. Do not edit files yet.</blockquote>
+  <p>Success: eight public read/compliance tools are available. This connection does not inspect your browser or edit local files.</p>
+  <h2>2. Check whether the local verifier fits</h2>
+  <p>Supported: trusted static HTML/CSS/JavaScript, light-DOM ID targets, and a configured button/dialog journey. Native input, textarea and select error checks are supported. You need Node 22.12+, pnpm 10.34.5 and the installed Chromium runtime.</p>
+  <p>The CLI runs an isolated browser without a coding-agent connection. Custom comboboxes, shadow DOM and arbitrary framework applications require separate support.</p>
+  <h2>3. Replay one repair</h2>
+  <p>The demo copies a profile page into a new private workspace. Measure its intentional 24px button, review the supplied correction, apply it with a recovery receipt, then recheck.</p>
+  <pre><code>{`git clone https://github.com/sulabhdubey/astra-fable-styleguide-mcp.git
+cd astra-fable-styleguide-mcp
+pnpm install --frozen-lockfile
+pnpm build
+pnpm stylecon browser-install
+pnpm stylecon check examples/profile`}</code></pre>
+  <p>The standalone CLI commands require this revision; they are not included in the v0.4.0 tag. Exit 0 means recorded checks pass, 1 means violations, and 2 means incomplete verification or an error.</p>
+  <p><a href={`${base}demo/`}>Open the step-by-step repair demo →</a></p>
+  <p><a href={`${repo}PROJECT_WORKFLOW.md`}>Configure your own project</a></p>
+  <aside class="card"><h2>Know what a pass means</h2><p>A pass covers the recorded checks and state. Unsupported treatments need manual review. This synthetic demo is not a developer pilot, a full accessibility audit or a model-performance benchmark.</p></aside>
+</Layout>

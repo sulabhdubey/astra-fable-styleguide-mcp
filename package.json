@@ -30,7 +30,8 @@
     "evidence": "node scripts/release-evidence.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
     "repro": "npm run compile:core && node scripts/check-reproducibility.mjs",
-    "project": "node scripts/project-cli.mjs"
+    "project": "node scripts/project-cli.mjs",
+    "demo:init": "node scripts/prepare-demo.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
@@ -41,8 +42,9 @@
     "@types/node": "^22.0.0",
     "astro": "^7.2.8",
     "eslint": "^9.0.0",
+    "playwright": "1.63.0",
+    "sharp": "^0.35.4",
     "tsx": "^4.0.0",
-    "typescript": "^5.8.3",
-    "sharp": "^0.35.4"
+    "typescript": "^5.8.3"
   }
 }
