@@ -8,6 +8,11 @@ The project idea was inspired by Tibo's post on X.
 
 ## Start here
 
+The product site includes a no-install interactive sample: measure a button,
+review a supplied correction, recheck it and undo. To preview this checkout,
+run `pnpm dev:docs` and open the printed local URL. The homepage links to the
+demo and guided MCP setup; the demo measures only its supplied sample.
+
 Use Node 22.12+ and pnpm 10.34.5. From a checkout of this revision:
 
 ```sh
@@ -44,6 +49,11 @@ The full connected build uses pnpm and installs the official MCP SDK, Astro, Zod
 pnpm install
 pnpm verify
 ```
+
+After building the Astro site and installing Chromium (`pnpm stylecon browser-install`),
+run `pnpm test:product` for the built homepage, demo lifecycle, setup, clipboard
+fallback, mobile layout and navigation checks. It starts and closes its own
+loopback server. For a Pages build, use the same `BASE_PATH` for build and test.
 
 ## Validate a local StyleSpec
 

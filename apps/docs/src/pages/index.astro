@@ -1,14 +1,31 @@
 ---
 import Layout from '../layouts.astro';
-import { manifest, principles, components, patterns } from '../lib/spec';
+import { manifest, components } from '../lib/spec';
 const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+const minimum = components.find((component:any) => component.id === 'button').accessibility.minimumTarget;
 ---
-<Layout title={`${manifest.name} ${manifest.version}`}>
-  <p class="pill">v{manifest.version}</p><p class="pill">{manifest.status}</p>
-  <h1>{manifest.name}</h1>
-  <p class="muted">A governed design constitution created through independent proposals, cross-review, deterministic checks, exact-hash consensus, and human-controlled release.</p>
-  <p><a class="start-link" href={`${base}start/`}>Start here: connect your agent and try a repair →</a></p>
-  <img class="hero" src={`${base}architecture.png`} alt="Astra and Fable Style Constitution architecture" />
-  <h2>Principles</h2><div class="grid">{principles.principles.map((p:any)=><article class="card"><h3>{p.name}</h3><p>{p.rule}</p><small>{p.id}</small></article>)}</div>
-  <h2>Canonical surface</h2><div class="grid"><article class="card"><strong>{components.length}</strong><p>canonical components</p></article><article class="card"><strong>{patterns.length}</strong><p>interaction/application patterns</p></article><article class="card"><strong>1</strong><p>source of truth: <code>/spec</code></p></article></div>
+<Layout title="Style Constitution · Design rules your agent can use">
+  <section class="hero-grid" aria-labelledby="intro">
+    <div>
+      <p class="eyebrow"><span class="dot"></span>Astra + Fable / Experimental</p>
+      <h1 id="intro">Keep the intent.<br /><em>Check the interface.</em></h1>
+      <p class="lead">Give your coding agent a shared set of design rules. See where a rendered interface falls short, then review the correction.</p>
+      <div class="actions"><a class="button primary" href={`${base}demo/`}>Try the interactive demo <span aria-hidden="true">→</span></a><a class="button" href={`${base}start/`}>Connect your agent</a></div>
+      <p class="micro">Try the sample in your browser. No account, install or AI call.</p>
+    </div>
+    <figure class="preview" style="margin:0">
+      <div class="preview-top"><span>MEMBER PROFILE</span><span>One intentionally small button</span></div>
+      <div class="preview-body"><p class="eyebrow">A small detail. An explicit rule.</p><h3>How your team sees you.</h3><p class="muted">A familiar interface with something easy to miss.</p><span class="sample-label">Display name</span><div class="sample-field">Studio member</div><span class="preview-button">Review name</span></div>
+      <figcaption class="measurement-line"><strong>24px button</strong> · This project's rule: at least {minimum}.<br /><span class="micro">Illustrative preview. Open the demo to measure it live.</span></figcaption>
+    </figure>
+  </section>
+  <section class="section" aria-labelledby="workflow">
+    <div class="section-intro"><h2 id="workflow">From a design decision<br />to something you can check.</h2><p class="muted">For teams building with coding agents, and people who want to understand what those agents are following. Start with one button. Keep every claim tied to a rule or a measurement.</p></div>
+    <div class="steps"><article><span class="step-number">01</span><h3>Make the rules available</h3><p>The public MCP gives compatible coding agents access to the same design contract: tokens, component rules and decisions.</p></article><article><span class="step-number">02</span><h3>Look at what rendered</h3><p>The local verifier checks configured static interfaces in Chromium. Findings name the rule and the observed result.</p></article><article><span class="step-number">03</span><h3>Review, then recheck</h3><p>Preview a correction before applying it. Recheck the result. The local workflow rejects stale repair packets and supports guarded undo.</p></article></div>
+  </section>
+  <section class="section split" aria-label="Choose your next step">
+    <article><p class="eyebrow">Start without code</p><h2>See the difference<br />for yourself.</h2><p class="muted">Measure a sample button, inspect a supplied correction and recheck it. The demonstration stays in this page.</p><a class="button primary" href={`${base}demo/`}>Explore the sample →</a></article>
+    <article class="card"><p class="eyebrow">Bring it to your workflow</p><h2>One contract.<br />Your choice of agent.</h2><p class="muted">Connect a client to the read-only MCP, or install the experimental local verifier for supported static HTML, CSS and JavaScript.</p><a href={`${base}start/`}>Choose your setup →</a></article>
+  </section>
+  <section class="section section-intro" aria-labelledby="scope"><div><p class="eyebrow">Useful boundaries</p><h2 id="scope">Know what a check<br />can tell you.</h2></div><div><p>This is experimental software. The browser demo checks one supplied sample; the local verifier checks configured static UI journeys.</p><p class="muted">It does not establish complete accessibility, general framework support or autonomous repair accuracy. A supplied correction is an example you can reproduce.</p><p><a href={`${base}components/`}>Explore the v{manifest.version} design contract →</a></p></div></section>
 </Layout>
