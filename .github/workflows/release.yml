@@ -42,6 +42,8 @@ jobs:
       - run: pnpm test
       - run: pnpm validate
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:product
       - run: pnpm repro
       - run: git diff --exit-code -- generated
       - run: pnpm smoke:mcp

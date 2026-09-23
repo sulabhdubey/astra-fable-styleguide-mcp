@@ -32,6 +32,7 @@ const evidence={
     tests:gateStatus,
     canonicalValidation:gateStatus,
     build:gateStatus,
+    productBrowser:gateStatus,
     generatedReproducibility:gateStatus,
     generatedDiff:gateStatus,
     mcpSmoke:gateStatus,

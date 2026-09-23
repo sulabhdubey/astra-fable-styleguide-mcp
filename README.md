@@ -25,7 +25,7 @@ The standalone checker runs isolated Chromium on a configured static project.
 It supports light-DOM button/dialog journeys and native form error checks.
 The public design-rule MCP is `https://astra-fable-styleguide-mcp.vercel.app/mcp`;
 it does not access your local files. See [Start Here](docs/START_HERE.md) and the
-[broken → repaired demo](docs/DEMO.md). These CLI additions are not in the v0.4.0 tag.
+[broken → repaired demo](docs/DEMO.md). The standalone CLI is included in v0.5.0.
 
 ## What it gives you
 - A canonical StyleSpec under `/spec`.

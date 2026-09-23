@@ -20,7 +20,7 @@ Ask your connected agent:
 
 Success: the client lists eight tools, including `get_style_manifest`,
 `get_component_rules`, and `check_style_compliance`. The manifest currently reports
-v0.4.0. The browser documentation and `/version` are human checks; opening `/mcp`
+v0.5.0. The browser documentation and `/version` are human checks; opening `/mcp`
 in a browser does not perform an MCP handshake.
 
 ## 2. Decide whether the local verifier fits
@@ -50,13 +50,12 @@ pnpm stylecon check examples/profile
 Then follow the [repair demo](DEMO.md). It starts with an intentional 24px button,
 records a real rendered finding, applies a reviewed correction and rechecks it.
 The correction is provided for reproducibility; it is not evidence of autonomous
-model performance. Demo setup commands require this onboarding revision; the
-v0.4.0 tag contains the underlying verifier and repair APIs, not the standalone CLI.
+model performance. The standalone CLI and these demo setup commands are included in v0.5.0.
 
 ### Install a packed CLI without a repository checkout at runtime
 
 Build first, then `npm pack ./packages/cli`. In another directory, run
-`npm install /absolute/path/styleconstitution-cli-0.4.0.tgz` and use
+`npm install /absolute/path/styleconstitution-cli-0.5.0.tgz` and use
 `npx stylecon --help`. The archive contains the checking runtime, canonical
 contract/CSS snapshot and demo. Use `npx stylecon browser-install` if Chromium
 is absent. The package is not yet on npm; do not substitute a similarly named
