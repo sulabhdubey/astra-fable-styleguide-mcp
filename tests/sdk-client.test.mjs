@@ -44,6 +44,9 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     assert.equal(client.protocolEra(), 'modern');
     const { tools } = await client.listTools();
     assert.deepEqual(tools.map(tool => tool.name).sort(), [...PUBLIC_STYLE_TOOL_NAMES].sort());
+    for (const tool of tools) {
+      assert.deepEqual(tool.annotations, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, tool.name);
+    }
     assert.equal((await client.getStyleManifest()).version, '0.4.0');
     assert.ok(await client.getDesignTokens('space'));
     assert.equal((await client.getComponentRules('button')).id, 'button');
