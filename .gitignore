@@ -1,4 +1,6 @@
 node_modules/
+.pnpm-store/
+.rta-smriti/
 dist/
 coverage/
 .env

@@ -1,0 +1,15 @@
+---
+import Layout from '../layouts.astro';
+---
+<Layout title="Give feedback · Style Constitution">
+  <div class="page-head"><p class="eyebrow">Help shape the next step</p><h1>Where did you<br />get stuck?</h1><p class="lead">A confusing step or an incorrect finding is useful feedback. You don't need to write a perfect bug report.</p></div>
+  <section class="setup card"><label for="feedback">Your report — stays in this page</label><textarea id="feedback">What I tried: browser demo / MCP setup / local verifier
+The first confusing step:
+What I expected:
+What actually happened:
+Browser or coding client (optional):</textarea><p class="micro">Avoid credentials, private file paths, proprietary code and personal information. This page neither saves nor sends your text.</p><button class="action" data-copy="feedback" type="button" disabled>Copy report</button><p class="copy-status" role="status" data-copy-status></p><noscript><p>Select the report text and copy it manually.</p></noscript><h2 style="margin-top:32px">Share it where you're comfortable</h2><p>If you're already speaking with the project maintainer, paste it into that conversation. You can also choose to <a href="https://github.com/sulabhdubey/astra-fable-styleguide-mcp/issues/new">open a public GitHub issue</a>; that requires a GitHub account. Copying the report does not submit it.</p><p class="muted">There is no anonymous submission service on this page.</p></section>
+</Layout>
+<script>
+  import { wireCopyButtons } from '../lib/copy';
+  wireCopyButtons();
+</script>

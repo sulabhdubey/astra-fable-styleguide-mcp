@@ -28,6 +28,7 @@ jobs:
       - run: pnpm validate
       - run: pnpm generate
       - run: pnpm build:docs
+      - run: pnpm test:product
       - run: pnpm smoke:mcp
       - run: docker build -t style-constitution:ci .
       - run: git diff --exit-code -- generated

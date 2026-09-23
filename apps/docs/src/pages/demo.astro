@@ -1,7 +1,64 @@
 ---
 import Layout from '../layouts.astro';
-import { Content } from '../../../../docs/DEMO.md';
+import { components, accessibility } from '../lib/spec';
+const button = components.find((component:any) => component.id === 'button');
+const minimum = button.accessibility.minimumTarget;
+const targetRule = accessibility.rules.find((rule:any) => rule.name === 'Button target size' && button.accessibility.ruleIds.includes(rule.id));
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 ---
-<Layout title="Repair demo · Style Constitution">
-  <Content />
+<Layout title="Try a rendered check · Style Constitution">
+  <div class="page-head"><p class="eyebrow">Interactive demo / No installation</p><h1>One small button.<br />One visible difference.</h1><p class="lead">Check this sample in your browser. Review a supplied correction, apply it, and measure again.</p></div>
+  <noscript><p class="card">JavaScript is needed to measure and change this sample. You can still read the rule below or follow the <a href={`${base}walkthrough/`}>local repair walkthrough</a>.</p></noscript>
+  <div id="demo" class="demo-grid" data-minimum={parseFloat(minimum)} style={`--demo-minimum:${minimum}`}>
+    <section class="preview" aria-label="Live sample">
+      <div class="preview-top"><span>LIVE SAMPLE</span><span id="sample-state">Original</span></div>
+      <div class="demo-sample"><p class="eyebrow">Member profile</p><h2>How your team sees you.</h2><p class="muted">A simple profile with a deliberately small button.</p><span class="sample-label">Display name</span><div class="sample-field">Studio member</div><button id="sample-button" type="button">Review name</button><p id="sample-response" class="micro" style="margin-top:20px" aria-live="polite">This sample does not save a profile.</p></div>
+      <div class="measurement-line"><span class="metric">{minimum}</span> minimum height · <a href={`${base}accessibility/`}>{targetRule.id}</a><br /><span class="micro">From the canonical button contract. This demo measures height only; the rule covers both dimensions. Not a universal WCAG minimum.</span></div>
+    </section>
+    <section class="demo-panel" aria-labelledby="check-heading">
+      <h2 id="check-heading">See what the browser measures.</h2>
+      <p id="measurement" class="demo-status" role="status" aria-live="polite">Ready. Check the button to measure its current height.</p>
+      <div class="demo-toolbar"><button class="action primary" id="check" type="button" disabled>Check button</button><button class="action" id="review" type="button" disabled>Review correction</button></div>
+      <div id="correction" hidden><h3 style="margin-top:28px">A supplied correction</h3><p class="micro">Remove the fixed 24px height. Use this project's minimum and comfortable vertical padding.</p><pre><code>{`/* Remove */\nheight: 24px;\n\n/* Apply to this sample */\nheight: auto;\nmin-height: ${minimum};\npadding: 10px 16px;`}</code></pre></div>
+      <div class="demo-toolbar"><button class="action" id="apply" type="button" disabled>Apply correction</button><button class="action" id="undo" type="button" disabled>Undo correction</button></div>
+      <p class="micro" style="margin-top:24px">This teaching example changes only the sample above. It does not inspect your files or run the source-bound CLI repair workflow.</p>
+    </section>
+  </div>
+  <section class="section" style="margin-top:56px"><div class="section-intro"><div><p class="eyebrow">Take the next step</p><h2>A shared rule is<br />only the beginning.</h2></div><div><p>Connect a coding agent to the design contract, or replay the full local workflow with source-bound findings and a recovery receipt.</p><div class="actions"><a class="button primary" href={`${base}start/`}>Connect your agent</a><a href={`${base}walkthrough/`}>Local repair walkthrough →</a></div><p><a href={`${base}feedback/`}>Tell us what was confusing</a></p></div></div></section>
 </Layout>
+<script>
+  const root = document.querySelector<HTMLElement>('#demo')!;
+  const sample = document.querySelector<HTMLButtonElement>('#sample-button')!;
+  const check = document.querySelector<HTMLButtonElement>('#check')!;
+  const review = document.querySelector<HTMLButtonElement>('#review')!;
+  const apply = document.querySelector<HTMLButtonElement>('#apply')!;
+  const undo = document.querySelector<HTMLButtonElement>('#undo')!;
+  const result = document.querySelector<HTMLElement>('#measurement')!;
+  const correction = document.querySelector<HTMLElement>('#correction')!;
+  const label = document.querySelector<HTMLElement>('#sample-state')!;
+  const minimum = Number(root.dataset.minimum);
+  if (Number.isFinite(minimum) && minimum > 0) check.disabled = false;
+  sample.addEventListener('click', () => { document.querySelector('#sample-response')!.textContent = 'Review opened for Studio member. Nothing is saved or sent.'; });
+  check.addEventListener('click', () => {
+    const height = sample.getBoundingClientRect().height;
+    const pass = height >= minimum;
+    result.textContent = `${height.toFixed(1)}px measured — ${pass ? 'meets' : 'below'} this project's ${minimum}px minimum. ${pass ? 'This height check passes; other behavior is not assessed.' : 'Review the supplied correction next.'}`;
+    review.disabled = pass;
+    if (sample.dataset.corrected) label.textContent = pass ? 'Correction rechecked' : 'Correction needs review';
+  });
+  review.addEventListener('click', () => { correction.hidden = false; apply.disabled = false; });
+  apply.addEventListener('click', () => {
+    sample.dataset.corrected = 'true';
+    label.textContent = 'Correction applied · not rechecked';
+    result.textContent = 'Correction applied. Recheck the button to measure the new result.';
+    apply.disabled = true; review.disabled = true; undo.disabled = false;
+    check.focus();
+  });
+  undo.addEventListener('click', () => {
+    delete sample.dataset.corrected;
+    label.textContent = 'Original restored';
+    result.textContent = 'Original restored. Check the button again for a fresh measurement.';
+    correction.hidden = true; apply.disabled = true; review.disabled = true; undo.disabled = true;
+    check.focus();
+  });
+</script>

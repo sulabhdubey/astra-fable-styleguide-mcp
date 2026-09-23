@@ -18,6 +18,7 @@
     "generate": "npm run compile:core && node scripts/generate-assets.mjs",
     "build:portable": "npm run clean && npm run compile:core && npm run generate && node scripts/build-docs-portable.mjs",
     "build:docs": "cd apps/docs && astro build",
+    "test:product": "node scripts/verify-product.mjs",
     "build": "npm run build:portable && pnpm --filter @styleconstitution/cli build && pnpm --filter @styleconstitution/sdk build && npm run build:docs",
     "verify:core": "npm run lint && npm run typecheck && npm run test && npm run validate && npm run build:portable && npm run repro && npm run audit && npm run evidence",
     "verify": "pnpm lint && pnpm lint:eslint && pnpm typecheck:full && pnpm test && pnpm validate && pnpm generate && pnpm repro && pnpm build:docs && pnpm smoke:mcp && pnpm audit && pnpm evidence",

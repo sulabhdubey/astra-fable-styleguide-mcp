@@ -1,30 +1,41 @@
 ---
 import Layout from '../layouts.astro';
-const repo='https://github.com/sulabhdubey/astra-fable-styleguide-mcp/blob/main/docs/';
-const base=import.meta.env.BASE_URL;
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+const endpoint = 'https://astra-fable-styleguide-mcp.vercel.app/mcp';
+const cursor = JSON.stringify({mcpServers:{'style-constitution':{url:endpoint}}},null,2);
 ---
-<Layout title="Start here · Style Constitution">
-  <p class="pill">Developer quickstart</p>
-  <h1>From a rule to a checked repair.</h1>
-  <p class="muted">Connect your coding agent to shared design rules. Use the experimental local verifier when you need evidence from a supported interface.</p>
-  <h2>1. Connect the design-rule MCP</h2>
-  <pre><code>https://astra-fable-styleguide-mcp.vercel.app/mcp</code></pre>
-  <p>Add this as a Streamable HTTP server in your MCP client. No service account or provider key is required. Your agent may have its own model costs.</p>
-  <blockquote>Read the manifest and button/dialog rules. Cite their rule IDs and separate declared rules from anything you have measured. Do not edit files yet.</blockquote>
-  <p>Success: eight public read/compliance tools are available. This connection does not inspect your browser or edit local files.</p>
-  <h2>2. Check whether the local verifier fits</h2>
-  <p>Supported: trusted static HTML/CSS/JavaScript, light-DOM ID targets, and a configured button/dialog journey. Native input, textarea and select error checks are supported. You need Node 22.12+, pnpm 10.34.5 and the installed Chromium runtime.</p>
-  <p>The CLI runs an isolated browser without a coding-agent connection. Custom comboboxes, shadow DOM and arbitrary framework applications require separate support.</p>
-  <h2>3. Replay one repair</h2>
-  <p>The demo copies a profile page into a new private workspace. Measure its intentional 24px button, review the supplied correction, apply it with a recovery receipt, then recheck.</p>
-  <pre><code>{`git clone https://github.com/sulabhdubey/astra-fable-styleguide-mcp.git
-cd astra-fable-styleguide-mcp
-pnpm install --frozen-lockfile
-pnpm build
-pnpm stylecon browser-install
-pnpm stylecon check examples/profile`}</code></pre>
-  <p>The standalone CLI commands require this revision; they are not included in the v0.4.0 tag. Exit 0 means recorded checks pass, 1 means violations, and 2 means incomplete verification or an error.</p>
-  <p><a href={`${base}demo/`}>Open the step-by-step repair demo →</a></p>
-  <p><a href={`${repo}PROJECT_WORKFLOW.md`}>Configure your own project</a></p>
-  <aside class="card"><h2>Know what a pass means</h2><p>A pass covers the recorded checks and state. Unsupported treatments need manual review. This synthetic demo is not a developer pilot, a full accessibility audit or a model-performance benchmark.</p></aside>
+<Layout title="Connect your agent · Style Constitution">
+  <div class="page-head"><p class="eyebrow">Guided setup</p><h1>Your agent.<br />A shared design contract.</h1><p class="lead">Connect to the public read-only MCP to give your coding agent access to design rules. No project account or provider key is required.</p><p class="micro">Your coding client may have its own subscription or model costs. <a href={`${base}demo/`}>Just exploring? Try the no-install demo.</a></p></div>
+  <div class="setup">
+    <section class="card" aria-labelledby="client-heading"><p class="eyebrow">01 / Connect</p><h2 id="client-heading">Choose your client</h2>
+      <label for="client">Your coding client</label><select id="client"><option value="cursor">Cursor</option><option value="other">Another Streamable HTTP client</option></select>
+      <p id="client-instructions" style="margin-top:20px">Add this entry to .cursor/mcp.json in your project, or ~/.cursor/mcp.json for personal use. Merge it with existing servers; do not replace other configuration. Save and restart Cursor.</p>
+      <pre id="configuration" tabindex="0" aria-label="MCP configuration"><code>{cursor}</code></pre>
+      <button class="action" id="copy-config" type="button" disabled>Copy configuration</button><p id="copy-status" class="copy-status" role="status"></p>
+      <p class="micro" id="client-source">Configuration follows <a href="https://prod.cursor.com/help/customization/mcp">Cursor's official MCP documentation</a>. This is a setup guide, not a claim that every client version has been tested.</p>
+      <noscript><p>Copy the configuration manually. For another Streamable HTTP client, use <code>{endpoint}</code> as its server URL.</p></noscript>
+    </section>
+    <section class="card"><p class="eyebrow">02 / Confirm in your client</p><h2>Look for eight tools</h2><p>Open your client's MCP tools list. Enable the server if needed and check for <code>get_style_manifest</code>, <code>get_component_rules</code> and <code>check_style_compliance</code> among the eight public tools.</p><p class="muted">This page cannot see your client's connection. Tool visibility and a successful call in your client are the confirmation.</p><h3>Try this first prompt</h3><blockquote id="first-prompt">Read the Style Constitution manifest and button/dialog rules. Cite their rule IDs. Separate declared rules from anything you have actually measured. Do not edit files yet.</blockquote><button class="action" data-copy="first-prompt" type="button" disabled>Copy first prompt</button><p class="copy-status" role="status" data-copy-status></p><p class="micro">The public MCP supplies rules and checks submitted values. It cannot inspect your local browser or edit your files.</p></section>
+    <section><p class="eyebrow">03 / Optional developer workflow</p><h2>Check your own supported interface</h2><p>The separate experimental CLI runs Chromium locally. It supports trusted static HTML/CSS/JavaScript with light-DOM ID targets and configured button, dialog and native-field journeys.</p><p class="muted">Arbitrary frameworks, custom comboboxes, shadow DOM and complete accessibility coverage are outside its current scope. The CLI needs Git, Node 22.12+, pnpm 10.34.5 and Chromium. It is not on npm.</p><div class="actions"><a class="button" href="https://github.com/sulabhdubey/astra-fable-styleguide-mcp/blob/main/docs/START_HERE.md">Install the local verifier ↗</a><a href={`${base}walkthrough/`}>Repair walkthrough →</a></div></section>
+    <section aria-labelledby="troubleshoot"><h2 id="troubleshoot">If something doesn't connect</h2><details><summary>I opened /mcp in my browser</summary><p>That address is a protocol endpoint, not a webpage. A browser request is not an MCP connection test. Add the URL inside a client that supports Streamable HTTP, then check its tool list.</p></details><details><summary>The tools aren't appearing</summary><p>Confirm the exact endpoint, reload the client's MCP configuration, and inspect its connection log. Organization policies can restrict servers. Keep existing client security controls enabled. If it still fails, share the error text after removing credentials or private paths.</p></details><details><summary>Can I check a website by pasting its URL?</summary><p>Not with this product experience. The interactive demo checks its own sample. Your project's checks run through the separate local verifier and require a supported configuration.</p></details><p style="margin-top:24px"><a href={`${base}feedback/`}>Prepare a feedback report →</a></p></section>
+  </div>
 </Layout>
+<script>
+  import { wireCopyButtons, copyText } from '../lib/copy';
+  const endpoint = 'https://astra-fable-styleguide-mcp.vercel.app/mcp';
+  const select = document.querySelector<HTMLSelectElement>('#client')!;
+  const config = document.querySelector<HTMLElement>('#configuration')!;
+  const instructions = document.querySelector<HTMLElement>('#client-instructions')!;
+  const status = document.querySelector<HTMLElement>('#copy-status')!;
+  const button = document.querySelector<HTMLButtonElement>('#copy-config')!;
+  button.disabled = false;
+  select.addEventListener('change', () => {
+    const cursor = select.value === 'cursor';
+    config.textContent = cursor ? JSON.stringify({mcpServers:{'style-constitution':{url:endpoint}}},null,2) : endpoint;
+    instructions.textContent = cursor ? 'Add this entry to .cursor/mcp.json in your project, or ~/.cursor/mcp.json for personal use. Merge it with existing servers; do not replace other configuration. Save and restart Cursor.' : 'Add a remote MCP server in your client. Choose Streamable HTTP and paste this URL. No authentication header is required. Follow your client’s official instructions for enabling tools.';
+    document.querySelector<HTMLElement>('#client-source')!.hidden = !cursor;
+    status.textContent = '';
+  });
+  button.addEventListener('click', () => copyText(config.innerText, status, 'configuration above'));
+  wireCopyButtons();
+</script>
