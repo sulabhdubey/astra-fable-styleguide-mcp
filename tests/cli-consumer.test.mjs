@@ -12,7 +12,7 @@ const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'np
 const runNpm = (args, cwd) => spawnSync(
   process.platform === 'win32' ? process.execPath : 'npm',
   process.platform === 'win32' ? [npmCli, ...args] : args,
-  { cwd, encoding: 'utf8', env: { ...process.env, npm_config_cache: join(cwd, '.npm-cache') } }
+  { cwd, encoding: 'utf8', env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'npm_config_package')), npm_config_cache: join(cwd, '.npm-cache') } }
 );
 
 test('packed stylecon validates a clean consumer spec and reports a broken target', async () => {
