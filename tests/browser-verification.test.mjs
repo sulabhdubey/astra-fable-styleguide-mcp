@@ -75,3 +75,20 @@ test('native automatic focus treatment is unsupported, not a fabricated contrast
   assert.equal(checks.find(c=>c.check==='focus').status,'unsupported');
   assert.equal(checks.find(c=>c.check==='focus-contrast').status,'unsupported');
 });
+
+test('unsupported dialog focus surfaces cannot produce a containment pass', () => {
+  for (const risk of ['embedded-content', 'shadow-root', 'nested-overlay']) {
+    const observed = sample(); observed.dialog.focusScopeRisks = [risk];
+    const report = evaluateObservations(contract, observed);
+    assert.equal(report.checks.find(c => c.check === 'containment').status, 'unsupported', risk);
+    assert.notEqual(report.status, 'pass');
+  }
+});
+test('nested overlay Escape is incomplete rather than a dialog dismissal verdict', () => {
+  for (const closed of [true, false]) {
+    const observed = sample(); Object.assign(observed.dialog, { escapeScopeRisks: ['nested-overlay'], escapeClosed: closed });
+    const report = evaluateObservations(contract, observed);
+    assert.equal(report.checks.find(c => c.check === 'escape').status, 'unsupported');
+    assert.equal(report.checks.find(c => c.check === 'return-focus').status, 'unsupported');
+  }
+});

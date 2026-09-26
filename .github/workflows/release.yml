@@ -43,6 +43,7 @@ jobs:
       - run: pnpm validate
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/test-dialog-boundaries.mjs
       - run: pnpm test:product
       - run: pnpm repro
       - run: git diff --exit-code -- generated

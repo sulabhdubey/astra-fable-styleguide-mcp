@@ -63,16 +63,16 @@ export function evaluateObservations(contract, observed, identity = {}) {
     const steps = [...(dialog.forward ?? []), ...(dialog.backward ?? [])];
     const complete = Number.isInteger(dialog.focusableCount) && dialog.focusableCount > 0 &&
       dialog.forward?.length >= dialog.focusableCount + 1 && dialog.backward?.length >= dialog.focusableCount + 1;
-    add('containment', 'STYLE-A11Y-012', steps.includes(false) ? 'fail' : complete && steps.every(x => x === true) ? 'pass' : 'not_checked',
-      { forward: dialog.forward, backward: dialog.backward, focusableCount: dialog.focusableCount }, 'Keep keyboard focus inside the open dialog in both directions.');
+    add('containment', 'STYLE-A11Y-012', dialog.focusScopeRisks?.length ? 'unsupported' : steps.includes(false) ? 'fail' : complete && steps.every(x => x === true) ? 'pass' : 'not_checked',
+      { forward: dialog.forward, backward: dialog.backward, focusableCount: dialog.focusableCount, scopeRisks: dialog.focusScopeRisks ?? [] }, 'Keep keyboard focus inside the open dialog in both directions; unsupported focus surfaces require a dedicated journey.');
     const escape = typeof dialog.escapeClosed !== 'boolean' ? 'not_checked' : dialog.escapeAllowed === true ? boolean(dialog.escapeClosed) :
       dialog.escapeAllowed === false ? boolean(!dialog.escapeClosed && typeof dialog.exceptionReason === 'string' && dialog.exceptionReason.trim().length > 0) : 'not_checked';
-    add('escape', 'STYLE-A11Y-013', escape, { allowed: dialog.escapeAllowed, closed: dialog.escapeClosed, exception: dialog.exceptionReason }, 'Honor Escape dismissal or document an explicit non-dismissible exception.');
-    add('return-focus', 'STYLE-A11Y-012', boolean(dialog.returnFocus), dialog.returnFocus, 'Return focus to the trigger when closing.');
+    add('escape', 'STYLE-A11Y-013', dialog.escapeScopeRisks?.length ? 'unsupported' : escape, { allowed: dialog.escapeAllowed, closed: dialog.escapeClosed, exception: dialog.exceptionReason, scopeRisks: dialog.escapeScopeRisks ?? [] }, 'Honor Escape dismissal or document an explicit non-dismissible exception; nested overlays need a separately configured dismissal journey.');
+    add('return-focus', 'STYLE-A11Y-012', dialog.escapeScopeRisks?.length ? 'unsupported' : boolean(dialog.returnFocus), dialog.returnFocus, 'Return focus to the trigger when closing.');
   }
   const status = checks.some(x => x.status === 'fail') ? 'fail' : checks.every(x => x.status === 'pass') ? 'pass' : 'not_checked';
   return { schemaVersion: 1, status, specSha256: contract.specSha256, specHashScope: contract.specHashScope,
-    artifactSha256: identity.artifactSha256 ?? null, checks, limitations: ['Configured light-DOM targets and declared interaction path only.', 'Focus contrast supports opaque RGB outlines on flat opaque surfaces; clipping and overlays need review.', 'Not a complete accessibility audit or proof of arbitrary generated UI.'] };
+    artifactSha256: identity.artifactSha256 ?? null, checks, limitations: ['Configured light-DOM targets and declared interaction path only.', 'Embedded content, detected open shadow roots and visible semantic overlays make affected dialog checks unsupported. Closed shadow roots and unmarked custom overlays cannot be reliably detected.', 'Browser role/name matching does not verify screen-reader announcements; actual assistive-technology testing remains required.', 'Focus contrast supports opaque RGB outlines on flat opaque surfaces; clipping and overlays need review.', 'Not a complete accessibility audit or proof of arbitrary generated UI.'] };
 }
 
 /** Trusted local report -> bounded repair input. Hashes must come from current source, not a model. */

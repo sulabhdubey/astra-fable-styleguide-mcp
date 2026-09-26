@@ -39,17 +39,37 @@ export async function collectUiObservations(tab, config) {
     const visible = e => e && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().height > 0 && getComputedStyle(e).visibility === 'visible';
     return { found: true, visible: visible(d), name: titles.map(e => e?.textContent.trim() ?? '').join(' '),
       namedByVisibleTitle: titles.length > 0 && titles.every(e => visible(e) && /^H[1-6]$/.test(e.tagName) && d.contains(e)),
-      initialFocusInside: d.contains(document.activeElement), focusableCount: [...d.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(visible).length,
+      initialFocusInside: d.contains(document.activeElement), focusableCount: [...d.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')].filter(visible).length,
       width: rect.width };
   }, config.dialog);
   if (!state.visible) return { buttons, dialog: state };
+  // Light-DOM containment cannot establish focus behavior inside these surfaces.
+  // Re-sample before Escape: Tab handlers can open an overlay after initial focus.
+  const scopeRisks = () => tab.playwright.evaluate(selector => {
+    const d = document.querySelector(selector);
+    if (!d) return ['missing-dialog'];
+    const risks = [];
+    if (d.querySelector('iframe,object,embed')) risks.push('embedded-content');
+    if ([d, ...d.querySelectorAll('*')].some(e => e.shadowRoot)) risks.push('shadow-root');
+    const visible = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+    if ([...d.querySelectorAll('details')].some(e => !e.querySelector(':scope > summary'))) risks.push('implicit-summary');
+    if ([...document.querySelectorAll('[data-a11y-dialog-ignore-focus-trap]')].some(visible)) risks.push('focus-trap-exception');
+    if ([...document.querySelectorAll('dialog[open],[role="dialog"],[role="alertdialog"],[role="menu"],[role="listbox"],:popover-open')]
+      .some(e => e !== d && !e.contains(d) && visible(e))) risks.push('nested-overlay');
+    return risks;
+  }, config.dialog);
+  state.focusScopeRisks = await scopeRisks();
   state.roleNameMatched = await tab.playwright.getByRole('dialog', { name: config.name, exact: true }).count() === 1;
   const inside = () => tab.playwright.evaluate(selector => document.querySelector(selector)?.contains(document.activeElement) ?? false, config.dialog);
   state.forward = []; state.backward = [];
   for (const [key, output] of [['Tab', state.forward], ['shift+Tab', state.backward]]) {
-    for (let i = 0; i <= Math.min(state.focusableCount, 20); i++) { await tab.pressKey(null, key); output.push(await inside()); }
+    for (let i = 0; i <= Math.min(state.focusableCount, 20); i++) {
+      await tab.pressKey(null, key); output.push(await inside());
+      state.focusScopeRisks = [...new Set([...state.focusScopeRisks, ...await scopeRisks()])];
+    }
   }
   buttons.push(...await collectButtons(config.dialogButtons));
+  state.escapeScopeRisks = await scopeRisks();
   await tab.pressKey(null, 'Escape');
   await tab.getAXState({ emit: false }); // Observe after native close-event processing.
   // Native dialog close handlers may run on the next rendering task. Sample the
