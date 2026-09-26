@@ -19,6 +19,7 @@ jobs:
       - run: pnpm typecheck:full
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
       - run: node packages/cli/dist/stylecon.mjs check examples/profile --format sarif --output "$RUNNER_TEMP/stylecon.sarif"
       - uses: actions/upload-artifact@v4

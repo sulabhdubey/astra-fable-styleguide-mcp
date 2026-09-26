@@ -94,3 +94,33 @@ the change preserves your intended design. A pass covers only recorded checks.
 | Stale report or repair | Recheck the current source. Do not remove hash checks. |
 | Unsupported result | Inspect that treatment manually; do not convert it to a pass. |
 | Interrupted repair | Preserve the receipt and inspect the lock owner; follow the recovery guide. |
+
+## Dialog verification boundaries
+
+The verifier exercises actual Chromium keyboard input on the configured dialog.
+It records initial focus, bounded forward/backward Tab containment, Escape and
+focus return. These observations cover only the declared journey.
+
+Detected iframe/object/embed content, open shadow roots, and visible semantic
+nested overlays make affected focus checks `unsupported`, not passing evidence.
+Escape and focus-return judgments are also unsupported when these surfaces are
+present before Escape. An inner popover can correctly consume Escape without
+closing its parent dialog; this requires a dedicated nested interaction journey.
+The report records the detected scope risks. Unsupported results remain incomplete
+and are not proof of a product defect.
+
+Closed shadow roots and custom overlays without recognizable semantics cannot be
+reliably detected. Hidden or unopened interactions are not exercised automatically.
+Browser role/name matching is not screen-reader verification: test announcements
+and operation with actual assistive technologies separately (for example,
+VoiceOver/Safari). No screen-reader result is inferred from DOM or keyboard checks.
+
+Run `node scripts/test-dialog-boundaries.mjs` after installing Playwright Chromium
+for the native-dialog, embedded-content, shadow-root and nested-overlay regression.
+
+Additional focus cases: `<details>` without an explicit `<summary>` and visible
+`data-a11y-dialog-ignore-focus-trap` integrations are reported as unsupported.
+Explicit summaries are included in traversal bounds. Regression cases also cover
+container initial focus (`tabindex="-1"`), an autofocus control, and focus return
+for supported native journeys. This handling was informed by the
+[a11y-dialog focus considerations](https://a11y-dialog.netlify.app/advanced/focus-considerations/).
