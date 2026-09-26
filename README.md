@@ -6,6 +6,14 @@ Astra + Fable Style Constitution turns design rules into a versioned, machine-re
 
 The project idea was inspired by Tibo's post on X.
 
+## Current release
+
+**[v0.5.1](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.5.1)** adds explicit dialog-verification limits for embedded content, focus-trap exceptions and nested overlays. See the [release notes](docs/V0.5.1_RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+
+[Open the product](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/) · [Try the interactive demo](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/)
+
+Experimental software: configured static UI journeys are supported; complete accessibility and general framework coverage are not claimed.
+
 ## Start here
 
 The product site includes a no-install interactive sample: measure a button,
@@ -25,7 +33,7 @@ The standalone checker runs isolated Chromium on a configured static project.
 It supports light-DOM button/dialog journeys and native form error checks.
 The public design-rule MCP is `https://astra-fable-styleguide-mcp.vercel.app/mcp`;
 it does not access your local files. See [Start Here](docs/START_HERE.md) and the
-[broken → repaired demo](docs/DEMO.md). The standalone CLI is included in v0.5.0.
+[broken → repaired demo](docs/DEMO.md). The standalone CLI was introduced in v0.5.0; use the latest release for subsequent corrections.
 
 ## What it gives you
 - A canonical StyleSpec under `/spec`.
@@ -66,7 +74,7 @@ Run `pnpm stylecon validate` to validate the `/spec` directory in the current wo
 ## Production MCP
 The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance remains process-local, with optional local audit evidence and separate role approval credentials; see [GOVERNANCE.md](GOVERNANCE.md).
 
-The public server is available below. Check `/version` for the version currently serving; the immutable v0.1.0 release and snapshot remain available.
+The public server is available below. Check `/version` for the version currently serving; published releases and immutable snapshots remain available in the [release archive](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases).
 
 | Endpoint | URL |
 | --- | --- |
@@ -92,13 +100,13 @@ See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for deployment settings and ver
 
 For a machine-readable check of MCP discovery, protocol negotiation, version, and the eight advertised read tools, build the repository SDK and run `node scripts/probe-mcp.mjs https://astra-fable-styleguide-mcp.vercel.app/mcp`. See [`docs/TYPESCRIPT_CLIENT.md`](./docs/TYPESCRIPT_CLIENT.md) for the client API and probe output.
 
-The next compliance implementation reports source locations and explicit coverage limits. See [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) for its result contract.
+The compliance checker reports source locations and explicit coverage limits. See [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) for its result contract.
 
 For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIPT_CLIENT.md).
 
 Historical comparisons use [immutable `/spec` snapshots](./docs/VERSIONING.md).
 
-See the [v0.2.0 release notes](./docs/V0.2.0_RELEASE_NOTES.md) for the design delta, compatibility, and governance scope. The [implementation plan](./docs/V0.2_PLAN.md) records the delivery criteria.
+See the [latest release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/latest) for current changes and verification evidence. Earlier release notes are indexed in the [changelog](CHANGELOG.md).
 
 ## Project contract
 - Goal: [`GOAL.md`](./GOAL.md)
