@@ -47,7 +47,7 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     for (const tool of tools) {
       assert.deepEqual(tool.annotations, { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }, tool.name);
     }
-    assert.equal((await client.getStyleManifest()).version, '0.5.0');
+    assert.equal((await client.getStyleManifest()).version, '0.5.1');
     assert.ok(await client.getDesignTokens('space'));
     assert.equal((await client.getComponentRules('button')).id, 'button');
     const sameVersion = await client.compareSpecVersions('0.1.0', '0.1.0');
@@ -64,12 +64,12 @@ test('TypeScript client completes a local official-SDK MCP lifecycle', { timeout
     await legacyClient.connect();
     assert.equal(legacyClient.protocolEra(), 'legacy');
     assert.deepEqual((await legacyClient.listTools()).tools.map(tool => tool.name).sort(), [...PUBLIC_STYLE_TOOL_NAMES].sort());
-    assert.equal((await legacyClient.getStyleManifest()).version, '0.5.0');
+    assert.equal((await legacyClient.getStyleManifest()).version, '0.5.1');
     const probe = JSON.parse(execFileSync(process.execPath, ['scripts/probe-mcp.mjs', client.endpoint()], {
       cwd: process.cwd(), encoding: 'utf8', timeout: 10000,
     }));
     assert.equal(probe.protocolEra, 'modern');
-    assert.equal(probe.version, '0.5.0');
+    assert.equal(probe.version, '0.5.1');
     assert.equal(probe.expectedToolNamesOnly, true);
     assert.deepEqual(probe.toolNames, [...PUBLIC_STYLE_TOOL_NAMES].sort());
   } finally {
