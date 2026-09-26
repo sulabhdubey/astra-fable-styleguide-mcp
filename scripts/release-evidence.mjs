@@ -33,6 +33,7 @@ const evidence={
     canonicalValidation:gateStatus,
     build:gateStatus,
     productBrowser:gateStatus,
+    dialogBoundaryBrowser:gateStatus,
     generatedReproducibility:gateStatus,
     generatedDiff:gateStatus,
     mcpSmoke:gateStatus,

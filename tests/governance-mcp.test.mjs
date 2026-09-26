@@ -50,7 +50,7 @@ test('governance MCP tool is admin-only while public read tools remain available
     const { tools } = await anonymous.listTools();
     assert.ok(tools.some(tool => tool.name === 'get_governance_activity'));
     const currentManifest = await anonymous.getStyleManifest();
-    assert.equal(currentManifest.version, '0.5.0');
+    assert.equal(currentManifest.version, '0.5.1');
     const denied = await anonymous.connection.callTool({ name: 'get_governance_activity', arguments: {} });
     assert.equal(denied.isError, true);
     await authorized.connect();
