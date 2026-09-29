@@ -71,7 +71,7 @@ export function evaluateObservations(contract, observed, identity = {}) {
     add('return-focus', 'STYLE-A11Y-012', dialog.escapeScopeRisks?.length ? 'unsupported' : boolean(dialog.returnFocus), dialog.returnFocus, 'Return focus to the trigger when closing.');
   }
   const status = checks.some(x => x.status === 'fail') ? 'fail' : checks.every(x => x.status === 'pass') ? 'pass' : 'not_checked';
-  return { schemaVersion: 1, status, specSha256: contract.specSha256, specHashScope: contract.specHashScope,
+  return { schemaVersion: 1, status, specSha256: contract.specSha256, specHashScope: contract.specHashScope, ...(contract.constitution?{constitution:contract.constitution}:{}),
     artifactSha256: identity.artifactSha256 ?? null, checks, limitations: ['Configured light-DOM targets and declared interaction path only.', 'Embedded content, detected open shadow roots and visible semantic overlays make affected dialog checks unsupported. Closed shadow roots and unmarked custom overlays cannot be reliably detected.', 'Browser role/name matching does not verify screen-reader announcements; actual assistive-technology testing remains required.', 'Focus contrast supports opaque RGB outlines on flat opaque surfaces; clipping and overlays need review.', 'Not a complete accessibility audit or proof of arbitrary generated UI.'] };
 }
 

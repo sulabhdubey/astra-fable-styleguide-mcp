@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { createContract } from '../packages/browser-verification/src/index.mjs';
+import { loadPinnedConstitution } from './constitution.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -22,7 +23,7 @@ export async function loadProject(configPath) {
   const full = await realpath(configPath); const root = await realpath(dirname(full));
   const raw = await readFile(full,'utf8'); if (raw.length > 32000) throw new Error('Configuration too large');
   const config = JSON.parse(raw); const j = config.journey;
-  if(Object.keys(config).some(k=>!['schemaVersion','files','journey','targetPaths','form','states','closePaths'].includes(k))) throw new Error('Unknown project configuration field');
+  if(Object.keys(config).some(k=>!['schemaVersion','files','journey','targetPaths','form','states','closePaths','constitution'].includes(k))) throw new Error('Unknown project configuration field');
   if(j && Object.keys(j).some(k=>!['buttons','trigger','dialog','name','dialogButtons','close','escapeAllowed','exceptionReason'].includes(k))) throw new Error('Unknown journey field');
   if(config.schemaVersion!==1 || !Array.isArray(config.files) || config.files.length<1 || config.files.length>20 || !config.files.includes('index.html') || new Set(config.files).size!==config.files.length) throw new Error('Invalid project files');
   for(const path of config.files) { if(path==='tokens.css') throw new Error('Reserved canonical CSS route'); await contained(root,path); }
@@ -44,9 +45,15 @@ export async function loadProject(configPath) {
 export async function snapshotProject(project) {
   if(hash(await readFile(project.configPath,'utf8'))!==project.configHash) throw new Error('Configuration changed; reload project');
   const files={}; for(const path of project.config.files) files[path]=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(await readFile(await contained(project.root,path)));
+  if(project.config.constitution){
+    const {css,contract}=await loadPinnedConstitution(project.root,project.config.constitution);
+    return {artifactSha256:hash(JSON.stringify({configHash:project.configHash,files,css})),contract,files,css,config:project.config};
+  }
   const css=await readFile(resolve(repository,'generated/css/tokens.css'),'utf8');
   const [button,dialog,rules]=await Promise.all(['spec/components/button.json','spec/components/dialog.json','spec/accessibility/rules.json'].map(async p=>JSON.parse(await readFile(resolve(repository,p),'utf8'))));
-  const contract=createContract({button,dialog,rules});
+  const manifest=JSON.parse(await readFile(resolve(repository,'spec/manifest.json'),'utf8'));
+  const base=createContract({button,dialog,rules});
+  const contract={...base,constitution:{name:manifest.name,version:manifest.version,sha256:base.specSha256,scope:'bundled browser contract'}};
   return {artifactSha256:hash(JSON.stringify({configHash:project.configHash,files,css})),contract,files,css,config:project.config};
 }
 async function withRepairLock(project,action) {
@@ -126,7 +133,7 @@ export async function startProjectServer(project,port=0) {
       const url=new URL(request.url,'http://127.0.0.1'); const snapshot=await snapshotProject(project);
       response.setHeader('Cache-Control','no-store');response.setHeader('X-Content-Type-Options','nosniff');
       response.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
-      if(url.pathname==='/_verification'){response.setHeader('Content-Type','application/json');response.end(JSON.stringify({artifactSha256:snapshot.artifactSha256,contract:snapshot.contract,config:snapshot.config}));return;}
+      if(url.pathname==='/_verification'){response.setHeader('Content-Type','application/json');response.end(JSON.stringify({artifactSha256:snapshot.artifactSha256,configurationSha256:project.configHash,contract:snapshot.contract,config:snapshot.config}));return;}
       const path=url.pathname==='/'?'index.html':url.pathname.slice(1);
       const content=path==='tokens.css'?snapshot.css:Object.hasOwn(snapshot.files,path)?snapshot.files[path]:undefined;
       if(content===undefined){response.writeHead(404);response.end();return;}

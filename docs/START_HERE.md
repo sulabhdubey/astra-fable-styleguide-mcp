@@ -2,6 +2,10 @@
 
 Give your coding agent a shared set of design rules, then check a supported interface against them.
 
+For the development changes after v0.5.1, see [guided project setup, pinned team
+rules and readable reports](PROJECT_ADOPTION.md). These commands require a newly
+built and reviewed archive; they are not in the existing v0.5.1 release.
+
 ## 1. Connect the public design-rule MCP
 
 Use an MCP client that accepts a Streamable HTTP server URL:
