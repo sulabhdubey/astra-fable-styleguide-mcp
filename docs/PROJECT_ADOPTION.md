@@ -1,8 +1,9 @@
 # Configure and check your project
 
-These commands are development changes after v0.5.1. Use a reviewed archive built
-from this source; the existing v0.5.1 release does not contain `init`, constitution
-pinning, or HTML reports.
+These commands are included in v0.6.0. Download the CLI archive and checksum from
+the [v0.6.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.6.0),
+or build a reviewed archive from source. Earlier releases do not contain `init`,
+constitution pinning, or HTML reports.
 
 ## Install a reviewed archive
 

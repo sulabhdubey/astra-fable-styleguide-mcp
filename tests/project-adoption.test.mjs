@@ -74,14 +74,14 @@ test('a constitution pin binds generated tokens, all canonical documents and rep
     config.constitution={path:'constitution.json',sha256:pin.sha256}; await writeFile(configPath,JSON.stringify(config));
     const snapshot=await snapshotProject(await loadProject(configPath));
     assert.equal(snapshot.contract.constitution.sha256,pin.sha256);
-    assert.equal(snapshot.contract.constitution.version,'0.5.1');
+    assert.equal(snapshot.contract.constitution.version,'0.6.0');
     assert.match(snapshot.css,/--size-control-md/);
     const fresh=join(temp,'fresh');await cp(join(root,'examples/profile'),fresh,{recursive:true});await rm(join(fresh,'project.json'));
     await cp(target,join(fresh,'constitution.json'));
     const initialized=run(['init',fresh,'--files','index.html','--trigger','#review','--dialog','#review-dialog','--close','#back','--name','Confirm display name','--constitution','constitution.json','--yes']);
     assert.equal(initialized.status,0,initialized.stderr);
     assert.deepEqual((await loadProject(join(fresh,'project.json'))).config.constitution,{path:'constitution.json',sha256:pin.sha256});
-    const content=JSON.parse(await readFile(target,'utf8'));content.files['manifest.json'].version='0.5.2';await writeFile(target,JSON.stringify(content));
+    const content=JSON.parse(await readFile(target,'utf8'));content.files['manifest.json'].version='0.6.1';await writeFile(target,JSON.stringify(content));
     await assert.rejects(snapshotProject(await loadProject(configPath)),/pin|hash|changed/i);
   }finally{await rm(temp,{recursive:true,force:true});}
 });

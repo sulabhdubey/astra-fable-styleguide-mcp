@@ -1,10 +1,10 @@
 {
   "$schema": "../packages/schemas/style-manifest.schema.json",
   "name": "Style Constitution",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "status": "released",
   "schemaVersion": "1.0",
-  "updatedAt": "2026-09-26",
+  "updatedAt": "2026-09-29",
   "principles": [
     "clarity",
     "accessibility",

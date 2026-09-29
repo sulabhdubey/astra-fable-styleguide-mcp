@@ -8,7 +8,7 @@ The project idea was inspired by Tibo's post on X.
 
 ## Current release
 
-**[v0.5.1](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.5.1)** adds explicit dialog-verification limits for embedded content, focus-trap exceptions and nested overlays. See the [release notes](docs/V0.5.1_RELEASE_NOTES.md) and [changelog](CHANGELOG.md).
+**[v0.6.0](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.6.0)** adds guided project setup, pinned team constitutions, readable HTML reports and a verified CLI archive. See the [release notes](docs/V0.6.0_RELEASE_NOTES.md), [project setup guide](docs/PROJECT_ADOPTION.md) and [changelog](CHANGELOG.md).
 
 [Open the product](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/) · [Try the interactive demo](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/)
 
