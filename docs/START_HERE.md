@@ -2,6 +2,9 @@
 
 Give your coding agent a shared set of design rules, then check a supported interface against them.
 
+For v0.6.0 [guided project setup, pinned team rules and readable reports](PROJECT_ADOPTION.md),
+use the verified CLI archive attached to the release or build from source.
+
 ## 1. Connect the public design-rule MCP
 
 Use an MCP client that accepts a Streamable HTTP server URL:
@@ -20,7 +23,7 @@ Ask your connected agent:
 
 Success: the client lists eight tools, including `get_style_manifest`,
 `get_component_rules`, and `check_style_compliance`. The manifest currently reports
-v0.5.1. The browser documentation and `/version` are human checks; opening `/mcp`
+v0.6.0. The browser documentation and `/version` are human checks; opening `/mcp`
 in a browser does not perform an MCP handshake.
 
 ## 2. Decide whether the local verifier fits
@@ -35,7 +38,12 @@ requests are restricted, and errors/blocked resources make verification incomple
 
 ## 3. Install and try one repair
 
-Prerequisites: Git, Node 22.12 or newer and pnpm 10.34.5.
+For installation from an archive, use Node 22.12 or newer. Download
+`styleconstitution-cli-0.6.0.tgz` and `SHA256SUMS` from the
+[v0.6.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.6.0),
+compare the SHA-256, then follow the [archive installation guide](PROJECT_ADOPTION.md#install-a-reviewed-archive).
+
+To build from source instead, also install Git and pnpm 10.34.5:
 
 ```sh
 git clone https://github.com/sulabhdubey/astra-fable-styleguide-mcp.git
@@ -54,10 +62,11 @@ model performance. The standalone CLI and these demo setup commands are included
 
 ### Install a packed CLI without a repository checkout at runtime
 
-Build first, then `npm pack ./packages/cli`. In another directory, run
-`npm install /absolute/path/styleconstitution-cli-0.5.1.tgz` and use
-`npx stylecon --help`. The archive contains the checking runtime, canonical
-contract/CSS snapshot and demo. Use `npx stylecon browser-install` if Chromium
+Use the release archive above, or build and verify one using the
+[packaging guide](PROJECT_ADOPTION.md#produce-and-verify-an-archive). In another directory, run
+`npm install /absolute/path/styleconstitution-cli-0.6.0.tgz` and use
+`npx --no-install stylecon --help`. The archive contains the checking runtime, canonical
+contract/CSS snapshot and demo. Use `npx --no-install stylecon browser-install` if Chromium
 is absent. The package is not yet on npm; do not substitute a similarly named
 registry package. The `validate` command still expects a separate spec repository.
 
@@ -65,7 +74,9 @@ registry package. The `validate` command still expects a separate spec repositor
 
 `stylecon check <project> --format json` emits source-bound observations and a
 repair packet. `--format sarif` emits file/target findings without invented line
-numbers. `--output /private/new-file` saves exclusively outside the served project.
+numbers. `--format html` produces readable observations; `--compare` accepts a
+previous JSON report with compatible rules, configuration and coverage.
+`--output /private/new-file` saves exclusively outside the served project.
 Exit 0 means all recorded checks pass, 1 means violations, and 2 means usage,
 runtime failure or incomplete checks. Runtime errors are on stderr; with JSON
 format they use `{ "status": "not_checked", "error": "..." }`.
@@ -74,8 +85,10 @@ synthetic example SARIF artifact. No external AI service is required.
 
 ## 4. Try your own supported project
 
-Copy the configuration structure from `examples/profile/project.json`. Declare
-only files and targets you want checked. Use synthetic form values. See the
+Run `stylecon init <project-directory>` to configure one supported journey.
+Declare only files and targets you want checked. Setup preserves existing
+configuration; advanced configurations can use `examples/profile/project.json`.
+Use synthetic form values. See the
 [configuration and recovery guide](PROJECT_WORKFLOW.md) for the complete contract.
 Keep reports and original-content receipts in a private directory outside the
 served project and outside any public repository.

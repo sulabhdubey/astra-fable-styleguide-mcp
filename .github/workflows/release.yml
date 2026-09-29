@@ -44,6 +44,8 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/test-dialog-boundaries.mjs
+      - run: node scripts/test-installed-cli.mjs
+      - run: node scripts/test-project-adoption.mjs
       - run: pnpm test:product
       - run: pnpm repro
       - run: git diff --exit-code -- generated
@@ -51,6 +53,19 @@ jobs:
       - run: pnpm run audit
       - run: pnpm audit
       - run: docker build -t style-constitution:release .
+      - name: Package exact-source CLI
+        run: |
+          mkdir "$RUNNER_TEMP/stylecon-package"
+          node scripts/package-cli.mjs "$RUNNER_TEMP/stylecon-package"
+      - run: node scripts/verify-cli-archive.mjs "$RUNNER_TEMP/stylecon-package" --browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stylecon-cli-release
+          path: |
+            ${{ runner.temp }}/stylecon-package/*.tgz
+            ${{ runner.temp }}/stylecon-package/SHA256SUMS
+            ${{ runner.temp }}/stylecon-package/package-evidence.json
+            ${{ runner.temp }}/stylecon-package/archive-verification.json
       - run: RELEASE_EVIDENCE_CONNECTED=1 pnpm evidence
       - id: release_version
         name: Verify and expose release version
@@ -95,6 +110,10 @@ jobs:
         with:
           name: release-evidence-${{ needs.verify-release.outputs.version }}
           path: releases
+      - uses: actions/download-artifact@v4
+        with:
+          name: stylecon-cli-release
+          path: cli-release
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -136,7 +155,8 @@ jobs:
 
           The attached build-evidence JSON contains connected verification hashes and GitHub Actions proof.
           EOF
-          gh release create "$tag" "$evidence#release-evidence-${RELEASE_VERSION}.json" \
+          (cd cli-release && sha256sum --check SHA256SUMS)
+          gh release create "$tag" "$evidence#release-evidence-${RELEASE_VERSION}.json" cli-release/*.tgz cli-release/SHA256SUMS cli-release/package-evidence.json cli-release/archive-verification.json \
             --target "$GITHUB_SHA" \
             --title "Astra + Fable Style Constitution ${tag}" \
             --notes-file "$notes"

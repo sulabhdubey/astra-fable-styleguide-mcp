@@ -49,6 +49,7 @@ export async function verifyProject(tab,origin) {
   const after=await metadata();
   if(before.artifactSha256!==after.artifactSha256||before.contract.specSha256!==after.contract.specSha256) throw new Error('Project changed during verification');
   const report=appendProductChecks(evaluateObservations(before.contract,observations,{artifactSha256:before.artifactSha256}),extra);
+  report.projectConfigurationSha256=before.configurationSha256;
   const repair=createRepairPacket({report,expectedSpecSha256:before.contract.specSha256,expectedArtifactSha256:before.artifactSha256,targetPaths:config.targetPaths});
   return {report,repair,observations,extra};
 }

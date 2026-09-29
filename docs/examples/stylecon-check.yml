@@ -1,0 +1,48 @@
+# Copy to .github/workflows only after reviewing scope and artifact visibility.
+# Prerequisites: package-lock.json with an exact reviewed CLI dependency accessible
+# to CI, and a configured trusted static project at ./ui-fixture.
+name: Check configured interface
+on:
+  workflow_dispatch:
+    inputs:
+      format:
+        description: Report format
+        type: choice
+        options: [sarif, json, html]
+        default: sarif
+        required: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: npx --no-install stylecon browser-install
+      - run: npx --no-install stylecon doctor
+      - name: Check and preserve exit status
+        id: check
+        shell: bash
+        env:
+          REPORT_FORMAT: ${{ inputs.format }}
+        run: |
+          case "$REPORT_FORMAT" in sarif|json|html) ;; *) exit 2 ;; esac
+          set +e
+          npx --no-install stylecon check ./ui-fixture --format "$REPORT_FORMAT" --output "$RUNNER_TEMP/stylecon.$REPORT_FORMAT"
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: configured-interface-report
+          path: ${{ runner.temp }}/stylecon.${{ inputs.format }}
+          if-no-files-found: warn
+          retention-days: 3
+      - name: Preserve violations and incomplete results
+        env:
+          CHECK_EXIT: ${{ steps.check.outputs.exit_code }}
+        run: exit "$CHECK_EXIT"

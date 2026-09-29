@@ -21,6 +21,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
+      - run: node scripts/test-project-adoption.mjs
       - run: node packages/cli/dist/stylecon.mjs check examples/profile --format sarif --output "$RUNNER_TEMP/stylecon.sarif"
       - uses: actions/upload-artifact@v4
         with:
@@ -31,6 +32,20 @@ jobs:
       - run: pnpm build:docs
       - run: pnpm test:product
       - run: pnpm smoke:mcp
+      - name: Package the development CLI
+        run: |
+          mkdir "$RUNNER_TEMP/stylecon-package"
+          node scripts/package-cli.mjs "$RUNNER_TEMP/stylecon-package" --development
+      - run: node scripts/verify-cli-archive.mjs "$RUNNER_TEMP/stylecon-package" --browser
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stylecon-cli-development
+          path: |
+            ${{ runner.temp }}/stylecon-package/*.tgz
+            ${{ runner.temp }}/stylecon-package/SHA256SUMS
+            ${{ runner.temp }}/stylecon-package/package-evidence.json
+            ${{ runner.temp }}/stylecon-package/archive-verification.json
+          retention-days: 7
       - run: docker build -t style-constitution:ci .
       - run: git diff --exit-code -- generated
 

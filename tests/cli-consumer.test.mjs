@@ -37,11 +37,18 @@ test('packed stylecon validates a clean consumer spec and reports a broken targe
     const installed = JSON.parse(await readFile(join(temp, 'node_modules', '@styleconstitution', 'cli', 'package.json'), 'utf8'));
     assert.equal(installed.bin.stylecon, 'dist/stylecon.mjs');
     const command = join(temp, 'node_modules', '@styleconstitution', 'cli', installed.bin.stylecon);
+    const ownProject=join(temp,'own-project');await cp(join(projectRoot,'examples/profile'),ownProject,{recursive:true});
+    await rm(join(ownProject,'project.json'));
+    const setup=spawnSync(process.execPath,[command,'init',ownProject,'--files','index.html','--trigger','#review','--dialog','#review-dialog','--close','#back','--name','Confirm display name','--yes'],{cwd:temp,encoding:'utf8'});
+    assert.equal(setup.status,0,setup.stderr);
+    assert.equal(JSON.parse(await readFile(join(ownProject,'project.json'),'utf8')).journey.trigger,'#review');
     const consumer = join(temp, 'consumer');
     await cp(join(projectRoot, 'spec'), join(consumer, 'spec'), { recursive: true });
     const clean = runNpm(['exec', '--offline', '--', 'stylecon', 'validate', '--root', consumer], temp);
     assert.equal(clean.status, 0, `${clean.stdout}\n${clean.stderr}`);
     assert.match(clean.stdout, /StyleSpec valid/);
+    const pin=spawnSync(process.execPath,[command,'constitution','pin',consumer,join(ownProject,'constitution.json')],{cwd:temp,encoding:'utf8'});
+    assert.equal(pin.status,0,pin.stderr);assert.match(JSON.parse(pin.stdout).sha256,/^[a-f0-9]{64}$/);
 
     const principlesPath = join(consumer, 'spec', 'principles.json');
     await rm(principlesPath);

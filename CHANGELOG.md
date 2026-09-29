@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- Guided CLI setup for supported static button/dialog and native-field journeys.
+- Validated project constitution snapshots pinned by full SHA-256, with custom generated tokens.
+- Local HTML observations and compatible before/after report comparisons.
+- Downloadable CLI archives with checksums, exact-archive consumer/browser verification and release evidence.
+- Bounded same-model comparison harness, stronger regressions and an opt-in consumer CI example.
+- [Release notes](docs/V0.6.0_RELEASE_NOTES.md) · [Published release and evidence](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.6.0)
+
 ## 0.5.1
 
 - Explicit unsupported results for dialog focus surfaces outside the verified journey.

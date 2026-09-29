@@ -1,6 +1,7 @@
 import {loadProject,startProjectServer} from './project-workflow.mjs';
 import {verifyProject} from './verify-project.mjs';
 import {inspectReport} from './project-cli.mjs';
+import {renderHtmlReport} from './html-report.mjs';
 
 export function allowedRequest(origin,url,method) {
   try {const target=new URL(url);return method==='GET'&&target.origin===origin&&!target.username&&!target.password&&target.pathname!=='/_verification';}
@@ -51,11 +52,12 @@ export async function runCheck(configPath,{launch}={}) {
   }
 }
 
-export function formatReport(result,targetPaths,format='text') {
+export function formatReport(result,targetPaths,format='text',options={}) {
   const report=result.report??result;
   if(format==='json')return JSON.stringify(result,null,2);
+  if(format==='html')return renderHtmlReport(result,targetPaths,options);
   if(format==='text')return [report.status,...report.checks.filter(c=>c.status!=='pass').map(c=>`${c.ruleId} ${targetPaths[c.target]??'(unmapped)'} ${c.target}: ${c.status} — ${c.fix}`)].join('\n');
-  if(format!=='sarif')throw new Error('Format must be text, json or sarif');
+  if(format!=='sarif')throw new Error('Format must be text, json, sarif or html');
   return JSON.stringify({version:'2.1.0',$schema:'https://json.schemastore.org/sarif-2.1.0.json',runs:[{
     tool:{driver:{name:'Style Constitution'}},
     properties:{status:report.status,artifactSha256:report.artifactSha256,specSha256:report.specSha256},
