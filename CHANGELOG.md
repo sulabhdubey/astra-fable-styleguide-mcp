@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- Stable caller issue IDs and separate explanatory notes prevent structured duplicate concerns; exact-hash reviews retain pending evidence and distinguish host-normalized review input from generation output.
+- Explicit specification review scopes and deferred-to-check dispositions retain open implementation obligations without waiving defects or release checks.
+
+- Persistent clarification holds for write-enabled MCP: explicit journal initialization, restart recovery, and fail-closed storage checks. Candidate registrations and approvals remain process-local.
+
+- Explicit `NEEDS_CLARIFICATION` results stop revision loops on grounded reviewer requests; unchanged held inputs reuse the result, while stale approvals, manual promotion and late concurrent runs cannot bypass the hold.
+
+- React/Vite production-preview checks with source/build identity and configured typography, spacing, contrast and responsive-overflow measurements; verified literal public-CSS corrections with preview, stale-build refusal and undo.
+- Local Studio for project selection, static target setup, findings, exact correction review, recheck and undo.
+- Reviewed constitution authoring, CSS-variable suggestions and hash-bound export to a new canonical repository.
+- Git-bound regression receipts and actionable Markdown summaries for reviewed base/head revisions.
+- Archive installer verifies checksums and package identity before reporting success; installation hooks remain disabled.
+- Bounded, typed proposals and hash-bound deterministic feedback for independent role review. Recorded comparisons have not demonstrated an overall collaboration advantage; see the comparison report for individual results and limitations.
+
 ## 0.6.0
 
 - Guided CLI setup for supported static button/dialog and native-field journeys.

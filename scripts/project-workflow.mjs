@@ -56,7 +56,7 @@ export async function snapshotProject(project) {
   const contract={...base,constitution:{name:manifest.name,version:manifest.version,sha256:base.specSha256,scope:'bundled browser contract'}};
   return {artifactSha256:hash(JSON.stringify({configHash:project.configHash,files,css})),contract,files,css,config:project.config};
 }
-async function withRepairLock(project,action) {
+export async function withRepairLock(project,action) {
   const lockPath=resolve(project.root,'.style-repair.lock');
   const lock=await open(lockPath,'wx');
   try {await lock.writeFile(JSON.stringify({pid:process.pid,createdAt:new Date().toISOString()}));await lock.sync();return await action();}
@@ -76,7 +76,7 @@ export async function previewRepair(project,packet,change) {
     original,replacement,originalSha256:hash(original),replacementSha256:hash(replacement),
     diff:{path:change.path,before:change.before,after:change.after},requiresBrowserRecheck:true};
 }
-async function receiptRoot(project,directory) {
+export async function receiptRoot(project,directory) {
   if(typeof directory!=='string'||!isAbsolute(directory)) throw new Error('An absolute private receipt directory is required');
   const root=await realpath(directory);const rel=relative(project.root,root);
   if(!rel || (!(rel==='..'||rel.startsWith('..'+sep))&&!isAbsolute(rel))) throw new Error('Receipts must be outside the served project');
@@ -89,20 +89,21 @@ async function writeDurably(path,content) {
   catch(error){await file.close();await unlink(path);throw error;}
   await file.close();
 }
-async function commitRepair(project,preview,directory) {
+export async function commitRepair(project,preview,directory,readSnapshot=snapshotProject,beforeWrite=async()=>{}) {
   const root=await receiptRoot(project,directory);
   const receiptPath=resolve(root,`repair-${randomUUID()}.json`);
   // Immutable prepared journal is durable before any source mutation. It does not claim success.
   await writeDurably(receiptPath,JSON.stringify({...preview,phase:'prepared'},null,2));
-  const path=await contained(project.root,preview.path);const temp=`${path}.${randomUUID()}.tmp`;
+  const path=await contained(project.root,preview.path);const temp=resolve(project.root,`.style-repair-${randomUUID()}.tmp`);
   let staged=false;
   try {
     await writeDurably(temp,preview.replacement);staged=true;
-    const current=await snapshotProject(project);
+    const current=await readSnapshot(project);
     if(current.artifactSha256!==preview.previousArtifactSha256||current.contract.specSha256!==preview.specSha256) throw new Error('Stale repair evidence');
+    await beforeWrite();
     await rename(temp,path);staged=false;
   } finally {if(staged)await unlink(temp);}
-  const after=await snapshotProject(project);
+  const after=await readSnapshot(project);
   if(after.artifactSha256!==preview.artifactSha256||after.contract.specSha256!==preview.specSha256) throw new Error(`Post-write conflict; recovery receipt: ${receiptPath}`);
   return {previousArtifactSha256:preview.previousArtifactSha256,artifactSha256:after.artifactSha256,path:preview.path,receiptPath,requiresBrowserRecheck:true};
 }

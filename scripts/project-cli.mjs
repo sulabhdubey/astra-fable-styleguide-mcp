@@ -37,6 +37,21 @@ export async function exportRepairPacket(project,result,outputPath) {
 }
 export async function main([command,configPath,...args]) {
   if(!command||!configPath)throw new Error('Usage: project-cli.mjs validate|serve|report|packet|preview|apply|undo <project.json> [arguments]');
+  if((await readJson(configPath)).schemaVersion===2) {
+    const {previewRunningRepair,applyRunningRepair,undoRunningRepair}=await import('./running-repair.mjs');
+    if(command==='preview')return previewRunningRepair(configPath,await readJson(args[0]),await readJson(args[1]));
+    if(command==='apply')return applyRunningRepair(configPath,await readJson(args[0]),await readJson(args[1]),{receiptDirectory:args[2]});
+    if(command==='undo')return undoRunningRepair(configPath,args[0],{receiptDirectory:args[1]});
+    if(command==='packet') {
+      const {runRunningCheck}=await import('./running-app.mjs');const checked=await runRunningCheck(configPath),report=await readJson(args[0]);
+      const supplied=report.report??report;
+      if(!checked.result.repair||supplied.artifactSha256!==checked.summary.artifactSha256||supplied.specSha256!==checked.summary.specSha256)throw new Error('Stale report or no supported running repair');
+      const root=await realpath(dirname(resolve(configPath))),parent=await realpath(dirname(resolve(args[1]))),rel=relative(root,parent);
+      if(!rel||(!isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('..'+sep)))throw new Error('Save repair packets outside the served project');
+      await writeFile(args[1],JSON.stringify(checked.result.repair,null,2)+'\n',{flag:'wx',mode:0o600});return {candidates:checked.result.repair.candidates.length};
+    }
+    throw new Error('Use check/report for a running project');
+  }
   const project=await loadProject(configPath);
   if(command==='validate')return {valid:true,...await snapshotProject(project).then(s=>({artifactSha256:s.artifactSha256,specSha256:s.contract.specSha256}))};
   if(command==='serve') {const port=Number(args[0]??0);if(!Number.isInteger(port)||port<0||port>65535)throw new Error('Invalid port');const server=await startProjectServer(project,port);return {origin:`http://127.0.0.1:${server.address().port}`};}

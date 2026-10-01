@@ -29,7 +29,7 @@ export async function cliInputFingerprint(root) {
       else throw new Error('Unsupported CLI input link');
     }
   }
-  for(const path of ['packages','scripts','spec','examples/profile','generated/css'])await walk(path);
+  for(const path of ['packages','scripts','spec','examples/profile','generated/css','generated/json'])await walk(path);
   for(const path of ['package.json','pnpm-lock.yaml','tsconfig.core.json'])inputs.push([path,hash(await readFile(resolve(root,path)))]);
   inputs.sort(([a],[b])=>a.localeCompare(b));
   return {sha256:hash(JSON.stringify(inputs)),files:inputs.length};

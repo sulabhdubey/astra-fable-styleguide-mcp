@@ -1,0 +1,93 @@
+# Copy only into a reviewed consumer commit whose package-lock.json pins stylecon.
+# That commit supplies the single trusted checker; target revisions never build it.
+# This manual workflow intentionally has no pull_request_target trigger, PR comment,
+# write permission, or untrusted fork execution.
+name: Style Constitution regression evidence
+on:
+  workflow_dispatch:
+    inputs:
+      base_sha:
+        description: Exact reviewed base commit SHA
+        required: true
+        type: string
+      head_sha:
+        description: Exact reviewed head commit SHA
+        required: true
+        type: string
+      checker_sha:
+        description: Exact trusted consumer commit with a locked Style Constitution CLI dependency
+        required: true
+        type: string
+      project_config:
+        description: Repository-relative configured project JSON path
+        required: true
+        default: ui-fixture/project.json
+        type: string
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checker_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Validate reviewed refs and project path
+        shell: bash
+        env:
+          BASE_SHA: ${{ inputs.base_sha }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          CHECKER_SHA: ${{ inputs.checker_sha }}
+          PROJECT_CONFIG: ${{ inputs.project_config }}
+        run: |
+          [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ && "$HEAD_SHA" =~ ^[0-9a-f]{40}$ && "$CHECKER_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 2
+          [[ "$PROJECT_CONFIG" =~ ^[A-Za-z0-9._/-]+\.json$ && "$PROJECT_CONFIG" != *..* && "$PROJECT_CONFIG" != /* ]] || exit 2
+          test "$(git rev-parse HEAD)" = "$CHECKER_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          git cat-file -e "$HEAD_SHA^{commit}"
+      - name: Install one locked checker from the trusted ref
+        shell: bash
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install stylecon --help
+          test -x "$GITHUB_WORKSPACE/node_modules/.bin/stylecon"
+          npx --no-install stylecon browser-install
+      - name: Create isolated target worktrees
+        shell: bash
+        env:
+          BASE_SHA: ${{ inputs.base_sha }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/stylecon-base" "$BASE_SHA"
+          git worktree add --detach "$RUNNER_TEMP/stylecon-head" "$HEAD_SHA"
+      - name: Capture exact base receipt
+        shell: bash
+        env:
+          PROJECT_CONFIG: ${{ inputs.project_config }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/stylecon-private"
+          "$GITHUB_WORKSPACE/node_modules/.bin/stylecon" ci capture "$RUNNER_TEMP/stylecon-base/$PROJECT_CONFIG" "$RUNNER_TEMP/stylecon-private/base.json"
+      - name: Capture exact head receipt
+        shell: bash
+        env:
+          PROJECT_CONFIG: ${{ inputs.project_config }}
+        run: |
+          "$GITHUB_WORKSPACE/node_modules/.bin/stylecon" ci capture "$RUNNER_TEMP/stylecon-head/$PROJECT_CONFIG" "$RUNNER_TEMP/stylecon-private/head.json"
+      - name: Render summary and preserve result
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          "$GITHUB_WORKSPACE/node_modules/.bin/stylecon" ci compare "$RUNNER_TEMP/stylecon-private/base.json" "$RUNNER_TEMP/stylecon-private/head.json" --format markdown > "$RUNNER_TEMP/stylecon-private/summary.md"
+          code=$?
+          cat "$RUNNER_TEMP/stylecon-private/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Preserve violation or incomplete status
+        env:
+          CHECK_EXIT: ${{ steps.compare.outputs.exit_code }}
+        run: exit "$CHECK_EXIT"

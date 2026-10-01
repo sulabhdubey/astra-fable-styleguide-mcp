@@ -16,6 +16,15 @@ Experimental software: configured static UI journeys are supported; complete acc
 
 ## Start here
 
+### In this development checkout
+
+The next version adds a [local Studio](docs/LOCAL_STUDIO.md),
+[React/Vite preview checks](docs/RUNNING_APP.md), [constitution authoring](docs/CONSTITUTION_AUTHORING.md),
+[verified installation](docs/INSTALLATION.md) and [PR regression summaries](docs/PR_REGRESSIONS.md).
+These changes are not part of the published v0.6.0 archive yet.
+
+### Published product
+
 The product site includes a no-install interactive sample: measure a button,
 review a supplied correction, recheck it and undo. To preview this checkout,
 run `pnpm dev:docs` and open the printed local URL. The homepage links to the

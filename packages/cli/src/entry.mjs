@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {stat,realpath,writeFile} from 'node:fs/promises';
+import {stat,realpath,writeFile,readFile} from 'node:fs/promises';
 import {resolve,dirname,relative,isAbsolute,sep} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
@@ -8,10 +8,19 @@ import {main as projectCommand,readJson} from './runtime/scripts/project-cli.mjs
 import {prepareDemo} from './runtime/scripts/prepare-demo.mjs';
 import {initCommand} from './runtime/scripts/project-init.mjs';
 import {pinConstitution} from './runtime/scripts/constitution.mjs';
+import {startStudio} from './runtime/scripts/studio.mjs';
+import {importCssSuggestions,createConstitutionCandidate,exportConstitutionCandidate} from './runtime/scripts/constitution-authoring.mjs';
+import {captureGitEvidence,compareGitEvidence,renderPrSummary} from './runtime/scripts/ci-report.mjs';
 const args=process.argv.slice(2);
 const help=`stylecon validate [--root <spec-repository>]
 stylecon init <project-directory> [--files index.html,app.css --trigger '#open' --dialog '#dialog' --close '#close' --name 'Title' --yes]
 stylecon constitution pin <spec-repository> <new-snapshot.json>
+stylecon constitution import <local.css>
+stylecon constitution propose <spec-repository> <changes.json> <new-candidate.json>
+stylecon constitution export <spec-repository> <candidate.json> <approved-sha256> <new-directory>
+stylecon studio <workspace> --evidence <existing-private-directory>
+stylecon ci capture <project.json> <new-private-receipt.json>
+stylecon ci compare <base-receipt.json> <head-receipt.json> [--format markdown|json]
 stylecon browser-install
 stylecon doctor
 stylecon demo <new-absolute-directory>
@@ -25,6 +34,19 @@ try {
   else if(args[0]==='validate'){await import('./validate.mjs');}
   else if(args[0]==='init'){console.log(JSON.stringify(await initCommand(args.slice(1)),null,2));}
   else if(args[0]==='constitution'&&args[1]==='pin'&&args.length===4){console.log(JSON.stringify(await pinConstitution(resolve(args[2]),resolve(args[3])),null,2));}
+  else if(args[0]==='constitution'&&args[1]==='import'&&args.length===3){const path=resolve(args[2]);if((await stat(path)).size>1_000_000)throw new Error('CSS file too large');console.log(JSON.stringify(importCssSuggestions(await readFile(path,'utf8')),null,2));}
+  else if(args[0]==='constitution'&&args[1]==='propose'&&args.length===5){const candidate=await createConstitutionCandidate(resolve(args[2]),await readJson(resolve(args[3])));await writeFile(resolve(args[4]),JSON.stringify(candidate,null,2)+'\n',{flag:'wx',mode:0o600});console.log(candidate.candidateSha256);}
+  else if(args[0]==='constitution'&&args[1]==='export'&&args.length===6){console.log(JSON.stringify(await exportConstitutionCandidate(resolve(args[2]),await readJson(resolve(args[3])),args[4],resolve(args[5])),null,2));}
+  else if(args[0]==='studio'&&args.length===4&&args[2]==='--evidence'){
+    const studio=await startStudio({workspace:resolve(args[1]),evidenceDirectory:resolve(args[3])});console.log(`Open locally: ${studio.url}\nKeep this session link private. Stop with Ctrl+C.`);
+    process.once('SIGINT',()=>{studio.close().then(()=>process.exit(0));});
+  } else if(args[0]==='ci'&&args[1]==='capture'&&args.length===4){
+    const config=await realpath(resolve(args[2])),output=resolve(args[3]);const rel=relative(dirname(config),await realpath(dirname(output)));
+    if(!rel||(!isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('..'+sep)))throw new Error('Receipts must be outside the checked project');
+    const receipt=await captureGitEvidence(config,runCheck);await writeFile(output,JSON.stringify(receipt,null,2)+'\n',{flag:'wx',mode:0o600});console.log(receipt.evidenceSha256);
+  } else if(args[0]==='ci'&&args[1]==='compare'&&(args.length===4||(args.length===6&&args[4]==='--format'&&['markdown','json'].includes(args[5])))){
+    const result=compareGitEvidence(await readJson(resolve(args[2])),await readJson(resolve(args[3])));process.stdout.write((args[5]==='json'?JSON.stringify(result,null,2):renderPrSummary(result))+'\n');process.exitCode=result.exitCode;
+  }
   else if(args[0]==='browser-install'&&args.length===1){
     const require=createRequire(import.meta.url);
     const result=spawnSync(process.execPath,[resolve(dirname(require.resolve('playwright/package.json')),'cli.js'),'install','chromium'],{stdio:'inherit'});

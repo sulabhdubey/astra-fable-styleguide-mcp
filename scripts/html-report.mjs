@@ -1,6 +1,6 @@
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const statuses=['pass','fail','unsupported','not_checked'];
-const key=check=>JSON.stringify([check.ruleId,check.check,check.target]);
+const key=check=>JSON.stringify([check.ruleId,check.check,check.target,check.viewport?.width??null]);
 function validReport(report) {
   return report&&/^[a-f0-9]{64}$/.test(report.artifactSha256)&&/^[a-f0-9]{64}$/.test(report.specSha256)&&
     Array.isArray(report.checks)&&report.checks.length>0&&new Set(report.checks.map(key)).size===report.checks.length&&
