@@ -8,13 +8,22 @@ The project idea was inspired by Tibo's post on X.
 
 ## Current release
 
-**[v0.6.0](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.6.0)** adds guided project setup, pinned team constitutions, readable HTML reports and a verified CLI archive. See the [release notes](docs/V0.6.0_RELEASE_NOTES.md), [project setup guide](docs/PROJECT_ADOPTION.md) and [changelog](CHANGELOG.md).
+**[v0.7.0](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.7.0)** adds React/Vite preview checks and supported CSS repairs, Local Studio, constitution authoring, PR regression summaries and a verified installer. See the [release notes](docs/V0.7.0_RELEASE_NOTES.md), [installation guide](docs/INSTALLATION.md) and [changelog](CHANGELOG.md).
 
 [Open the product](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/) · [Try the interactive demo](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/)
 
-Experimental software: configured static UI journeys are supported; complete accessibility and general framework coverage are not claimed.
+Experimental software: configured static UI journeys and trusted local React/Vite production previews are supported within documented limits. Complete accessibility and general framework coverage are not claimed.
 
 ## Start here
+
+### Local developer workflow
+
+v0.7.0 includes a [local Studio](docs/LOCAL_STUDIO.md),
+[React/Vite preview checks](docs/RUNNING_APP.md), [constitution authoring](docs/CONSTITUTION_AUTHORING.md),
+[verified installation](docs/INSTALLATION.md) and [PR regression summaries](docs/PR_REGRESSIONS.md).
+Use the v0.7.0 archive and its matching checksums; older archives do not include these workflows.
+
+### Published product
 
 The product site includes a no-install interactive sample: measure a button,
 review a supplied correction, recheck it and undo. To preview this checkout,

@@ -5,15 +5,31 @@ const context={brief:'A serious analytics UI',criteria:['accessibility','consist
 function proposal(id,author,value){return {id,author,baseVersion:'0.1.0',summary:'x',changes:[{path:'tokens.radius',value}],tradeoffs:[],unresolved:[]};}
 test('initial proposals are independent and revised proposals are cross-reviewed before consensus',async()=>{const a=new MockAgent('astra',{initial:proposal('A','astra','8px'),convergeTo:{'tokens.radius':'10px'}});const f=new MockAgent('fable',{initial:proposal('F','fable','12px'),convergeTo:{'tokens.radius':'10px'}});const r=await runConsensus({astra:a,fable:f,context});assert.equal(r.status,'CONSENSUS');assert.equal(r.rounds,2);assert.equal(r.critiques.length,4);assert.equal(a.seenInitialContexts.length,1);assert.equal(f.seenInitialContexts.length,1);assert.equal('proposal' in a.seenInitialContexts[0],false);});
 test('unresolved blocking critique cannot become consensus',async()=>{
-  const agent=role=>({id:role,generateProposal:async()=>proposal(role,role,'10px'),critiqueProposal:async p=>({reviewer:role,proposalId:p.id,objections:[{path:'tokens.radius',reason:'Unresolved concern',severity:'blocking'}],acceptedPaths:[]}),reviseProposal:async p=>p});
+  const agent=role=>({id:role,generateProposal:async()=>proposal(role,role,'10px'),critiqueProposal:async p=>({reviewer:role,proposalId:p.id,candidateHash:await sha256({baseVersion:p.baseVersion,changes:p.changes}),objections:[{path:'tokens.radius',reason:'Unresolved concern',severity:'blocking'}],acceptedPaths:[]}),reviseProposal:async p=>p});
   const result=await runConsensus({astra:agent('astra'),fable:agent('fable'),context,maxRounds:2});
   assert.equal(result.status,'PARTIAL_CONSENSUS');
   assert.equal(result.rounds,2);
 });
-test('a change made after a clear critique needs another cross-review',async()=>{
-  const agent=role=>({id:role,generateProposal:async()=>proposal(role,role,'10px'),critiqueProposal:async p=>({reviewer:role,proposalId:p.id,objections:[],acceptedPaths:['tokens.radius']}),reviseProposal:async p=>({...p,changes:[{path:'tokens.radius',value:'12px'}]})});
+test('a clear complete review does not request an unnecessary revision',async()=>{
+  const agent=role=>({id:role,generateProposal:async()=>proposal(role,role,'10px'),critiqueProposal:async p=>({reviewer:role,proposalId:p.id,candidateHash:await sha256({baseVersion:p.baseVersion,changes:p.changes}),objections:[],acceptedPaths:['tokens.radius']}),reviseProposal:async p=>({...p,changes:[{path:'tokens.radius',value:'12px'}]})});
   const result=await runConsensus({astra:agent('astra'),fable:agent('fable'),context,maxRounds:1});
-  assert.equal(result.status,'PARTIAL_CONSENSUS');
+  assert.equal(result.status,'CONSENSUS');
+});
+test('deterministic proposal feedback is hash-bound and reaches reviewer and proposer',async()=>{
+  const seen={};
+  const makeAgent=(role,value)=>({
+    id:role,
+    generateProposal:async()=>proposal(role,role,value),
+    critiqueProposal:async(p,c)=>{seen[`${role}Critique`]=c.deterministicFeedback;return {reviewer:role,proposalId:p.id,candidateHash:await sha256({baseVersion:p.baseVersion,changes:p.changes}),objections:[],acceptedPaths:['tokens.radius']};},
+    reviseProposal:async(p,_critique,c)=>{seen[`${role}Revision`]=c.deterministicFeedback;return p;}
+  });
+  const result=await runConsensus({astra:makeAgent('astra','8px'),fable:makeAgent('fable','10px'),context,maxRounds:2,evaluate:candidate=>candidate.changes.some(change=>change.value==='8px')?['radius must be 10px']:[]});
+  assert.deepEqual(seen.fableCritique.errors,['radius must be 10px']);
+  assert.deepEqual(seen.astraRevision.errors,['radius must be 10px']);
+  assert.deepEqual(seen.astraCritique.errors,[]);assert.deepEqual(seen.fableRevision.errors,[]);
+  assert.match(seen.astraRevision.candidateHash,/^[a-f0-9]{64}$/);
+  assert.equal(seen.fableCritique.candidateHash,seen.astraRevision.candidateHash);
+  assert.equal(result.status,'DEADLOCK');
 });
 test('deadlock terminates at configured round limit',async()=>{const a=new MockAgent('astra',{initial:proposal('A','astra','8px')});const f=new MockAgent('fable',{initial:proposal('F','fable','12px')});const r=await runConsensus({astra:a,fable:f,context,maxRounds:2});assert.equal(r.status,'DEADLOCK');assert.equal(r.rounds,2);assert.ok(r.conflicts.length>0);});
 test('same hash approvals and human gate are enforced',async()=>{const candidate={baseVersion:'0.1.0',changes:[{path:'a',value:1}]};const hash=await sha256(candidate);const approvals=[approve('astra',hash),approve('fable',hash)];assert.equal(approvalsMatch(hash,approvals),true);assert.equal(canRelease({candidateHash:hash,approvals,humanApproved:false}),false);assert.equal(canRelease({candidateHash:hash,approvals,humanApproved:true}),true);});

@@ -1,6 +1,6 @@
 {
   "name": "astra-fable-styleguide-mcp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.34.5",
@@ -44,8 +44,11 @@
     "astro": "^7.2.8",
     "eslint": "^9.0.0",
     "playwright": "1.63.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "sharp": "^0.35.4",
     "tsx": "^4.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "8.3.1"
   }
 }

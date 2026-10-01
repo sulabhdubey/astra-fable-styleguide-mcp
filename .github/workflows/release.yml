@@ -46,6 +46,9 @@ jobs:
       - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
       - run: node scripts/test-project-adoption.mjs
+      - run: node scripts/test-running-app.mjs
+      - run: node scripts/test-studio.mjs
+      - run: node scripts/test-ci-workflow.mjs
       - run: pnpm test:product
       - run: pnpm repro
       - run: git diff --exit-code -- generated
@@ -53,6 +56,7 @@ jobs:
       - run: pnpm run audit
       - run: pnpm audit
       - run: docker build -t style-constitution:release .
+      - run: docker build -f Dockerfile.vercel -t style-constitution:release-vercel .
       - name: Package exact-source CLI
         run: |
           mkdir "$RUNNER_TEMP/stylecon-package"
@@ -63,6 +67,7 @@ jobs:
           name: stylecon-cli-release
           path: |
             ${{ runner.temp }}/stylecon-package/*.tgz
+            ${{ runner.temp }}/stylecon-package/install-cli.mjs
             ${{ runner.temp }}/stylecon-package/SHA256SUMS
             ${{ runner.temp }}/stylecon-package/package-evidence.json
             ${{ runner.temp }}/stylecon-package/archive-verification.json
@@ -156,7 +161,7 @@ jobs:
           The attached build-evidence JSON contains connected verification hashes and GitHub Actions proof.
           EOF
           (cd cli-release && sha256sum --check SHA256SUMS)
-          gh release create "$tag" "$evidence#release-evidence-${RELEASE_VERSION}.json" cli-release/*.tgz cli-release/SHA256SUMS cli-release/package-evidence.json cli-release/archive-verification.json \
+          gh release create "$tag" "$evidence#release-evidence-${RELEASE_VERSION}.json" cli-release/*.tgz cli-release/install-cli.mjs cli-release/SHA256SUMS cli-release/package-evidence.json cli-release/archive-verification.json \
             --target "$GITHUB_SHA" \
             --title "Astra + Fable Style Constitution ${tag}" \
             --notes-file "$notes"

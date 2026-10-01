@@ -1,5 +1,5 @@
 import { evaluateSpec } from '../../../packages/evaluator/src/index.js';
-import { approve, approvalsMatch, mergeProposals, runConsensus, sha256, type Approval, type Candidate, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
+import { approve, approvalsMatch, bindReviewScope, candidateFromProposal, validateReviewScope, reviewReadiness, mergeProposals, runConsensus, sha256, type ReviewScope, type ReviewReadiness, type Approval, type Candidate, type ConsensusRun, type DesignAgent, type DesignProposal } from '../../../packages/consensus-engine/src/index.js';
 import { addPath, canonicalize, deepClone, getPath, isRecord, setPath, tokenReference } from '../../../packages/style-spec/src/index.js';
 import { checkStyleCompliance } from '../../../packages/compliance/src/index.js';
 import { compareSnapshots, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
@@ -8,14 +8,20 @@ import { auditIdentifier, type AuditEvent } from '../../../packages/governance-a
 export interface SpecBundle { manifest: Record<string,unknown>; principles: unknown; tokens: Record<string,unknown>; components: Record<string,unknown>[]; patterns: unknown[]; antiPatterns: unknown; accessibility: Record<string,unknown>; decisions: Record<string,string>; }
 interface GovernanceRunSummary { runId:string; source:'manual'|'agent-consensus'; status:string; rounds:number; proposalIds:string[]; conflictPaths:string[]; conflictCount?:number; evaluationErrorCount:number; candidateHash?:string; }
 interface AuditSink { record(event:AuditEvent):void; status():{durable:boolean;eventCount:number;headHash:string|null}; }
-interface GovernanceOptions { auditLedger?:AuditSink; roleApprovalTokens?:{astra:string;fable:string}; }
+export interface ClarificationSnapshot { heldHashes:string[]; contexts:[string,ConsensusRun&{runId:string}][]; }
+export interface ClarificationStorage { load():ClarificationSnapshot; save(state:ClarificationSnapshot):void; assertHealthy():void; }
+interface GovernanceOptions { auditLedger?:AuditSink; roleApprovalTokens?:{astra:string;fable:string}; clarificationStore?:ClarificationStorage; }
 export class StyleService {
  private proposals=new Map<string,DesignProposal>();
- private candidates=new Map<string,{candidate:Candidate;status:'candidate'|'released';approvals:Approval[];source:'manual'|'agent-consensus'}>();
+ private candidates=new Map<string,{candidate:Candidate;status:'candidate'|'released';approvals:Approval[];source:'manual'|'agent-consensus';reviewEvidence?:ReviewReadiness}>();
  private recentRuns:GovernanceRunSummary[]=[];
+ private clarificationHolds=new Set<string>();
+ private clarificationContexts=new Map<string,ConsensusRun&{runId:string}>();
+ private persistenceFailed=false;
  constructor(private bundle:SpecBundle, private snapshots:ReadonlyMap<string,StyleSnapshot>=new Map(), private governance:GovernanceOptions={}){
    const tokens=governance.roleApprovalTokens;
    if(tokens&&(!tokens.astra||!tokens.fable||tokens.astra===tokens.fable))throw new Error('Role approval credentials must be distinct and nonempty');
+   if(governance.clarificationStore){const state=deepClone(governance.clarificationStore.load());this.clarificationHolds=new Set(state.heldHashes);this.clarificationContexts=new Map(state.contexts);}
  }
  getManifest(){return this.bundle.manifest;}
  getDesignTokens(scope?:string){ if(!scope)return this.bundle.tokens; const v=getPath(this.bundle.tokens,scope); if(v===undefined)throw new Error(`Unknown token scope: ${scope}`); return v; }
@@ -24,9 +30,9 @@ export class StyleService {
  explainDecision(id:string){const v=this.bundle.decisions[id];if(!v)throw new Error(`Unknown decision: ${id}`);return {id,text:v};}
  validate(){return evaluateSpec({manifest:this.bundle.manifest,tokens:this.bundle.tokens,components:this.bundle.components,accessibility:this.bundle.accessibility,patterns:this.bundle.patterns});}
  checkStyleCompliance(input:string){return checkStyleCompliance(input,this.bundle.tokens);}
- createProposal(id:string,payload:DesignProposal,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);if(this.proposals.has(id))throw new Error('Proposal already exists');if(payload.id!==id)throw new Error('Proposal id mismatch');if(payload.author!=='astra'&&payload.author!=='fable')throw new Error('Proposal author must be astra or fable');const stored=deepClone(payload);this.governance.auditLedger?.record({type:'proposal_created',proposalIdHash:auditIdentifier(id),actor:payload.author,changeCount:payload.changes.length});this.proposals.set(id,stored);return {id,status:'open'};}
+ createProposal(id:string,payload:DesignProposal,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);if(this.proposals.has(id))throw new Error('Proposal already exists');if(payload.id!==id)throw new Error('Proposal id mismatch');if(payload.author!=='astra'&&payload.author!=='fable')throw new Error('Proposal author must be astra or fable');const stored=bindReviewScope(payload,{brief:"",criteria:[],baseVersion:payload.baseVersion,...(payload.reviewScope?{reviewScope:payload.reviewScope}:{})});this.governance.auditLedger?.record({type:'proposal_created',proposalIdHash:auditIdentifier(id),actor:payload.author,changeCount:payload.changes.length});this.proposals.set(id,stored);return {id,status:'open'};}
  getProposal(id:string){const p=this.proposals.get(id);return p?deepClone(p):undefined;}
- evaluateProposal(id:string,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const proposal=this.proposals.get(id);if(!proposal)throw new Error('Unknown proposal');const paths=new Set<string>();const duplicatePaths=proposal.changes.filter(c=>paths.has(c.path)||!paths.add(c.path));const candidate={baseVersion:proposal.baseVersion,changes:proposal.changes};const deterministicErrors=this.evaluateCandidate(candidate);return {id,valid:proposal.changes.length>0&&duplicatePaths.length===0&&deterministicErrors.length===0,duplicatePaths:duplicatePaths.map(c=>c.path),deterministicErrors,baseline:this.validate()};}
+ evaluateProposal(id:string,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const proposal=this.proposals.get(id);if(!proposal)throw new Error('Unknown proposal');const paths=new Set<string>();const duplicatePaths=proposal.changes.filter(c=>paths.has(c.path)||!paths.add(c.path));const candidate=candidateFromProposal(proposal);const deterministicErrors=this.evaluateCandidate(candidate);return {id,valid:proposal.changes.length>0&&duplicatePaths.length===0&&deterministicErrors.length===0,duplicatePaths:duplicatePaths.map(c=>c.path),deterministicErrors,baseline:this.validate()};}
  async startConsensusRound(astraProposalId:string,fableProposalId:string,authToken:string|undefined,expectedToken:string|undefined){
    this.authorize(authToken,expectedToken);
    const a=this.proposals.get(astraProposalId),b=this.proposals.get(fableProposalId);
@@ -38,33 +44,52 @@ export class StyleService {
    const deterministicErrors=this.evaluateCandidate(merged.candidate);
    if(deterministicErrors.length){this.recordRun({runId,source:'manual',status:'invalid_candidate',rounds:1,proposalIds,conflictPaths:[],evaluationErrorCount:deterministicErrors.length});return {status:'invalid_candidate',runId,deterministicErrors};}
    const candidateHash=await sha256(merged.candidate);
+   if(this.clarificationHolds.has(candidateHash)){
+     this.recordRun({runId,source:'manual',status:'needs_clarification',rounds:1,proposalIds,conflictPaths:[],evaluationErrorCount:0,candidateHash});
+     return {status:'needs_clarification',runId,candidateHash,message:'Submit clarified requirements through a fresh agent consensus run.'};
+   }
    const storedCandidate=deepClone(merged.candidate);
    this.recordRun({runId,source:'manual',status:'candidate_ready',rounds:1,proposalIds,conflictPaths:[],evaluationErrorCount:0,candidateHash});
-   this.candidates.set(candidateHash,{candidate:storedCandidate,status:'candidate',approvals:[],source:'manual'});
+   this.candidates.set(candidateHash,{candidate:storedCandidate,status:'candidate',approvals:[],source:'manual',...(this.candidates.get(candidateHash)?.reviewEvidence?{reviewEvidence:deepClone(this.candidates.get(candidateHash)!.reviewEvidence!)}:{})});
    return {status:'candidate_ready',runId,candidateHash,candidate:merged.candidate};
  }
- async generateCandidateFromBrief(input:{brief:string;criteria:string[];maxRounds?:number;astra:DesignAgent;fable:DesignAgent},authToken:string|undefined,expectedToken:string|undefined){
+ async generateCandidateFromBrief(input:{brief:string;criteria:string[];maxRounds?:number;reviewScope?:ReviewScope;astra:DesignAgent;fable:DesignAgent},authToken:string|undefined,expectedToken:string|undefined){
    this.authorize(authToken,expectedToken);
    const baseVersion=String(this.bundle.manifest.version??'0.0.0');
    const referenceSpec={tokens:this.bundle.tokens,components:Object.fromEntries(this.bundle.components.map(c=>[String(c.id),c])),patterns:Object.fromEntries(this.bundle.patterns.filter(isRecord).map(p=>[String(p.id),p])),principles:this.bundle.principles,accessibility:this.bundle.accessibility};
+   const scope=validateReviewScope(input.reviewScope);
+   const context=deepClone({brief:input.brief,criteria:input.criteria,baseVersion,referenceSpec,...(scope?{reviewScope:scope}:{})}),contextHash=await sha256(context);
+   const held=this.clarificationContexts.get(contextHash);
+   if(held)return {...deepClone(held),reused:true};
    const runId=crypto.randomUUID();
    let run;
-   try {run=await runConsensus({astra:input.astra,fable:input.fable,context:{brief:input.brief,criteria:input.criteria,baseVersion,referenceSpec},maxRounds:input.maxRounds??5,evaluate:c=>this.evaluateCandidate(c)});}
+   try {run=await runConsensus({astra:input.astra,fable:input.fable,context,maxRounds:input.maxRounds??5,evaluate:c=>this.evaluateCandidate(c)});}
    catch(error){this.recordRun({runId,source:'agent-consensus',status:'provider_error',rounds:0,proposalIds:[],conflictPaths:[],evaluationErrorCount:0});throw error;}
+   // A concurrent run may have recorded the hold while this run awaited a provider.
+   const interveningHold=this.clarificationContexts.get(contextHash);
+   this.checkClarificationStorage();
+   if(interveningHold)return {...deepClone(interveningHold),reused:true};
    const storedInitial=run.initial.map(proposal=>deepClone(proposal));
    const storedCandidate=run.status==='CONSENSUS'?deepClone(run.candidate):undefined;
-   this.recordRun({runId,source:'agent-consensus',status:run.status,rounds:run.rounds,proposalIds:run.initial.map(p=>p.id),conflictPaths:run.conflicts.map(c=>c.path),evaluationErrorCount:run.evaluationErrors.length,...(run.status==='CONSENSUS'?{candidateHash:run.candidateHash}:{})});
-   for(const proposal of storedInitial)this.proposals.set(proposal.id,proposal);
-   if(run.status==='CONSENSUS'&&storedCandidate)this.candidates.set(run.candidateHash,{candidate:storedCandidate,status:'candidate',approvals:[],source:'agent-consensus'});
+   if(run.status==='NEEDS_CLARIFICATION'){
+     this.clarificationContexts.set(contextHash,deepClone({...run,runId}));
+     for(const hash of [run.candidateHash,...run.critiques.slice(-2).map(r=>r.candidateHash)]){
+       this.clarificationHolds.add(hash);
+       const prior=this.candidates.get(hash);if(prior?.status==='candidate')prior.approvals=[];
+     }
+   }else for(const proposal of storedInitial)this.proposals.set(proposal.id,proposal);
+   if(run.status==='CONSENSUS'&&storedCandidate){this.clarificationHolds.delete(run.candidateHash);this.candidates.set(run.candidateHash,{candidate:storedCandidate,status:'candidate',approvals:[],source:'agent-consensus',...(run.reviewReadiness?{reviewEvidence:deepClone(run.reviewReadiness)}:{})});}
+   if(run.status==='NEEDS_CLARIFICATION'||run.status==='CONSENSUS')this.persistClarification();
+   this.recordRun({runId,source:'agent-consensus',status:run.status,rounds:run.rounds,proposalIds:run.initial.map(p=>p.id),conflictPaths:run.conflicts.map(c=>c.path),evaluationErrorCount:run.evaluationErrors.length,...(run.status==='CONSENSUS'||run.status==='NEEDS_CLARIFICATION'?{candidateHash:run.candidateHash}:{})});
    return {...run,runId};
  }
- getConsensusStatus(candidateHash:string,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');return {candidateHash,status:c.status,source:c.source,approvals:c.approvals.map(a=>a.actor),roleApprovalsComplete:approvalsMatch(candidateHash,c.approvals),humanApprovalRequired:c.status!=='released',durable:false,identityAssurance:this.governance.roleApprovalTokens?'role-scoped-credentials' as const:'shared-admin-credential' as const,baseVersion:c.candidate.baseVersion,changeCount:c.candidate.changes.length,changePaths:c.candidate.changes.slice(0,50).map(change=>change.path)};}
+ getConsensusStatus(candidateHash:string,authToken:string|undefined,expectedToken:string|undefined){this.authorize(authToken,expectedToken);const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');const clarificationPending=this.clarificationHolds.has(candidateHash);return {candidateHash,reviewReadiness:deepClone(c.reviewEvidence??reviewReadiness(c.candidate,candidateHash)),status:clarificationPending&&c.status!=='released'?'needs_clarification':c.status,clarificationPending,source:c.source,approvals:c.approvals.map(a=>a.actor),roleApprovalsComplete:!clarificationPending&&approvalsMatch(candidateHash,c.approvals),humanApprovalRequired:c.status!=='released',durable:false,identityAssurance:this.governance.roleApprovalTokens?'role-scoped-credentials' as const:'shared-admin-credential' as const,baseVersion:c.candidate.baseVersion,changeCount:c.candidate.changes.length,changePaths:c.candidate.changes.slice(0,50).map(change=>change.path)};}
  getGovernanceActivity(authToken:string|undefined,expectedToken:string|undefined){
    this.authorize(authToken,expectedToken);
    return {durable:false,identityAssurance:this.governance.roleApprovalTokens?'role-scoped-credentials' as const:'shared-admin-credential' as const,retention:'current-process-only' as const,audit:this.governance.auditLedger?.status()??{durable:false,eventCount:0,headHash:null},proposals:[...this.proposals.values()].slice(-50).reverse().map(p=>({id:p.id,author:p.author,baseVersion:p.baseVersion,changeCount:p.changes.length,changePaths:p.changes.slice(0,50).map(c=>c.path)})),recentRuns:this.recentRuns.map(r=>({...r,proposalIds:r.proposalIds.slice(0,50),conflictPaths:r.conflictPaths.slice(0,50)})),candidates:[...this.candidates.entries()].slice(-50).reverse().map(([hash])=>this.getConsensusStatus(hash,authToken,expectedToken))};
  }
- approveCandidate(candidateHash:string,actor:'astra'|'fable',authToken:string|undefined,expectedToken:string|undefined,roleApprovalToken?:string){this.authorize(authToken,expectedToken);const expectedRoleToken=this.governance.roleApprovalTokens?.[actor];if(expectedRoleToken&&(!roleApprovalToken||roleApprovalToken!==expectedRoleToken||roleApprovalToken===expectedToken))throw new Error('Role approval credential required');const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');this.governance.auditLedger?.record({type:'candidate_approved',candidateHash,actor});c.approvals=c.approvals.filter(a=>a.actor!==actor);c.approvals.push(approve(actor,candidateHash));return {candidateHash,actor,approved:true};}
- publishRelease(candidateHash:string,humanApproved:boolean,authToken:string|undefined,expectedToken:string|undefined,humanApprovalToken?:string,expectedHumanApprovalToken?:string){this.authorize(authToken,expectedToken);const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');if(!humanApproved)throw new Error('Human approval required');const roleTokens=this.governance.roleApprovalTokens;if(!expectedHumanApprovalToken||expectedHumanApprovalToken===expectedToken||expectedHumanApprovalToken===roleTokens?.astra||expectedHumanApprovalToken===roleTokens?.fable||humanApprovalToken!==expectedHumanApprovalToken)throw new Error('Separate human approval credential required');if(!approvalsMatch(candidateHash,c.approvals))throw new Error('Astra and Fable approvals required');this.governance.auditLedger?.record({type:'candidate_released',candidateHash});c.status='released';return {candidateHash,status:'released'};}
+ approveCandidate(candidateHash:string,actor:'astra'|'fable',authToken:string|undefined,expectedToken:string|undefined,roleApprovalToken?:string){this.authorize(authToken,expectedToken);if(this.clarificationHolds.has(candidateHash))throw new Error('Candidate needs clarification');const expectedRoleToken=this.governance.roleApprovalTokens?.[actor];if(expectedRoleToken&&(!roleApprovalToken||roleApprovalToken!==expectedRoleToken||roleApprovalToken===expectedToken))throw new Error('Role approval credential required');const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');this.governance.auditLedger?.record({type:'candidate_approved',candidateHash,actor});c.approvals=c.approvals.filter(a=>a.actor!==actor);c.approvals.push(approve(actor,candidateHash));return {candidateHash,actor,approved:true};}
+ publishRelease(candidateHash:string,humanApproved:boolean,authToken:string|undefined,expectedToken:string|undefined,humanApprovalToken?:string,expectedHumanApprovalToken?:string){this.authorize(authToken,expectedToken);if(this.clarificationHolds.has(candidateHash))throw new Error('Candidate needs clarification');const c=this.candidates.get(candidateHash);if(!c)throw new Error('Unknown candidate');if(c.candidate.reviewScope?.pendingChecks.length)throw new Error('Pending implementation checks prevent release; specification consensus is not rendered verification');if(!humanApproved)throw new Error('Human approval required');const roleTokens=this.governance.roleApprovalTokens;if(!expectedHumanApprovalToken||expectedHumanApprovalToken===expectedToken||expectedHumanApprovalToken===roleTokens?.astra||expectedHumanApprovalToken===roleTokens?.fable||humanApprovalToken!==expectedHumanApprovalToken)throw new Error('Separate human approval credential required');if(!approvalsMatch(candidateHash,c.approvals))throw new Error('Astra and Fable approvals required');this.governance.auditLedger?.record({type:'candidate_released',candidateHash});c.status='released';return {candidateHash,status:'released'};}
  compareSpecVersions(fromVersion:string,toVersion:string){
    const from=this.snapshots.get(fromVersion),to=this.snapshots.get(toVersion);
    if(from&&to)return compareSnapshots(from,to);
@@ -105,6 +130,8 @@ export class StyleService {
    const result=evaluateSpec({manifest:this.bundle.manifest,tokens:draft.tokens,components,accessibility:draft.accessibility,patterns:isRecord(draft.patterns)?Object.values(draft.patterns):[]});
    return result.issues.filter(i=>i.severity==='error').map(i=>`${i.code} ${i.path}: ${i.message}`);
  }
- private authorize(got:string|undefined,expected:string|undefined){if(!expected||got!==expected)throw new Error('Unauthorized');}
+ private checkClarificationStorage(){if(this.persistenceFailed)throw new Error('Clarification persistence failed; restart after storage recovery');try{this.governance.clarificationStore?.assertHealthy();}catch(error){this.persistenceFailed=true;throw error;}}
+ private persistClarification(){try{this.governance.clarificationStore?.save({heldHashes:[...this.clarificationHolds],contexts:[...this.clarificationContexts]});}catch(error){this.persistenceFailed=true;throw error;}}
+ private authorize(got:string|undefined,expected:string|undefined){if(!expected||got!==expected)throw new Error('Unauthorized');this.checkClarificationStorage();}
  private recordRun(summary:GovernanceRunSummary){this.governance.auditLedger?.record({type:'run_recorded',runId:summary.runId,source:summary.source,status:summary.status,rounds:summary.rounds,proposalIdHashes:summary.proposalIds.map(auditIdentifier),conflictCount:summary.conflictPaths.length,evaluationErrorCount:summary.evaluationErrorCount,...(summary.candidateHash?{candidateHash:summary.candidateHash}:{})});this.recentRuns.unshift({...summary,proposalIds:summary.proposalIds.slice(0,50),conflictCount:summary.conflictPaths.length,conflictPaths:summary.conflictPaths.slice(0,50)});if(this.recentRuns.length>50)this.recentRuns.length=50;}
 }

@@ -7,6 +7,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { StyleConstitutionClient } from '../packages/sdk/dist/index.js';
+import { ClarificationStore } from '../dist/apps/mcp-server/src/clarification-store.js';
 
 async function freePort() {
   const server = createServer();
@@ -23,9 +24,11 @@ test('governance MCP tool is admin-only while public read tools remain available
   const fableToken = randomUUID();
   const dir = await mkdtemp(join(tmpdir(), 'style-governance-mcp-'));
   const auditPath = join(dir, 'audit.jsonl');
+  const clarificationPath = join(dir, 'clarification.jsonl');
+  ClarificationStore.initialize(clarificationPath);
   const child = spawn(process.execPath, ['--import', 'tsx', 'apps/mcp-server/src/official-server.ts'], {
     cwd: process.cwd(), stdio: ['ignore', 'ignore', 'pipe'],
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', MCP_ENABLE_WRITES: 'true', MCP_ENABLE_RELEASE_TOOL: 'false', MCP_ENABLE_AI_ORCHESTRATION: 'false', MCP_ADMIN_TOKEN: token, MCP_AUDIT_PATH: auditPath, MCP_ASTRA_APPROVAL_TOKEN: astraToken, MCP_FABLE_APPROVAL_TOKEN: fableToken },
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', MCP_ENABLE_WRITES: 'true', MCP_ENABLE_RELEASE_TOOL: 'false', MCP_ENABLE_AI_ORCHESTRATION: 'false', MCP_ADMIN_TOKEN: token, MCP_AUDIT_PATH: auditPath, MCP_CLARIFICATION_PATH: clarificationPath, MCP_ASTRA_APPROVAL_TOKEN: astraToken, MCP_FABLE_APPROVAL_TOKEN: fableToken },
   });
   let stderr = '';
   child.stderr.on('data', chunk => { stderr += String(chunk); });
@@ -50,7 +53,7 @@ test('governance MCP tool is admin-only while public read tools remain available
     const { tools } = await anonymous.listTools();
     assert.ok(tools.some(tool => tool.name === 'get_governance_activity'));
     const currentManifest = await anonymous.getStyleManifest();
-    assert.equal(currentManifest.version, '0.6.0');
+    assert.equal(currentManifest.version, '0.7.0');
     const denied = await anonymous.connection.callTool({ name: 'get_governance_activity', arguments: {} });
     assert.equal(denied.isError, true);
     await authorized.connect();

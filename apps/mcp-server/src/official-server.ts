@@ -9,6 +9,8 @@ import { canonicalize, mergeObjects } from '../../../packages/style-spec/src/ind
 import { verifySnapshot, type SnapshotIndexEntry, type StyleSnapshot } from '../../../packages/versioning/src/index.js';
 import { createConfiguredAgent } from '../../../packages/provider-adapters/src/index.js';
 import { AuditLedger } from '../../../packages/governance-audit/src/index.js';
+import { ClarificationStore } from './clarification-store.js';
+import { validateReviewScope } from '../../../packages/consensus-engine/src/index.js';
 
 async function json(path:string){return JSON.parse(await readFile(path,'utf8')) as Record<string,unknown>;}
 async function text(path:string){return readFile(path,'utf8');}
@@ -58,7 +60,9 @@ if(writesEnabled&&Boolean(astraApprovalToken)!==Boolean(fableApprovalToken))thro
 const roleApprovalTokens=writesEnabled&&astraApprovalToken&&fableApprovalToken?{astra:astraApprovalToken,fable:fableApprovalToken}:undefined;
 if(roleApprovalTokens&&(roleApprovalTokens.astra===process.env.MCP_ADMIN_TOKEN||roleApprovalTokens.fable===process.env.MCP_ADMIN_TOKEN))throw new Error('Role approval credentials must differ from admin credential');
 const auditLedger=writesEnabled&&process.env.MCP_AUDIT_PATH?new AuditLedger(process.env.MCP_AUDIT_PATH):undefined;
-const service=new StyleService(bundle,await loadSnapshots(),{...(roleApprovalTokens?{roleApprovalTokens}:{}),...(auditLedger?{auditLedger}:{})});
+if(writesEnabled&&!process.env.MCP_CLARIFICATION_PATH)throw new Error('MCP_CLARIFICATION_PATH is required for write-enabled service; initialize a private persistent journal first');
+const clarificationStore=writesEnabled?new ClarificationStore(process.env.MCP_CLARIFICATION_PATH!):undefined;
+const service=new StyleService(bundle,await loadSnapshots(),{...(roleApprovalTokens?{roleApprovalTokens}:{}),...(auditLedger?{auditLedger}:{}),...(clarificationStore?{clarificationStore}:{})});
 const asText=(data:unknown)=>({content:[{type:'text' as const,text:JSON.stringify(data,null,2)}]});
 const bearer=(ctx:any)=>ctx.http?.req?.headers.get('authorization')?.replace(/^Bearer\s+/i,'');
 const humanApproval=(ctx:any)=>ctx.http?.req?.headers.get('x-human-approval-token')??undefined;
@@ -86,7 +90,7 @@ function buildServer(){
    server.registerTool('get_governance_activity',{description:'Return recent proposal, round, conflict, and candidate summaries (admin only; process-local prototype)',inputSchema:z.object({})},async(_input,ctx)=>asText(service.getGovernanceActivity(bearer(ctx),adminToken)));
    server.registerTool('approve_candidate',{description:'Record Astra/Fable approval against the exact candidate hash (admin and configured role credential)',inputSchema:z.object({candidateHash:z.string(),actor:z.enum(['astra','fable'])})},async({candidateHash,actor},ctx)=>asText(service.approveCandidate(candidateHash,actor,bearer(ctx),adminToken,roleApproval(ctx))));
    if(process.env.MCP_ENABLE_RELEASE_TOOL==='true') server.registerTool('publish_release',{description:'Mark an approved candidate released after explicit human approval; requires admin auth plus a separate X-Human-Approval-Token',inputSchema:z.object({candidateHash:z.string(),humanApproved:z.boolean()})},async({candidateHash,humanApproved},ctx)=>asText(service.publishRelease(candidateHash,humanApproved,bearer(ctx),adminToken,humanApproval(ctx),releaseApprovalToken)));
-   if(process.env.MCP_ENABLE_AI_ORCHESTRATION==='true') server.registerTool('generate_style_constitution_candidate',{description:'Run independent Astra/Fable proposals, cross-review, deterministic validation, and bounded consensus from one product brief (admin only)',inputSchema:z.object({brief:z.string().min(20).max(50000),criteria:z.array(z.string()).default(['accessibility','consistency','maintainability']),maxRounds:z.number().int().min(1).max(10).default(5)})},async({brief,criteria,maxRounds},ctx)=>asText(await service.generateCandidateFromBrief({brief,criteria,maxRounds,astra:createConfiguredAgent('astra'),fable:createConfiguredAgent('fable')},bearer(ctx),adminToken)));
+   if(process.env.MCP_ENABLE_AI_ORCHESTRATION==='true') server.registerTool('generate_style_constitution_candidate',{description:'Run independent Astra/Fable proposals, cross-review, deterministic validation, and bounded consensus from one product brief (admin only)',inputSchema:z.object({brief:z.string().min(20).max(50000),criteria:z.array(z.string()).default(['accessibility','consistency','maintainability']),maxRounds:z.number().int().min(1).max(10).default(5),reviewScope:z.object({stage:z.literal('specification'),pendingChecks:z.array(z.object({id:z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/),requirement:z.string().min(1).max(2000),evidenceRequired:z.string().min(1).max(2000)}).strict()).max(20),issues:z.array(z.object({id:z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/),text:z.string().min(1).max(2000)}).strict()).max(50).optional()}).strict().optional()})},async({brief,criteria,maxRounds,reviewScope},ctx)=>asText(await service.generateCandidateFromBrief({brief,criteria,maxRounds,...(reviewScope?{reviewScope:validateReviewScope(reviewScope)!}:{}),astra:createConfiguredAgent('astra'),fable:createConfiguredAgent('fable')},bearer(ctx),adminToken)));
  }
  return server;
 }

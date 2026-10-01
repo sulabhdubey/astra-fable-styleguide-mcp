@@ -1,0 +1,20 @@
+import {mkdtemp,readFile,writeFile} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
+import {join,resolve,dirname} from 'node:path';
+import assert from 'node:assert/strict';
+import {prepareDemo} from './prepare-demo.mjs';
+const root=await mkdtemp(join(tmpdir(),'stylecon-ci-proof-'));
+const demo=await prepareDemo(join(root,'demo')),project=dirname(demo.project),cli=resolve(process.argv[2]??'packages/cli/dist/stylecon.mjs');
+function run(command,args,expected=0){const result=spawnSync(command,args,{cwd:project,encoding:'utf8',timeout:60000});assert.equal(result.status,expected,result.stderr||result.error?.message||result.stdout);return result.stdout;}
+const git=(...args)=>run('git',args).trim();
+const check=(...args)=>run(process.execPath,[cli,...args]);
+git('init','-q');git('config','user.name','Style Constitution Fixture');git('config','user.email','fixture@localhost');git('config','core.autocrlf','false');git('add','.');git('commit','-qm','Broken target fixture');
+const base=join(root,'base.json'),head=join(root,'head.json');check('ci','capture',demo.project,base);
+const change=JSON.parse(await readFile(demo.change,'utf8')),path=join(project,'index.html');await writeFile(path,(await readFile(path,'utf8')).replace(change.before,()=>change.after));
+git('add','.');git('commit','-qm','Correct target fixture');check('ci','capture',demo.project,head);
+const comparison=JSON.parse(check('ci','compare',base,head,'--format','json'));
+assert.equal(comparison.resolved.length,1);assert.equal(comparison.newViolations.length,0);assert.equal(comparison.exitCode,0);assert.equal(comparison.headCommit,git('rev-parse','HEAD'));
+const reverse=JSON.parse(run(process.execPath,[cli,'ci','compare',head,base,'--format','json'],1));assert.equal(reverse.newViolations.length,1);
+const markdown=check('ci','compare',base,head);assert.match(markdown,/Resolved: 1/);assert.match(markdown,/Observed:/);
+await writeFile(join(root,'summary.md'),markdown);console.log(JSON.stringify({passed:true,privateEvidence:root,cases:['exact committed base/head capture','resolved finding','new violation preserves exit 1','actionable markdown summary']}));

@@ -36,7 +36,9 @@ if(packed.files.some(file=>!file.path.startsWith('dist/')&&file.path!=='package.
 const filename=development?`styleconstitution-cli-${packageJson.version}-dev-${input.sha256.slice(0,12)}.tgz`:packed.filename;
 if(filename!==packed.filename)await rename(resolve(directory,packed.filename),resolve(directory,filename));
 const bytes=await readFile(resolve(directory,filename));const sha256=createHash('sha256').update(bytes).digest('hex');
-const evidence={schemaVersion:1,channel:development?'development':'release-candidate',releaseAuthorized:false,cliVersion:packageJson.version,constitutionVersion:manifest.version,source:{commit,dirty,gitAvailable:!unavailable,inputSha256:input.sha256,inputFiles:input.files},archive:{filename,sha256,bytes:bytes.length},files:packed.files.map(file=>file.path)};
+const installer=await readFile(resolve(root,'scripts/install-cli.mjs'));const installerSha256=createHash('sha256').update(installer).digest('hex');
+await writeFile(resolve(directory,'install-cli.mjs'),installer,{flag:'wx'});
+const evidence={schemaVersion:1,channel:development?'development':'release-candidate',releaseAuthorized:false,cliVersion:packageJson.version,constitutionVersion:manifest.version,source:{commit,dirty,gitAvailable:!unavailable,inputSha256:input.sha256,inputFiles:input.files},archive:{filename,sha256,bytes:bytes.length},installer:{filename:'install-cli.mjs',sha256:installerSha256},files:packed.files.map(file=>file.path)};
 await writeFile(resolve(directory,'package-evidence.json'),JSON.stringify(evidence,null,2)+'\n',{flag:'wx'});
-await writeFile(resolve(directory,'SHA256SUMS'),`${sha256}  ${filename}\n`,{flag:'wx'});
+await writeFile(resolve(directory,'SHA256SUMS'),`${sha256}  ${filename}\n${installerSha256}  install-cli.mjs\n`,{flag:'wx'});
 console.log(JSON.stringify({archive:filename,sha256,channel:evidence.channel,releaseAuthorized:false}));

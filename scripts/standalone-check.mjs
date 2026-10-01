@@ -2,6 +2,7 @@ import {loadProject,startProjectServer} from './project-workflow.mjs';
 import {verifyProject} from './verify-project.mjs';
 import {inspectReport} from './project-cli.mjs';
 import {renderHtmlReport} from './html-report.mjs';
+import {readJson} from './project-cli.mjs';
 
 export function allowedRequest(origin,url,method) {
   try {const target=new URL(url);return method==='GET'&&target.origin===origin&&!target.username&&!target.password&&target.pathname!=='/_verification';}
@@ -22,6 +23,7 @@ function connectedTab(page) {
 }
 
 export async function runCheck(configPath,{launch}={}) {
+  if((await readJson(configPath)).schemaVersion===2){const {runRunningCheck}=await import('./running-app.mjs');return runRunningCheck(configPath,{launch});}
   const project=await loadProject(configPath);
   const start=launch??(async()=>{const {chromium}=await import('playwright');return chromium.launch({headless:true});});
   const browser=await start();let server;

@@ -5,6 +5,7 @@ COPY . .
 RUN pnpm install --prod=false --frozen-lockfile
 
 FROM deps AS build
+RUN apk add --no-cache git
 RUN pnpm typecheck:full && pnpm test && pnpm validate && pnpm generate
 
 FROM node:22-alpine AS runtime

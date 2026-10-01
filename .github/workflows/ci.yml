@@ -22,6 +22,9 @@ jobs:
       - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
       - run: node scripts/test-project-adoption.mjs
+      - run: node scripts/test-running-app.mjs
+      - run: node scripts/test-studio.mjs
+      - run: node scripts/test-ci-workflow.mjs
       - run: node packages/cli/dist/stylecon.mjs check examples/profile --format sarif --output "$RUNNER_TEMP/stylecon.sarif"
       - uses: actions/upload-artifact@v4
         with:
@@ -42,10 +45,12 @@ jobs:
           name: stylecon-cli-development
           path: |
             ${{ runner.temp }}/stylecon-package/*.tgz
+            ${{ runner.temp }}/stylecon-package/install-cli.mjs
             ${{ runner.temp }}/stylecon-package/SHA256SUMS
             ${{ runner.temp }}/stylecon-package/package-evidence.json
             ${{ runner.temp }}/stylecon-package/archive-verification.json
           retention-days: 7
       - run: docker build -t style-constitution:ci .
+      - run: docker build -f Dockerfile.vercel -t style-constitution:ci-vercel .
       - run: git diff --exit-code -- generated
 

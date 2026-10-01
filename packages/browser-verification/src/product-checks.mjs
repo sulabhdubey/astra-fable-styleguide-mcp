@@ -13,7 +13,7 @@ export function appendProductChecks(report, observations) {
     const l=observations.layout;
     add('overflow','PROJECT-LAYOUT-001','page',Number.isFinite(l.viewportWidth)&&l.viewportWidth>0&&Number.isFinite(l.contentWidth)?l.contentWidth<=l.viewportWidth:undefined,l,'Remove unintended horizontal page overflow at this viewport.');
   }
-  for(const path of observations.closePaths??[]) add('close-path','STYLE-A11Y-012','dialog',path.closed===undefined?undefined:path.closed&&path.returnFocus,path,'Close this dialog and restore focus through the configured action.');
+  for(const path of observations.closePaths??[]) add('close-path','STYLE-A11Y-012',path.selector??'dialog',path.closed===undefined?undefined:path.closed&&path.returnFocus,path,'Close this dialog and restore focus through the configured action.');
   return {...report,checks,status:checks.some(c=>c.status==='fail')?'fail':checks.every(c=>c.status==='pass')?'pass':'not_checked',
     limitations:[...(report.limitations??[]),'Form error checks measure text presence, association and focus location; correction accuracy and invalid-input focus visibility/contrast require separate review.','Declared loading/disabled states and current viewport only; no background-operation or general responsive-layout proof.']};
 }
