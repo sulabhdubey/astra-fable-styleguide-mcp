@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import {bindReviewScope,validateReviewScope,runConsensus,sha256,candidateFromProposal,reviewIsComplete} from '../dist/packages/consensus-engine/src/index.js';
 import {ConfigurableAgent,createGovernedHostInvoker} from '../dist/packages/provider-adapters/src/index.js';
 import {StyleService} from '../dist/apps/mcp-server/src/service.js';
-import {loadBundle} from './helpers.mjs';
+import {loadBundle,loadJson} from './helpers.mjs';
 const text='Rendered dimensions remain unmeasured.';
 const scope={stage:'specification',pendingChecks:[{id:'measure',requirement:'Usable targets',evidenceRequired:'Browser measurements'}],issues:[{id:'target',text}]};
-const context={brief:'Change radius to 11px.',criteria:[],baseVersion:'0.6.0',reviewScope:scope};
+const currentVersion=(await loadJson('spec/manifest.json')).version;
+const context={brief:'Change radius to 11px.',criteria:[],baseVersion:currentVersion,reviewScope:scope};
 const path='tokens.radius.md.$value';
-const proposal=id=>({id,author:id,baseVersion:'0.6.0',summary:'Radius',changes:[{path,value:'11px'}],tradeoffs:[],unresolved:[],issueNotes:[{issueId:'target',note:'Pending actual browser measurement.'}]});
+const proposal=id=>({id,author:id,baseVersion:currentVersion,summary:'Radius',changes:[{path,value:'11px'}],tradeoffs:[],unresolved:[],issueNotes:[{issueId:'target',note:'Pending actual browser measurement.'}]});
 const make=id=>({id,generateProposal:async()=>proposal(id),critiqueProposal:async p=>({reviewer:id,proposalId:p.id,candidateHash:await sha256(candidateFromProposal(p)),acceptedPaths:[path],objections:[],deferredIssues:[{issue:text,issueId:'target',checkId:'measure',reason:'Evidence remains pending.'}]}),reviseProposal:async()=>proposal(id)});
 
 test('caller identity survives model omission and duplicate notes without merging distinct concerns',()=>{

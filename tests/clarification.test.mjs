@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {runConsensus,sha256} from '../dist/packages/consensus-engine/src/index.js';
 import {ConfigurableAgent,createGovernedHostInvoker} from '../dist/packages/provider-adapters/src/index.js';
 import {StyleService} from '../dist/apps/mcp-server/src/service.js';
-import {loadBundle} from './helpers.mjs';
+import {loadBundle,loadJson} from './helpers.mjs';
 import {compareDesignSuite} from '../scripts/compare-local-design.mjs';
 import {ClarificationStore} from '../dist/apps/mcp-server/src/clarification-store.js';
 import {mkdtempSync,rmSync} from 'node:fs';
@@ -11,7 +11,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 
 const path='tokens.duration.normal.$value';
-const context={brief:'Requirement A requires 210ms. Requirement B requires 230ms.',criteria:['Both requirements are mandatory.'],baseVersion:'0.6.0'};
+const currentVersion=(await loadJson('spec/manifest.json')).version;
+const context={brief:'Requirement A requires 210ms. Requirement B requires 230ms.',criteria:['Both requirements are mandatory.'],baseVersion:currentVersion};
 const request={reason:'The same duration cannot have two different values simultaneously.',question:'Which duration should apply: 210ms or 230ms?',requirements:[{source:'brief',quote:'Requirement A requires 210ms.'},{source:'brief',quote:'Requirement B requires 230ms.'}]};
 const candidate=p=>({baseVersion:p.baseVersion,changes:p.changes});
 const proposal=(role,value='210ms')=>({id:`P-${role}`,author:role,baseVersion:context.baseVersion,summary:'Tentative duration',changes:[{path,value}],tradeoffs:[],unresolved:[]});
