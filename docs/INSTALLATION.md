@@ -10,7 +10,7 @@ unrelated issue, message, or mirror is not sufficient.
 
 ## One local installation command
 
-Using the installer supplied with the reviewed development archive (or `scripts/install-cli.mjs` from the same trusted source checkout), run:
+Using the installer supplied with the reviewed v0.7.0 release archive (or `scripts/install-cli.mjs` from the same trusted source checkout), run:
 
 ```sh
 node /absolute/path/to/install-cli.mjs \
@@ -38,9 +38,7 @@ For a released version, download the CLI `.tgz` and its accompanying
 with the reviewed release record. For the next release candidate, use artifacts
 made by the reviewed local packaging workflow together with its emitted
 `SHA256SUMS`. The development packaging command includes `install-cli.mjs` and
-its checksum. Verify the installer checksum before running it. The published
-v0.6.0 assets do not yet contain this installer or Studio; use the reviewed
-development artifacts for these features.
+its checksum. Verify the installer checksum before running it. The v0.7.0 release includes this installer and Studio; v0.6.0 assets do not.
 
 After installation, run the installed command without downloading a package:
 

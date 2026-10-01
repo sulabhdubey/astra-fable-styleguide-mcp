@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - Stable caller issue IDs and separate explanatory notes prevent structured duplicate concerns; exact-hash reviews retain pending evidence and distinguish host-normalized review input from generation output.
 - Explicit specification review scopes and deferred-to-check dispositions retain open implementation obligations without waiving defects or release checks.
