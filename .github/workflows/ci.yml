@@ -51,5 +51,6 @@ jobs:
             ${{ runner.temp }}/stylecon-package/archive-verification.json
           retention-days: 7
       - run: docker build -t style-constitution:ci .
+      - run: docker build -f Dockerfile.vercel -t style-constitution:ci-vercel .
       - run: git diff --exit-code -- generated
 
