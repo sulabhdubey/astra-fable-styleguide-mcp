@@ -1,99 +1,60 @@
 # Astra + Fable Style Constitution
 
-**Check a supported UI against declared design rules, review a source-bound repair, and verify the result.**
+**Give your coding agent shared design rules. Check the UI. Review the correction.**
 
-Astra + Fable Style Constitution turns design rules into a versioned, machine-readable contract. Two provider-independent agent roles propose and critique changes; deterministic checks resolve measurable questions; exact candidate hashes prevent fake consensus; humans retain release authority by default.
+A versioned design contract, a read-only MCP server for coding agents, and a local UI checker with reviewed repairs. For developers who want their interfaces to follow the same rules as their code changes.
 
-The project idea was inspired by Tibo's post on X.
+[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.7.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.7.0)
 
-## Current release
+## See a check in action
 
-**[v0.7.0](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.7.0)** adds React/Vite preview checks and supported CSS repairs, Local Studio, constitution authoring, PR regression summaries and a verified installer. See the [release notes](docs/V0.7.0_RELEASE_NOTES.md), [installation guide](docs/INSTALLATION.md) and [changelog](CHANGELOG.md).
+The browser measures a **24px button**, flags it against this project's **40px rule**, then measures again after you approve a supplied correction.
 
-[Open the product](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/) · [Try the interactive demo](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/)
+**1 · Find the mismatch**
 
-Experimental software: configured static UI journeys and trusted local React/Vite production previews are supported within documented limits. Complete accessibility and general framework coverage are not claimed.
+![Demo before correction: measured button height of 24px is below the project's 40px rule.](docs/images/demo-before.png)
 
-## Start here
+**2 · Apply and recheck**
 
-### Local developer workflow
+![Demo after correction: rechecked button height of 40px meets the project's rule.](docs/images/demo-after.png)
 
-v0.7.0 includes a [local Studio](docs/LOCAL_STUDIO.md),
-[React/Vite preview checks](docs/RUNNING_APP.md), [constitution authoring](docs/CONSTITUTION_AUTHORING.md),
-[verified installation](docs/INSTALLATION.md) and [PR regression summaries](docs/PR_REGRESSIONS.md).
-Use the v0.7.0 archive and its matching checksums; older archives do not include these workflows.
+Actual v0.7.0 demo screenshots. This sample checks button height only; 40px is a project rule, not a universal accessibility minimum. **[Try it without an account, install or AI call.](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/)**
 
-### Published product
+## How it works
 
-The product site includes a no-install interactive sample: measure a button,
-review a supplied correction, recheck it and undo. To preview this checkout,
-run `pnpm dev:docs` and open the printed local URL. The homepage links to the
-demo and guided MCP setup; the demo measures only its supplied sample.
+```mermaid
+flowchart LR
+  Rules["Design rules /spec"] --> MCP["Read-only MCP"]
+  MCP --> Agent["Your coding agent"]
+  Rules --> Check["Local UI check"]
+  Check --> Review["Inspect findings; review correction"]
+  Review --> Recheck["Apply, rebuild if needed, recheck"]
+  Recheck -.-> Undo["Undo if needed"]
+```
 
-Use Node 22.12+ and pnpm 10.34.5. From a checkout of this revision:
+| You want to… | Start with… |
+| --- | --- |
+| Give an agent consistent tokens and component rules | [Public MCP setup](#production-mcp) |
+| Inspect a supported interface and review corrections | [Local Studio](docs/LOCAL_STUDIO.md) · [React/Vite guide](docs/RUNNING_APP.md) |
+| Create and pin your team's design contract | [Constitution authoring](docs/CONSTITUTION_AUTHORING.md) |
+| See new, resolved and incomplete checks in a PR | [PR regression summaries](docs/PR_REGRESSIONS.md) |
+
+## Start locally
+
+Use **Node 22.12+** and **pnpm 10.34.5** in this repository:
 
 ```sh
-pnpm install --frozen-lockfile && pnpm build
+pnpm install --frozen-lockfile
+pnpm build
 pnpm stylecon browser-install
 pnpm stylecon check examples/profile
 ```
 
-The standalone checker runs isolated Chromium on a configured static project.
-It supports light-DOM button/dialog journeys and native form error checks.
-The public design-rule MCP is `https://astra-fable-styleguide-mcp.vercel.app/mcp`;
-it does not access your local files. See [Start Here](docs/START_HERE.md) and the
-[broken → repaired demo](docs/DEMO.md). The standalone CLI was introduced in v0.5.0; use the latest release for subsequent corrections.
-
-## What it gives you
-- A canonical StyleSpec under `/spec`.
-- Independent Astra/Fable proposal and cross-review workflow, including an optional one-call product-brief-to-candidate path.
-- Deterministic token, accessibility, component, and governance checks.
-- MCP resources and tools for coding agents.
-- Generated CSS, JSON, and TypeScript artifacts.
-- A human documentation site.
-- Audit-friendly decisions and proposal records.
-
-## Quick verification without external dependencies
-The repository includes a dependency-light verification path for the core engine:
-
-```bash
-npm run verify:core
-```
-
-The full connected build uses pnpm and installs the official MCP SDK, Astro, Zod, ESLint, and TypeScript:
-
-```bash
-pnpm install
-pnpm verify
-```
-
-After building the Astro site and installing Chromium (`pnpm stylecon browser-install`),
-run `pnpm test:product` for the built homepage, demo lifecycle, setup, clipboard
-fallback, mobile layout and navigation checks. It starts and closes its own
-loopback server. For a Pages build, use the same `BASE_PATH` for build and test.
-
-## Validate a local StyleSpec
-
-Run `pnpm stylecon validate` to validate the `/spec` directory in the current working directory, or use `--root <directory>`. This is distinct from `stylecon check <project>`, which observes a configured UI. Use `--help` for commands. The CLI can be packed and installed locally; it is not yet published to npm.
-
-## Architecture
-
-![Architecture](./architecture.png)
+Prefer the packaged CLI? Follow the [verified installation guide](docs/INSTALLATION.md). The CLI is distributed as a release archive; **it is not published to npm**.
 
 ## Production MCP
-The production adapter targets MCP `2026-07-28` via the official v2 TypeScript packages and `createMcpHandler`. The public endpoint is read-oriented by default. Write/release workflows remain governance-gated. When explicitly enabled, `generate_style_constitution_candidate` can invoke configurable OpenAI, Anthropic, or local Ollama-backed roles from a product brief; generated candidates still require exact-hash approvals. The optional release tool is separately disabled by default and requires a distinct human-held approval credential. Operator governance remains process-local, with optional local audit evidence and separate role approval credentials; see [GOVERNANCE.md](GOVERNANCE.md).
 
-The public server is available below. Check `/version` for the version currently serving; published releases and immutable snapshots remain available in the [release archive](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases).
-
-| Endpoint | URL |
-| --- | --- |
-| MCP (Streamable HTTP) | `https://astra-fable-styleguide-mcp.vercel.app/mcp` |
-| Health | `https://astra-fable-styleguide-mcp.vercel.app/health` |
-| Version | `https://astra-fable-styleguide-mcp.vercel.app/version` |
-
-The public deployment exposes eight read and compliance tools: `get_style_manifest`, `get_design_tokens`, `get_component_rules`, `search_style_spec`, `explain_style_decision`, `validate_tokens`, `check_style_compliance`, and `compare_spec_versions`. Proposal, approval, orchestration, and release tools are disabled. No provider key is needed to use the public endpoint.
-
-For a client that accepts a Streamable HTTP MCP URL, configure the server URL as `https://astra-fable-styleguide-mcp.vercel.app/mcp`. For example, a Cursor `.cursor/mcp.json` entry is:
+Add this to your client's MCP configuration; merge it with existing servers:
 
 ```json
 {
@@ -105,20 +66,61 @@ For a client that accepts a Streamable HTTP MCP URL, configure the server URL as
 }
 ```
 
-See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for deployment settings and verification commands, and [`docs/CLIENT_TRIALS.md`](./docs/CLIENT_TRIALS.md) for actual Codex CLI, Cursor CLI, and MCP Inspector results. Cursor CLI required explicit per-tool approval for its noninteractive trial; the example server configuration alone does not grant tool access.
+Eight public read/compliance tools. No provider key required. The server supplies rules and checks submitted values; it cannot inspect or edit your local files. [Client trial evidence](docs/CLIENT_TRIALS.md) · [TypeScript SDK](docs/TYPESCRIPT_CLIENT.md)
 
-For a machine-readable check of MCP discovery, protocol negotiation, version, and the eight advertised read tools, build the repository SDK and run `node scripts/probe-mcp.mjs https://astra-fable-styleguide-mcp.vercel.app/mcp`. See [`docs/TYPESCRIPT_CLIENT.md`](./docs/TYPESCRIPT_CLIENT.md) for the client API and probe output.
+<details>
+<summary>See the guided connection screen</summary>
 
-The compliance checker reports source locations and explicit coverage limits. See [`docs/COMPLIANCE.md`](./docs/COMPLIANCE.md) for its result contract.
+![Guided setup showing the Cursor MCP configuration and copy action.](docs/images/guided-setup.png)
 
-For a TypeScript integration, see the [local client quickstart](./docs/TYPESCRIPT_CLIENT.md).
+[Open guided setup](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Health](https://astra-fable-styleguide-mcp.vercel.app/health) · [Version](https://astra-fable-styleguide-mcp.vercel.app/version)
 
-Historical comparisons use [immutable `/spec` snapshots](./docs/VERSIONING.md).
+</details>
 
-See the [latest release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/latest) for current changes and verification evidence. Earlier release notes are indexed in the [changelog](CHANGELOG.md).
+## Why Astra + Fable?
 
-## Project contract
-- Goal: [`GOAL.md`](./GOAL.md)
-- Build requirements: [`BUILD_SPEC.md`](./BUILD_SPEC.md)
-- Agent rules: [`AGENTS.md`](./AGENTS.md)
-- Governance: [`GOVERNANCE.md`](./GOVERNANCE.md)
+Two configurable agent roles independently propose design changes, then review them. They are roles, not fixed model vendors.
+
+```mermaid
+flowchart TD
+  Brief["Same design brief"] --> A["Astra: independent proposal"]
+  Brief --> F["Fable: independent proposal"]
+  A --> Review["Cross-review and deterministic checks"]
+  F --> Review
+  Review --> Candidate["Revise candidate or request clarification"]
+  Candidate --> Approval["Both roles approve the exact candidate hash"]
+  Approval --> Human["Human release approval and release checks"]
+```
+
+A changed candidate invalidates prior approvals. Unresolved requirements and pending checks block release. **Collaboration is experimental; an overall advantage over a single agent has not been demonstrated.** [Governance](GOVERNANCE.md) · [Measured comparison](docs/SELECTIVE_REVIEW_STUDY.md)
+
+## Supported scope
+
+- Configured static UI journeys and trusted local React/Vite production previews.
+- Selected typography, spacing, contrast, overflow and interaction checks; [browser coverage](docs/RUNNING_APP.md) · [source-text checks](docs/COMPLIANCE.md).
+- Supported repairs require explicit source mappings. React/Vite literal CSS corrections require a trusted rebuild before rechecking.
+- Experimental software: no complete accessibility certification, arbitrary-framework coverage or autonomous repair guarantee.
+
+## Go deeper
+
+[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.7.0_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
+
+<details>
+<summary>Contributing and verification</summary>
+
+```sh
+pnpm install
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm validate
+pnpm build
+```
+
+After installing Chromium, `pnpm test:product` checks the built product pages. CI requires no external AI calls.
+
+[Project goal](GOAL.md) · [Build specification](BUILD_SPEC.md) · [Agent rules](AGENTS.md) · [Versioning](docs/VERSIONING.md)
+
+</details>
+
+Inspired by Tibo's post on X.
