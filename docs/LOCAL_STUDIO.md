@@ -1,6 +1,6 @@
 # Local Studio
 
-Studio is a local interface to the existing checker, repair engine and constitution authoring tools. It is included in the published v0.7.0 CLI archive. The guided React/Vite setup and coverage summary described below are additions in this development checkout; they are not included in the v0.7.0 archive.
+Studio is a local interface to the existing checker, repair engine and constitution authoring tools. The v0.8.0 CLI archive includes guided React/Vite setup and the coverage summary described below. The older v0.7.0 archive includes Studio but not these additions.
 
 After [installation](INSTALLATION.md), create an empty evidence directory outside your workspace, then run:
 
@@ -13,7 +13,7 @@ From a built source checkout use `pnpm stylecon studio` with the same arguments.
 ## Check and correct
 
 1. Select a project. Discovery looks up to three directories below the workspace and skips dependency, generated and hidden folders. Existing `project.json` files are used directly.
-2. For an unconfigured project, choose its type. Static HTML setup accepts a file list and dialog controls. The development checkout also offers guided React/Vite setup below. Configuration is created exclusively; existing files are not overwritten.
+2. For an unconfigured project, choose its type. Static HTML setup accepts a file list and dialog controls. React/Vite setup follows the guided flow below. Configuration is created exclusively; existing files are not overwritten.
 3. Run checks. Chromium exercises the declared controls. Only use a trusted project and synthetic test data. For [React/Vite](RUNNING_APP.md), manually start its reviewed production preview first.
 4. Inspect highlighted findings. Details show the actual element selector, configured source file, rule, observed value, expected value where recorded, and correction guidance. JSON and inert HTML evidence are saved privately.
 5. For a static project with mapped failures, supply one exact before/after replacement in an allowed file. Review the preview and apply that exact hash. The existing engine rejects stale source, invalid mappings and ambiguous replacements.
@@ -21,7 +21,7 @@ From a built source checkout use `pnpm stylecon studio` with the same arguments.
 
 For running React/Vite applications, explicitly mapped public stylesheets can offer verified literal CSS corrections. Select a recorded candidate, inspect the exact preview and apply it. Studio asks you to rebuild the trusted project before running checks again; undo also requires a rebuild. Other running-app findings remain observation-only. See the [supported mapping and limitations](RUNNING_APP.md#verified-css-corrections). Missing or unsupported evidence is visible. Passing configured checks is not a whole-application accessibility certification.
 
-## Guided React/Vite setup (development checkout)
+## Guided React/Vite setup
 
 Select an unconfigured project containing `index.html`, then choose **React / Vite production preview**. Build the trusted application using its reviewed build command before setup.
 
@@ -33,7 +33,7 @@ Select an unconfigured project containing `index.html`, then choose **React / Vi
 
 The wizard starts with bundled rules and observation only. It does not add repair authorizations. Pinned team constitutions, additional measurements and verified stylesheet mappings use the existing reviewed configuration format. Missing build files must be resolved by building the trusted project; Studio never runs package scripts for you.
 
-## Reading coverage (development checkout)
+## Reading coverage
 
 Studio, text reports and HTML reports show how many recorded checks were evaluated, with separate passed, failed, not-checked and unsupported counts. The denominator is recorded checks, **not a percentage of the application covered**. Targets, journey viewport and measurement viewports are listed separately: the running-app dialog journey executes at 1280px, while design measurements execute at 1280px and 390px. Other routes, widths and unexercised states remain untested.
 
