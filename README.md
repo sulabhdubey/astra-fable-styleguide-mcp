@@ -4,7 +4,7 @@
 
 A versioned design contract, a read-only MCP server for coding agents, and a local UI checker with reviewed repairs. For developers who want their interfaces to follow the same rules as their code changes.
 
-[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.7.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.7.0)
+[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.8.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.8.0)
 
 ## See a check in action
 
@@ -103,7 +103,7 @@ A changed candidate invalidates prior approvals. Unresolved requirements and pen
 
 ## Go deeper
 
-[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.7.0_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
+[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.8.0_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
 
 <details>
 <summary>Contributing and verification</summary>

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+- Add reviewed React/Vite setup in Local Studio with exact configuration hashes and exclusive saves.
+- Show explicit check coverage, actual selectors, separate viewport scopes and incomplete-check guidance.
+- Invalidate stale recheck/repair evidence, lock controls during operations and restore keyboard focus.
+- Reject ambiguous duplicate configuration and empty measurements; keep missing viewport evidence unverified.
+- Include guided setup in installed-archive browser verification and update pilot documentation.
+
 ## 0.7.0
 
 - Stable caller issue IDs and separate explanatory notes prevent structured duplicate concerns; exact-hash reviews retain pending evidence and distinguish host-normalized review input from generation output.
