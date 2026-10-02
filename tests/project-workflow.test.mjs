@@ -10,6 +10,17 @@ let receiptDirectory;
 const applyRepair=(...args)=>applyRawRepair(...args,{receiptDirectory});
 async function cleanReceipts(){for(const name of await readdir(receiptDirectory))await unlink(join(receiptDirectory,name));await rmdir(receiptDirectory);}
 const config = { schemaVersion:1, files:['index.html'], journey:{buttons:['#open'],trigger:'#open',dialog:'#dialog',name:'Review',dialogButtons:['#close'],close:'#close'}, targetPaths:{'#open':'index.html','#close':'index.html',dialog:'index.html',page:'index.html'} };
+
+test('static journeys reject duplicate and overlapping IDs before emitting duplicate evidence',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'style-journey-'));
+  try{
+    await writeFile(join(root,'index.html'),'<main></main>');
+    for(const journey of [{...config.journey,buttons:['#open','#open']},{...config.journey,dialog:'#open'},{...config.journey,dialogButtons:['#open'],close:'#open'}]){
+      await writeFile(join(root,'project.json'),JSON.stringify({...config,journey}));
+      await assert.rejects(loadProject(join(root,'project.json')),/journey/i);
+    }
+  }finally{await unlink(join(root,'index.html'));await unlink(join(root,'project.json'));await rmdir(root);}
+});
 test('project repair is allowlisted, exact-snapshot-bound and invalidates prior evidence', async () => {
   const root=await mkdtemp(join(tmpdir(),'style-project-'));
   receiptDirectory=await mkdtemp(join(tmpdir(),'style-receipts-'));

@@ -7,12 +7,13 @@ import {runCheck,formatReport} from './standalone-check.mjs';
 import {loadProject,previewRepair,applyRepair,undoRepair} from './project-workflow.mjs';
 import {previewRunningRepair,applyRunningRepair,undoRunningRepair} from './running-repair.mjs';
 import {initProject} from './project-init.mjs';
+import {previewRunningSetup,saveRunningSetup} from './running-setup.mjs';
 import {importCssSuggestions,createConstitutionCandidate,exportConstitutionCandidate,getConstitutionAuthoringCatalog} from './constitution-authoring.mjs';
 
 const assets=fileURLToPath(new URL('../packages/cli/studio/',import.meta.url));
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const inside=(root,path)=>{const rel=relative(root,path);return !isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('../')&&!rel.startsWith('..\\');};
-const assetTypes={'/':'text/html; charset=utf-8','/app.mjs':'text/javascript; charset=utf-8','/style.css':'text/css; charset=utf-8'};
+const assetTypes={'/':'text/html; charset=utf-8','/app.mjs':'text/javascript; charset=utf-8','/coverage.mjs':'text/javascript; charset=utf-8','/style.css':'text/css; charset=utf-8'};
 
 /** All actions are explicitly requested locally; no workspace code or shell commands run here. */
 export async function startStudio({workspace,evidenceDirectory,port=0,check=runCheck}) {
@@ -56,7 +57,19 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
       const result=await exportConstitutionCandidate(state.source,state.candidate,body.candidateSha256,destination);sessions.delete('constitution');return result;
     }
     const projectDirectory=await pathWithin(body.project);const config=resolve(projectDirectory,'project.json');
+    if(body.action==='setup-preview') {
+      sessions.delete(projectDirectory);
+      const preview=await previewRunningSetup(projectDirectory,body.options);
+      sessions.set(projectDirectory,{setup:{options:body.options,previewSha256:preview.previewSha256}});return preview;
+    }
+    if(body.action==='setup-save') {
+      const setup=sessions.get(projectDirectory)?.setup;
+      if(!setup||body.previewSha256!==setup.previewSha256)throw new Error('Review the exact setup before saving');
+      const result=await saveRunningSetup(projectDirectory,setup.options,setup.previewSha256);sessions.delete(projectDirectory);return result;
+    }
     if(body.action==='init') {const result=await initProject(projectDirectory,body.options);sessions.delete(projectDirectory);return result;}
+    // A new attempt supersedes prior check/preview evidence even when it fails.
+    if(body.action==='check')sessions.set(projectDirectory,{receipt:sessions.get(projectDirectory)?.receipt});
     await pathWithin(relative(root,config));
     if(body.action==='config') {const raw=await readFile(config,'utf8');if(raw.length>32_000)throw new Error('Configuration too large');return JSON.parse(raw);}
     const state=sessions.get(projectDirectory)??{};
@@ -89,7 +102,7 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
   const server=createServer(async(req,res)=>{
     const send=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','content-security-policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"});res.end(typeof value==='string'?value:JSON.stringify(value));};
     if(req.headers.host!==new URL(origin).host||(req.headers.origin&&req.headers.origin!==origin)||['cross-site','same-site'].includes(req.headers['sec-fetch-site']))return send(403,{error:'Local origin required'});
-    if(req.method==='GET'&&Object.hasOwn(assetTypes,req.url)){try{return send(200,await readFile(resolve(assets,req.url==='/'?'index.html':req.url.slice(1)),'utf8'),assetTypes[req.url]);}catch{return send(500,{error:'Studio assets unavailable'});}}
+    if(req.method==='GET'&&Object.hasOwn(assetTypes,req.url)){try{return send(200,await readFile(req.url==='/coverage.mjs'?fileURLToPath(new URL('./report-coverage.mjs',import.meta.url)):resolve(assets,req.url==='/'?'index.html':req.url.slice(1)),'utf8'),assetTypes[req.url]);}catch{return send(500,{error:'Studio assets unavailable'});}}
     if(req.url!=='/api')return send(404,{error:'Not found'});
     const provided=Buffer.from(String(req.headers['x-stylecon-session']??''));const expected=Buffer.from(token);
     if(req.method!=='POST'||req.headers['content-type']!=='application/json'||req.headers.origin!==origin||provided.length!==expected.length||!timingSafeEqual(provided,expected))return send(403,{error:'Authenticated local request required'});

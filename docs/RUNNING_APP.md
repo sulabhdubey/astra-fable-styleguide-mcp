@@ -4,6 +4,8 @@
 
 Create `project.json` beside the application:
 
+The development checkout also offers [guided setup in Local Studio](LOCAL_STUDIO.md#guided-reactvite-setup-development-checkout) for a first dialog journey and font-size/top-padding measurements. The published v0.7.0 archive uses the manual configuration below.
+
 ```json
 {
   "schemaVersion": 2,
@@ -30,6 +32,8 @@ Create `project.json` beside the application:
 ```
 
 The measurement fields name tokens resolved from the complete bundled canonical `/spec` snapshot, or from an optional existing `constitution` pin with the same form used by static projects. Contrast minima come from the canonical contrast-pair entry that matches the two token paths. The report's constitution SHA-256 identifies that complete snapshot; it is not only a hash of the browser-contract documents.
+
+In the development checkout, each measurement must contain a nonempty rule group, and measurement selectors and target labels must be unique. Combine multiple rules for an element into one measurement. Journey button IDs must be unique across both button lists and distinct from the dialog ID. These checks reject ambiguous or duplicate evidence before launching the browser. Missing or malformed viewport measurements remain `not_checked`; they cannot establish absence of overflow.
 
 Start the application yourself after building it, then run `stylecon check project.json`. The result has the shape `{ result: { report, repair, ... }, summary, targetPaths }`; `repair` is null unless a failed measurement has a supported verified source mapping.
 

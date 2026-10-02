@@ -29,10 +29,13 @@ function lineHeight(value, fontSize) {
 /** Evaluate configured rendered values. All expected values are resolved canonical values. */
 export function evaluateDesignObservations(measurements) {
   const checks = [];
-  const add = (measurement, check, ruleId, status, observed, expected, limitation) => checks.push({
-    check, ruleId, target: measurement.target, status, observed, expected, viewport: measurement.viewport, limitation,
-    fix:status==='unsupported'||status==='not_checked'?`Review manually: ${limitation}`:check==='overflow'?'Remove page overflow at the recorded viewport width.':check==='contrast'?'Meet the declared text contrast minimum on the measured surface.':`Match ${check} to the recorded canonical expected value.`
-  });
+  const add = (measurement, check, ruleId, status, observed, expected, limitation) => {
+    if(status==='not_checked')limitation=measurement.found!==true?'Configured target is missing or hidden in the measured state.':'Required computed style or viewport evidence was unavailable.';
+    checks.push({
+    check, ruleId, target: measurement.target, selector:measurement.selector, status, observed, expected, viewport: measurement.viewport, limitation,
+    fix:status==='not_checked'?'Inspect visibility and selector matching in this state, then recheck.':status==='unsupported'?`Review manually: ${limitation}`:check==='overflow'?'Remove page overflow at the recorded viewport width.':check==='contrast'?'Meet the declared text contrast minimum on the measured surface.':`Match ${check} to the recorded canonical expected value.`
+    });
+  };
   for (const measurement of measurements) {
     const { expected, observed } = measurement;
     const available = measurement.found === true;
@@ -57,8 +60,10 @@ export function evaluateDesignObservations(measurements) {
       add(measurement, 'contrast', expected.contrast.ruleId, !measurement.found ? 'not_checked' : !opaque ? 'unsupported' : ratio >= expected.contrast.minimum ? 'pass' : 'fail',
         { ratio, foreground: observed.color, background: observed.backgroundColor, composited: observed.composited === true }, expected.contrast, 'Only opaque flat-surface text can be measured; transparency, image backgrounds and compositing need review.');
     }
-    const overflow = measurement.viewport?.scrollWidth > measurement.viewport?.width;
-    add(measurement, 'overflow', 'STYLE-MEASURE-OVERFLOW', !available || !measurement.viewport ? 'not_checked' : overflow ? 'fail' : 'pass', measurement.viewport, { maximumScrollWidth: measurement.viewport.width }, 'Configured viewport only; nested scrolling regions require a dedicated target.');
+    const viewport=measurement.viewport;
+    const validViewport=Number.isFinite(viewport?.width)&&viewport.width>0&&Number.isFinite(viewport?.scrollWidth)&&viewport.scrollWidth>=viewport.width;
+    const overflow = validViewport&&viewport.scrollWidth>viewport.width;
+    add(measurement, 'overflow', 'STYLE-MEASURE-OVERFLOW', !available || !validViewport ? 'not_checked' : overflow ? 'fail' : 'pass', viewport, { maximumScrollWidth: viewport?.width??null }, 'Configured viewport only; nested scrolling regions require a dedicated target.');
   }
   return checks;
 }

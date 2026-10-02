@@ -62,6 +62,7 @@ export async function verifyCliArchive(directory,{browser=false}={}) {
       assert.match(await readFile(report,'utf8'),/0 findings resolved/);
       run(process.execPath,[join(root,'scripts/test-installed-cli.mjs'),command]);
       run(process.execPath,[join(root,'scripts/test-studio.mjs'),consumer,join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/studio.mjs')]);
+      run(process.execPath,[join(root,'scripts/test-studio-setup.mjs'),consumer,join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/studio.mjs')]);
       run(process.execPath,[join(root,'scripts/test-running-app.mjs'),join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/running-app.mjs')]);
     }
     const receipt={schemaVersion:2,archive:{filename,sha256},source:evidence.source,cleanConsumer:true,offlineDependencySeed:true,offlineInstall:false,distributedInstallerVerified:true,installation,checks:['distributed installer with real npm','help','validate','constitution pin','init',...(browser?['doctor','browser check','HTML report comparison','repair recheck stale refusal undo','Studio complete UI flow','running React/Vite and network identity boundaries']:[])],browserVerified:browser,published:false};
