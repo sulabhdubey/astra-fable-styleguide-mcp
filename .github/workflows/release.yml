@@ -48,6 +48,7 @@ jobs:
       - run: node scripts/test-project-adoption.mjs
       - run: node scripts/test-running-app.mjs
       - run: node scripts/test-studio.mjs
+      - run: node scripts/test-studio-setup.mjs
       - run: node scripts/test-ci-workflow.mjs
       - run: pnpm test:product
       - run: pnpm repro

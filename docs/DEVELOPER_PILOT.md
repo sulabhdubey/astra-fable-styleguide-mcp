@@ -8,10 +8,25 @@ UI defects with less manual intervention, while preserving the intended design?
 ## Scope
 
 Recruit 3–5 consenting repository owners after internal verification and release
-review. Start with static interfaces compatible with the documented verifier.
-Include different layouts and interaction paths. Use synthetic inputs. Keep raw
+review. Start with static interfaces or trusted React/Vite production previews
+compatible with the documented verifier. A development pilot must identify its
+exact PR commit and verified development archive; it must not be presented as a
+released version. Include different layouts and interaction paths. Use synthetic inputs. Keep raw
 source, screenshots, local paths and any personal data private unless an owner
 explicitly authorizes sharing. Do not treat internal fixtures as external users.
+
+## First session
+
+Choose one small, non-sensitive page with a supported dialog journey. Follow
+[installation](INSTALLATION.md), then [Local Studio](LOCAL_STUDIO.md) for setup.
+For React/Vite, review and run the project's build and production preview yourself;
+the checker does not start package scripts. Begin with observation only and stop
+at the first confusing step. A useful first response is the step, expected behavior,
+and actual result; source uploads and repository access are not required.
+
+Before a repair trial, review the supported source mapping and exact correction.
+The guided React/Vite setup does not grant repair authorization. Record consent
+separately for participation and any public quotation or screenshot.
 
 ## Per-repository trial
 

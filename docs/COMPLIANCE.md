@@ -4,7 +4,7 @@
 
 The result includes `status` (`pass`, `fail`, or `not_checked`), `compliant`, source `line` and `column` for each finding, `warnings`, `checksPerformed`, and `limitations`. Findings are capped at 200; `truncated: true` and a warning indicate that additional violations may exist. `not_checked` has `compliant: false`: an HTML document with no CSS must never be reported as a style pass. `pass` means only that the listed deterministic checks found no violation in the scanned source.
 
-This checker does not parse all CSS or inspect JavaScript style objects, rendered output, interaction states, contrast, or accessibility. App-local CSS variable names outside canonical token namespaces are not checked. It does not judge whether a literal token value was used through its semantic alias. Use the canonical validator for spec integrity and browser/accessibility checks for UI behavior. The public v0.1.0 deployment retains its original checker until a separately approved release is deployed.
+This source-text checker does not parse all CSS or inspect JavaScript style objects, rendered output, interaction states, contrast, or accessibility. App-local CSS variable names outside canonical token namespaces are not checked. It does not judge whether a literal token value was used through its semantic alias. Use the canonical validator for spec integrity and the separate [local browser workflow](LOCAL_STUDIO.md) for configured UI behavior and [React/Vite measurements](RUNNING_APP.md). Consult the [release notes](V0.7.0_RELEASE_NOTES.md) for released capabilities; source-text compliance alone does not establish browser compliance.
 
 ## Canonical token value gate
 

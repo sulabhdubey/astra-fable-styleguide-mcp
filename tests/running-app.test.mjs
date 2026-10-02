@@ -123,6 +123,7 @@ test('hidden configured design targets remain not checked', () => {
     expected: { typography: { fontSize: '24px' }, spacing: { paddingTop: '16px' } }, observed: { fontSize: '24px', paddingTop: '16px' }, viewport: { width: 390, scrollWidth: 390 } }]);
   assert.equal(checks.find(check => check.check === 'typography.fontSize').status, 'not_checked');
   assert.equal(checks.find(check => check.check === 'spacing.paddingTop').status, 'not_checked');
+  assert.match(checks.find(check => check.check === 'spacing.paddingTop').limitation,/missing or hidden/i);
   assert.equal(checks.find(check => check.check === 'overflow').status, 'not_checked');
 });
 
@@ -131,6 +132,36 @@ test('running preview requests admit only exact configured build assets', () => 
   assert.equal(allowedRunningRequest(origin, `${origin}/`, 'GET', assets), true);
   assert.equal(allowedRunningRequest(origin, `${origin}/assets/app.js`, 'GET', assets), true);
   for (const url of [`${origin}/api/session`, `${origin}/untracked.json`, 'https://example.invalid/app.js']) assert.equal(allowedRunningRequest(origin, url, 'GET', assets), false);
+});
+
+test('measurement configuration rejects empty groups, repeated targets and selectors before browser execution',async()=>{
+  const base={selector:'#title',target:'#title',typography:{fontSize:'typography.fontSize.500'}};
+  for(const measurements of [[{...base,typography:{}}],[{...base,typography:[]}],[base,base],[base,{...base,selector:'#other'}],[base,{...base,target:'#other'}]]){
+    const project=await fixture({measurements});
+    try{await assert.rejects(loadRunningProject(project.path),/measurement/i);}
+    finally{await rm(project.root,{recursive:true,force:true});}
+  }
+});
+
+test('missing or malformed viewport evidence never throws or becomes an overflow pass',()=>{
+  for(const viewport of [undefined,{}, {width:390},{width:0,scrollWidth:0},{width:390,scrollWidth:NaN}]){
+    const checks=evaluateDesignObservations([{selector:'#title',target:'#title',found:true,expected:{typography:{fontSize:'24px'}},observed:{fontSize:'24px'},viewport}]);
+    assert.equal(checks.find(check=>check.check==='overflow').status,'not_checked');
+  }
+});
+
+test('journey configuration rejects repeated or overlapping control IDs',async()=>{
+  const base={buttons:['#open'],trigger:'#open',dialog:'#dialog',name:'Review',dialogButtons:['#close'],close:'#close'};
+  for(const journey of [{...base,buttons:['#open','#open']},{...base,dialogButtons:['#close','#close']},{...base,dialog:'#open'},{...base,dialogButtons:['#open'],close:'#open'}]){
+    const project=await fixture({journey});
+    try{await assert.rejects(loadRunningProject(project.path),/journey/i);}
+    finally{await rm(project.root,{recursive:true,force:true});}
+  }
+});
+
+test('design evidence preserves the actual observed selector separately from its source label',()=>{
+  const checks=evaluateDesignObservations([{selector:'#actual',target:'#label',found:true,expected:{typography:{fontSize:'24px'}},observed:{fontSize:'24px'},viewport:{width:390,scrollWidth:390}}]);
+  assert.equal(checks[0].selector,'#actual');assert.equal(checks[0].target,'#label');
 });
 
 test('running preview routing preserves the port with or without a trailing slash',async()=>{

@@ -3,6 +3,7 @@ import {verifyProject} from './verify-project.mjs';
 import {inspectReport} from './project-cli.mjs';
 import {renderHtmlReport} from './html-report.mjs';
 import {readJson} from './project-cli.mjs';
+import {summarizeCoverage,describeTarget} from './report-coverage.mjs';
 
 export function allowedRequest(origin,url,method) {
   try {const target=new URL(url);return method==='GET'&&target.origin===origin&&!target.username&&!target.password&&target.pathname!=='/_verification';}
@@ -45,6 +46,7 @@ export async function runCheck(configPath,{launch}={}) {
     });
     const page=await context.newPage();
     const result=await verifyProject(connectedTab(page),origin+'/');
+    result.report.browserScope={journeyViewport:1280};
     if(runtimeErrors)throw new Error('Incomplete verification: page errors or blocked/failed resources; use a self-contained supported project');
     const summary=await inspectReport(project,result);
     return {result,summary,targetPaths:project.config.targetPaths};
@@ -58,13 +60,16 @@ export function formatReport(result,targetPaths,format='text',options={}) {
   const report=result.report??result;
   if(format==='json')return JSON.stringify(result,null,2);
   if(format==='html')return renderHtmlReport(result,targetPaths,options);
-  if(format==='text')return [report.status,...report.checks.filter(c=>c.status!=='pass').map(c=>`${c.ruleId} ${targetPaths[c.target]??'(unmapped)'} ${c.target}: ${c.status} — ${c.fix}`)].join('\n');
+  if(format==='text'){
+    const coverage=summarizeCoverage(report);
+    return [report.status,coverage.headline,coverage.breakdown,...coverage.scope,...coverage.limitations,...report.checks.filter(c=>c.status!=='pass').map(c=>`${c.ruleId} ${targetPaths[c.target]??'(unmapped)'} ${describeTarget(c)}: ${c.status} — ${c.fix}${c.limitation?' Reason: '+c.limitation:''}`)].join('\n');
+  }
   if(format!=='sarif')throw new Error('Format must be text, json, sarif or html');
   return JSON.stringify({version:'2.1.0',$schema:'https://json.schemastore.org/sarif-2.1.0.json',runs:[{
     tool:{driver:{name:'Style Constitution'}},
     properties:{status:report.status,artifactSha256:report.artifactSha256,specSha256:report.specSha256},
     results:report.checks.filter(c=>c.status!=='pass').map(c=>({ruleId:c.ruleId,level:c.status==='fail'?'error':'warning',
-      message:{text:`${c.target}: ${c.status}. ${c.fix}`},
+      message:{text:`${describeTarget(c)}: ${c.status}. ${c.fix}`},
       ...(targetPaths[c.target]?{locations:[{physicalLocation:{artifactLocation:{uri:targetPaths[c.target]}}}]}:{})}))
   }]},null,2);
 }

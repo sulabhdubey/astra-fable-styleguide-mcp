@@ -29,6 +29,8 @@ export async function loadProject(configPath) {
   for(const path of config.files) { if(path==='tokens.css') throw new Error('Reserved canonical CSS route'); await contained(root,path); }
   if(!j || !Array.isArray(j.buttons) || !j.buttons.length || !Array.isArray(j.dialogButtons) || !j.dialogButtons.length || [...j.buttons,...j.dialogButtons,j.trigger,j.dialog,j.close].some(s=>!selector(s)) || typeof j.name!=='string' || !j.name.trim()) throw new Error('Invalid configured journey');
   if(j.buttons.length+j.dialogButtons.length>20) throw new Error('Too many targets');
+  const journeyIds=[...j.buttons,...j.dialogButtons,j.dialog];
+  if(new Set(journeyIds).size!==journeyIds.length)throw new Error('Configured journey controls and dialog must have unique, non-overlapping IDs');
   if(!j.buttons.includes(j.trigger)||!j.dialogButtons.includes(j.close)) throw new Error('Trigger and close must be configured button targets');
   if(j.escapeAllowed===false && !j.exceptionReason?.trim()) throw new Error('Missing Escape exception');
   if(config.closePaths && (!Array.isArray(config.closePaths)||config.closePaths.length>5||config.closePaths.some(s=>!selector(s)||!j.dialogButtons.includes(s)))) throw new Error('Invalid close path');

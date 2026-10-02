@@ -14,6 +14,7 @@ const files=['scripts/project-workflow.mjs','scripts/project-cli.mjs','scripts/s
 files.push('scripts/project-init.mjs','scripts/html-report.mjs','spec/manifest.json');
 files.push('scripts/studio.mjs','scripts/running-app.mjs','scripts/design-observations.mjs','scripts/ci-report.mjs','generated/json/tokens.json','packages/cli/studio/index.html','packages/cli/studio/app.mjs','packages/cli/studio/style.css');
 files.push('scripts/running-repair.mjs','scripts/running-repair-map.mjs');
+files.push('scripts/running-setup.mjs','scripts/report-coverage.mjs');
 for(const path of files){const destination=resolve(output,'runtime',path);await mkdir(dirname(destination),{recursive:true});await copyFile(resolve(root,path),destination);}
 await cp(resolve(root,'spec'),resolve(output,'runtime/spec'),{recursive:true});
 await build({entryPoints:[resolve(root,'scripts/constitution.mjs')],bundle:true,platform:'node',target:'node22',format:'esm',outfile:resolve(output,'runtime/scripts/constitution.mjs')});
