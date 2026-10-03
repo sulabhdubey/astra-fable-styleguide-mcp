@@ -23,6 +23,7 @@ jobs:
       - run: node scripts/test-installed-cli.mjs
       - run: node scripts/test-project-adoption.mjs
       - run: node scripts/test-running-app.mjs
+      - run: node scripts/test-dembrandt-tokens.mjs
       - run: node scripts/test-studio.mjs
       - run: node scripts/test-studio-setup.mjs
       - run: node scripts/test-ci-workflow.mjs

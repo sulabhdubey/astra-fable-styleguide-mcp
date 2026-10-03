@@ -99,6 +99,7 @@ A changed candidate invalidates prior approvals. Unresolved requirements and pen
 - Configured static UI journeys and trusted local React/Vite production previews.
 - Selected typography, spacing, contrast, overflow and interaction checks; [browser coverage](docs/RUNNING_APP.md) · [source-text checks](docs/COMPLIANCE.md).
 - Supported repairs require explicit source mappings. React/Vite literal CSS corrections require a trusted rebuild before rechecking.
+- Experimental [Dembrandt token comparison](docs/DEMBRANDT_TOKENS.md) checks declared colors against a versioned export using a controlled local render.
 - Experimental software: no complete accessibility certification, arbitrary-framework coverage or autonomous repair guarantee.
 
 ## Go deeper

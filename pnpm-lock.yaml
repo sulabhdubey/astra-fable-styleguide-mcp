@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  http-cache-semantics@4.2.0:
+    hash: b95aed8311010eb2aab165cc3a23d6bb0f0be3abeedbbae72332ccc6ba3ee8ba
+    path: patches/http-cache-semantics@4.2.0.patch
+
 importers:
 
   .:
@@ -2508,7 +2513,7 @@ snapshots:
       get-tsconfig: 5.0.0-beta.4
       github-slugger: 2.0.0
       html-escaper: 3.0.3
-      http-cache-semantics: 4.2.0
+      http-cache-semantics: 4.2.0(patch_hash=b95aed8311010eb2aab165cc3a23d6bb0f0be3abeedbbae72332ccc6ba3ee8ba)
       js-yaml: 4.3.2
       jsonc-parser: 3.3.1
       magic-string: 1.4.1
@@ -2912,7 +2917,7 @@ snapshots:
 
   html-void-elements@3.0.0: {}
 
-  http-cache-semantics@4.2.0: {}
+  http-cache-semantics@4.2.0(patch_hash=b95aed8311010eb2aab165cc3a23d6bb0f0be3abeedbbae72332ccc6ba3ee8ba): {}
 
   ignore@5.3.2: {}
 
