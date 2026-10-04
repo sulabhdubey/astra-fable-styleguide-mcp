@@ -56,6 +56,15 @@ try {
   await check('no tokens observed only', 'unverified', page(), observationOnly);
   const degraded = structuredClone(base); degraded.meta.degraded = ['colors'];
   await check('failed extraction', 'incomplete', page(), degraded);
+  for (const stage of ['gradient-colors', 'dark-mode', 'logo', 'hover-focus', 'future-palette-stage']) {
+    const degradedStage = structuredClone(base); degradedStage.meta.degraded = [stage];
+    await check(`${stage} degradation`, 'incomplete', page(), degradedStage);
+    const failedStage = structuredClone(base); failedStage.meta.errors = [{ stage, reason: 'fixture failure' }];
+    await check(`${stage} extraction error`, 'incomplete', page(), failedStage);
+  }
+  const unrelated = structuredClone(base); unrelated.meta.degraded = ['typography']; unrelated.meta.errors = [{ stage: 'screenshot' }];
+  const warningReport = await check('unrelated extraction failures remain warnings', 'match', page(), unrelated);
+  assert.ok(warningReport.warnings.length);
   await check('external resource blocked', 'incomplete', page(undefined, '<img alt="external" src="https://example.invalid/probe.png">'));
   await check('page error', 'incomplete', page(undefined, '<script>throw new Error("fixture error")</script>'));
   const unknown = structuredClone(base); unknown.meta.schemaVersion = '2.0.0';
@@ -66,6 +75,16 @@ try {
   assert.equal(native.checks.length, 3);
   await check('native export changed page', 'mismatch', nativePage.replace('--accent: #2563eb', '--accent: #ef4444'), nativeExport);
   await check('native export missing token', 'incomplete', nativePage.replace('--accent: #2563eb;', ''), nativeExport);
+  const variablesExport = JSON.parse(await readFile(resolve(repository, 'examples/dembrandt/variables-export.json'), 'utf8'));
+  const variablesPage = await readFile(resolve(repository, 'examples/dembrandt/variables.html'), 'utf8');
+  assert.ok(Object.keys(variablesExport.colors.cssVariables).length, 'Genuine producer variables must be populated');
+  const nativeVariables = await check('native populated cssVariables export', 'unverified', variablesPage, variablesExport);
+  assert.equal(nativeVariables.checks.filter(item => item.token && item.status === 'match').length, 4);
+  assert.equal(nativeVariables.checks.find(item => item.token === '--reserve').source, 'cssVariables');
+  await check('native standalone variable changed', 'mismatch', variablesPage.replace('--reserve: #db2777', '--reserve: #ff0000'), variablesExport);
+  await check('native standalone variable missing', 'incomplete', variablesPage.replace('--reserve: #db2777;', ''), variablesExport);
+  const conflictingVariable = structuredClone(variablesExport); conflictingVariable.colors.cssVariables['--reserve'].hex = '#ff0000';
+  await check('native variable evidence mutation remains incomplete', 'incomplete', variablesPage, conflictingVariable);
   await assert.rejects(integration.runDembrandtCheck(exportPath, pagePath, { scope: '#arbitrary' }), /scope/i);
   await writeFile(exportPath, JSON.stringify(base)); await writeFile(pagePath, page());
   const cli = process.argv[3] ? resolve(process.argv[3]) : resolve('packages/cli/dist/stylecon.mjs');

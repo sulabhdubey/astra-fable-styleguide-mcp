@@ -31,6 +31,18 @@ The example's `meta` and `colors` are an unchanged color-only excerpt from a rea
 
 In a copy of the HTML, change `--accent: #2563eb` to `--accent: #ef4444` and recheck: that token becomes **mismatch**. Remove the `--accent` declaration and recheck: it becomes **incomplete**. Checking never changes either input.
 
+### Genuine populated variables example
+
+Dembrandt de-duplicates `colors.cssVariables` against its palette. The original three-token example therefore has an empty map. A second genuine **0.38.0 / schema 1.18.0** extraction contains an additional declared, unpainted `--reserve` token:
+
+```sh
+node packages/cli/dist/stylecon.mjs tokens check examples/dembrandt/variables-export.json examples/dembrandt/variables.html
+```
+
+All **four declared tokens match**, including `--reserve` from `cssVariables`. One observed white color has no declared token, so the aggregate is **unverified**, with exit code **2**. This is the expected result for the unchanged fixture. Its metadata and colors are an unchanged excerpt of the real producer output; the browser suite consumes that recorded export without requiring a live producer installation.
+
+In a copy of `variables.html`, change `--reserve: #db2777` to `--reserve: #ff0000`: the standalone token becomes **mismatch** (exit 1). Remove its declaration: **incomplete** (exit 2). The fixture preserves native palette/map deduplication. Tests that deliberately insert contradictory values or overlap the two representations remain synthetic adverse tests, not genuine extraction samples.
+
 ## Read the results
 
 | Result | Meaning |
@@ -45,13 +57,23 @@ The aggregate prioritizes incomplete, then mismatch, then unverified, then match
 ## Contract and scope
 
 - Exact supported `meta.schemaVersion` values: **1.17.0 and 1.18.0**. Unknown or missing versions are incomplete; compatibility is never inferred from JSON shape.
-- Required evidence: successful `meta.httpStatus`, `meta.snapshotId`, and a valid `meta.viewport`. Color-scoped `degraded` categories or `errors` block comparison. Unrelated category failures and `fontsReady: false` remain visible warnings because this command checks color tokens only.
-- `colors.palette[].tokens` identifies declared custom properties; `normalized` supplies the expected six-digit color. Conflicting token baselines or contradictory `colors.cssVariables[token].hex` evidence are incomplete. Names remain case sensitive.
+- Required evidence: successful `meta.httpStatus`, `meta.snapshotId`, and a valid `meta.viewport`. Extraction failure classification follows the explicit dependency table below for both `meta.degraded` and `meta.errors[].stage`. `fontsReady: false` remains a visible warning because this command checks color tokens only.
+- `colors.palette[].tokens` identifies declared custom properties; `normalized` supplies the expected six-digit color. `colors.cssVariables` contributes additional declared tokens after producer deduplication. A six-digit `hex` identity or literal six-digit hex value is required; malformed/unsupported entries are incomplete. Matching duplicate token entries collapse; conflicting identities, including a literal hex that contradicts its reported `hex`, are incomplete. Names remain case sensitive.
 - **Default scope: body.** This reads body declarations and inherited root tokens. Use `--scope root` to read only the root context. An override can produce different results; the report records the chosen scope.
 - The browser matches viewport dimensions and the recorded light/dark color scheme. Mobile, stealth, alternate browser and custom locale/user-agent/timezone profiles are unsupported. Multi-page merged exports are incomplete.
 - The chosen HTML must contain its styles and scripts. No external network, additional local files, frames or service workers are available. Blocked resources, script errors and timed-out observations produce incomplete checks. Only choose HTML you trust: inline JavaScript executes in the isolated browser context.
 - Supported literal opaque colors are compared through the browser. Transparent colors, contextual `currentColor`/`light-dark()` and nested expressions (including `calc()`) are incomplete. `color-mix()` support is limited to flat sRGB mixes of named/hex colors whose weights preserve opacity; nested or partial-opacity mixes are incomplete. The comparison is intentionally limited to 8-bit sRGB; it does not establish exact wide-gamut equivalence.
 - No per-color source element or interaction state is invented. A token match does not prove that a component uses it, that the original website was authentic, or that the selected local page matches a remote build. A baseline mismatch becomes a constitution violation only after the expected rule is deliberately approved.
+
+### Extraction degradation policy
+
+| Failure stage (case insensitive) | Effect |
+| --- | --- |
+| `color`, `colors`, `tokens`, `cssVariables`, `logo`, `manifest`, `svg-logo-colors`, `gradients`, `gradient-colors`, `hover-focus`, `dark-mode`, `mobile`, `reveal` | **incomplete**: these stages supply or enrich color evidence. This conservative rule blocks the whole comparison even if the surviving declared tokens happen to agree. |
+| `typography`, `spacing`, `borderRadius`, `borders`, `shadows`, `buttons`, `inputs`, `links`, `badges`, `breakpoints`, `iconSystem`, `frameworks`, `siteName`, `motion`, `voice`, `screenshot` | Warning: these failures do not establish failure of the selected color-token baseline. |
+| Any unknown stage | **incomplete**: its effect on color evidence has not been established. |
+
+Gradient and dark-mode degradation are never silently promoted to a match. Successful exports can still contain observed-only colors or tokens from multiple contexts; the command does not infer per-color state or resolve conflicting theme values.
 
 ## Verification and upstream references
 
@@ -60,6 +82,6 @@ node --test tests/dembrandt-tokens.test.mjs
 node scripts/test-dembrandt-tokens.mjs
 ```
 
-The browser suite checks the native recorded export, equivalent RGB and modern color notation, root/body overrides, responsive and dark-mode values, changed/missing tokens, transparency, extraction failures, blocked resources, script errors and CLI output protections. Synthetic 1.17.0 contract fixtures cover the prior schema explicitly. CI performs no external AI calls or live Dembrandt extraction.
+The browser suite checks both native recorded exports, standalone variable match/change/removal, equivalent RGB and modern color notation, root/body overrides, responsive and dark-mode values, changed/missing tokens, transparency, extraction dependencies, unrelated/unknown failure controls, blocked resources, script errors and CLI output protections. Unit tests cover both failure metadata channels across both supported schemas. Synthetic 1.17.0 contract fixtures cover the prior schema explicitly. CI performs no external AI calls or live Dembrandt extraction.
 
 The contract was inspected at [Dembrandt commit b4b827b](https://github.com/dembrandt/dembrandt/tree/b4b827b135b7c8c265fb775b30c5c1a6acc318fa): [types](https://github.com/dembrandt/dembrandt/blob/b4b827b135b7c8c265fb775b30c5c1a6acc318fa/lib/types.ts), [schema history](https://github.com/dembrandt/dembrandt/blob/b4b827b135b7c8c265fb775b30c5c1a6acc318fa/lib/version.ts).

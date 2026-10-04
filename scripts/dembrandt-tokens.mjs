@@ -3,13 +3,22 @@ const object = value => value !== null && typeof value === 'object' && !Array.is
 const color = value => typeof value === 'string' && /^#[a-f0-9]{6}$/i.test(value);
 const tokenName = value => typeof value === 'string' && value.length <= 128 && /^--[A-Za-z_][A-Za-z0-9_-]*$/.test(value);
 const viewport = value => object(value) && ['width', 'height'].every(key => Number.isInteger(value[key]) && value[key] >= 1 && value[key] <= 8192);
-const colorStage = value => /^(colors?|tokens|cssVariables)$/i.test(value);
+// These upstream stages create or enrich the exported palette. Even declared
+// tokens cannot establish a complete comparison when this dependency failed.
+const paletteStages = new Set(['color', 'colors', 'tokens', 'cssvariables', 'logo', 'manifest', 'svg-logo-colors', 'gradients', 'gradient-colors', 'hover-focus', 'dark-mode', 'mobile', 'reveal']);
+const unrelatedStages = new Set(['typography', 'spacing', 'borderradius', 'borders', 'shadows', 'buttons', 'inputs', 'links', 'badges', 'breakpoints', 'iconsystem', 'frameworks', 'sitename', 'motion', 'voice', 'screenshot']);
 const claimBoundary = 'Export baseline drift for declared color tokens in the selected static scope. A match does not prove component use, interaction states, accessibility or constitution compliance.';
 
 /** Read only the supported color contract; imported observations never become canonical rules. */
 export function importDembrandtExport(value) {
   const meta = object(value?.meta) ? value.meta : {};
   const issues = [], warnings = [], items = [];
+  const recordFailure = (stage, failure) => {
+    const key = stage.toLowerCase();
+    if (paletteStages.has(key)) issues.push(`color_extraction_${failure}`);
+    else if (unrelatedStages.has(key)) warnings.push(`other_extraction_category_${failure}`);
+    else issues.push('unknown_extraction_failure_stage');
+  };
   if (!supportedSchemas.has(meta.schemaVersion)) issues.push('unsupported_schema');
   if (typeof meta.snapshotId !== 'string' || !meta.snapshotId.trim() || meta.snapshotId.length > 128 || /[\u0000-\u001f\u007f]/.test(meta.snapshotId)) issues.push('missing_or_invalid_snapshot_id');
   if (!viewport(meta.viewport)) issues.push('missing_or_invalid_viewport');
@@ -23,16 +32,16 @@ export function importDembrandtExport(value) {
       ['userAgent', 'timezone', 'acceptLanguage'].some(key => flags[key] !== undefined)) issues.push('unsupported_extraction_profile');
   if (meta.crawl !== undefined && (!object(meta.crawl) || meta.crawl.pagesFound !== 1 || (meta.crawl.pages !== undefined && (!Array.isArray(meta.crawl.pages) || meta.crawl.pages.length !== 1)))) issues.push('merged_or_unknown_page_scope');
   if (meta.degraded !== undefined && (!Array.isArray(meta.degraded) || meta.degraded.some(stage => typeof stage !== 'string'))) issues.push('invalid_degraded_metadata');
-  else for (const stage of meta.degraded ?? []) (colorStage(stage) ? issues : warnings).push(colorStage(stage) ? 'color_extraction_degraded' : 'other_extraction_category_degraded');
+  else for (const stage of meta.degraded ?? []) recordFailure(stage, 'degraded');
   if (meta.errors !== undefined && (!Array.isArray(meta.errors) || meta.errors.some(error => !object(error) || typeof error.stage !== 'string'))) issues.push('invalid_error_metadata');
-  else for (const error of meta.errors ?? []) (colorStage(error.stage) ? issues : warnings).push(colorStage(error.stage) ? 'color_extraction_failed' : 'other_extraction_category_failed');
+  else for (const error of meta.errors ?? []) recordFailure(error.stage, 'failed');
   if (meta.fontsReady === false) warnings.push('fonts_not_ready_color_scope_only');
   if (meta.timeouts !== undefined && (!Array.isArray(meta.timeouts) || meta.timeouts.some(wait => typeof wait !== 'string'))) issues.push('invalid_timeout_metadata');
   else if (meta.timeouts?.length) issues.push('extraction_wait_timed_out');
   const palette = value?.colors?.palette;
+  const declared = new Map();
   if (!Array.isArray(palette) || !palette.length || palette.length > 500) issues.push('missing_empty_or_oversized_palette');
   else {
-    const declared = new Map();
     for (const [paletteIndex, entry] of palette.entries()) {
       if (!object(entry) || !color(entry.normalized) || (entry.tokens !== undefined && (!Array.isArray(entry.tokens) || entry.tokens.length > 50 || entry.tokens.some(token => !tokenName(token))))) {
         items.push({ paletteIndex, token: null, expected: null, issue: 'invalid_or_unsupported_palette_entry' }); continue;
@@ -42,13 +51,31 @@ export function importDembrandtExport(value) {
       else for (const token of new Set(entry.tokens)) {
         const previous = declared.get(token);
         if (previous) { if (previous.expected !== expected) previous.issue = 'conflicting_token_baselines'; continue; }
-        const variable = value.colors.cssVariables?.[token];
-        const contradictory = object(variable) && variable.hex !== undefined && (!color(variable.hex) || variable.hex.toLowerCase() !== expected);
-        const item = { paletteIndex, token, expected, issue: contradictory ? 'conflicting_declared_color_evidence' : null };
+        const item = { paletteIndex, token, expected, issue: null };
         declared.set(token, item); items.push(item);
       }
       if (items.length > 1000) { issues.push('too_many_token_checks'); break; }
     }
+  }
+  // Dembrandt removes variables represented in its palette; the remaining map
+  // supplies additional declared tokens, not just duplicate cross-check data.
+  const variables = value?.colors?.cssVariables;
+  if (variables !== undefined && (!object(variables) || Object.keys(variables).length > 1000)) issues.push('invalid_or_oversized_css_variables');
+  else for (const [token, variable] of Object.entries(variables ?? {})) {
+    const literal = typeof variable === 'string' ? variable : object(variable) ? variable.value : null;
+    const identity = object(variable) && variable.hex !== undefined ? variable.hex : literal;
+    const expected = color(identity) ? identity.toLowerCase() : null;
+    const malformed = !tokenName(token) || typeof literal !== 'string' || !expected;
+    const contradictory = expected && color(literal) && literal.toLowerCase() !== expected;
+    const problem = malformed ? 'invalid_or_unsupported_css_variable' : contradictory ? 'conflicting_declared_color_evidence' : null;
+    const previous = declared.get(token);
+    if (previous) {
+      if (problem || previous.expected !== expected) previous.issue = problem ?? 'conflicting_declared_color_evidence';
+    } else {
+      const item = { paletteIndex: null, source: 'cssVariables', token: tokenName(token) ? token : null, expected, issue: problem };
+      declared.set(token, item); items.push(item);
+    }
+    if (items.length > 1000) { issues.push('too_many_token_checks'); break; }
   }
   return { schemaVersion: supportedSchemas.has(meta.schemaVersion) ? meta.schemaVersion : null,
     snapshotId: typeof meta.snapshotId === 'string' && meta.snapshotId.length <= 128 ? meta.snapshotId : null,

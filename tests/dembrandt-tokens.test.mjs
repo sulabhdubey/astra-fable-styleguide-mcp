@@ -62,7 +62,7 @@ test('missing source metadata, bot wall and merged pages cannot authorize a matc
 test('color extraction failures block color comparison; unrelated failures remain warnings', () => {
   assert.equal(checked(exported({ degraded: ['colors'] })).status, 'incomplete');
   assert.equal(checked(exported({ errors: [{ stage: 'colors', reason: 'failed' }] })).status, 'incomplete');
-  const result = checked(exported({ fontsReady: false, degraded: ['typography'], errors: [{ stage: 'logo', reason: 'failed' }] }));
+  const result = checked(exported({ fontsReady: false, degraded: ['typography'], errors: [{ stage: 'screenshot', reason: 'failed' }] }));
   assert.equal(result.status, 'match'); assert.ok(result.warnings.length >= 2);
 });
 
@@ -105,5 +105,46 @@ test('malformed timeout/crawl metadata and contradictory declared color evidence
 test('unreproduced extraction profiles cannot authorize token matches', () => {
   for (const flags of [{ mobile: true }, { mobile: 'yes' }, { stealth: 1 }, { browser: 'firefox' }, { stealth: true }, { locale: 'fi-FI' }, [], { darkMode: 'yes' }]) {
     assert.equal(checked(exported({ flags })).status, 'incomplete', JSON.stringify(flags));
+  }
+});
+
+test('every source-supported palette dependency fails closed in both metadata channels and schemas', () => {
+  for (const schemaVersion of ['1.17.0', '1.18.0']) for (const stage of ['color', 'colors', 'tokens', 'cssVariables', 'logo', 'manifest', 'svg-logo-colors', 'gradients', 'gradient-colors', 'hover-focus', 'dark-mode', 'mobile', 'reveal']) {
+    for (const metadata of [{ degraded: [stage] }, { errors: [{ stage, reason: 'fixture failure' }] }]) {
+      const result = checked(exported({ schemaVersion, ...metadata }));
+      assert.equal(result.status, 'incomplete', `${schemaVersion} ${JSON.stringify(metadata)}`);
+      assert.equal(result.exitCode, 2);
+      assert.ok(result.issues.some(issue => issue.startsWith('color_extraction_')));
+    }
+  }
+});
+
+test('unknown extraction failures are incomplete; known unrelated failures remain warnings', () => {
+  for (const metadata of [{ degraded: ['future-palette-stage'] }, { errors: [{ stage: 'future-palette-stage' }] }]) {
+    assert.equal(checked(exported(metadata)).status, 'incomplete');
+  }
+  for (const stage of ['typography', 'spacing', 'borderRadius', 'borders', 'shadows', 'buttons', 'inputs', 'links', 'badges', 'breakpoints', 'iconSystem', 'frameworks', 'siteName', 'motion', 'voice', 'screenshot']) {
+    const result = checked(exported({ degraded: [stage], errors: [{ stage }] }));
+    assert.equal(result.status, 'match', stage);
+    assert.ok(result.warnings.length);
+  }
+});
+
+test('standalone cssVariables tokens are checked even when palette deduplication removes their entries', () => {
+  const value = exported(); value.colors.cssVariables['--reserve'] = { value: '#db2777', hex: '#db2777' };
+  const live = observed(); live.values.push({ token: '--reserve', raw: '#db2777', rgba: [219, 39, 119, 255] });
+  const result = checked(value, live);
+  assert.equal(result.status, 'match'); assert.equal(result.checks.length, 2);
+  assert.equal(result.checks[1].token, '--reserve');
+  live.values[1].rgba = [255, 0, 0, 255]; assert.equal(checked(value, live).status, 'mismatch');
+  live.values.pop(); assert.equal(checked(value, live).status, 'incomplete');
+  value.colors.cssVariables['--reserve'] = '#db2777';
+  assert.equal(checked(value).checks.length, 2);
+});
+
+test('malformed or contradictory cssVariables evidence cannot be silently omitted', () => {
+  for (const cssVariables of [[], 'invalid', { '--accent': null }, { '--accent': '#ff0000' }, { '--reserve': { value: 'oklch(.5 .2 20)' } }, { 'invalid name': { hex: '#db2777' } }]) {
+    const value = exported(); value.colors.cssVariables = cssVariables;
+    assert.equal(checked(value).status, 'incomplete', JSON.stringify(cssVariables));
   }
 });
