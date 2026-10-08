@@ -1,7 +1,6 @@
 # Offline review packets
 
-Available in the current development source. The published v0.8.0 archive does
-not include this workflow yet.
+Available in the v0.9.0 CLI archive. The older v0.8.0 archive does not include this workflow.
 
 Send a designer, client or teammate a readable **local HTML document** without
 requiring them to install Style Constitution. Every recorded check stays in the

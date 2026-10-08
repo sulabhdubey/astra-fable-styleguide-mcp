@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0
+
+- Add versioned Dembrandt token import and controlled browser comparison with match, mismatch, unverified and incomplete outcomes.
+- Add selected-finding agent briefs, private persistent Studio history and same-scope comparisons.
+- Add exact-preview constitution adoption with interruption recovery and stale-input refusal.
+- Add offline HTML/JSON review packets with all recorded outcomes and explicit disclosure limits.
+- Add individual/team workflow guidance and upstream dependency fixes.
+
 ## 0.8.0
 
 - Add reviewed React/Vite setup in Local Studio with exact configuration hashes and exclusive saves.

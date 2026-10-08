@@ -1,7 +1,6 @@
 # Individual and team workflows
 
-These additions are in the development source. They are not in the published
-v0.8.0 archive. Use a reviewed source build until an updated release is available.
+These workflows are included in the v0.9.0 CLI archive. Use the installer and checksums from that release.
 
 ## An individual builder: finding → agent brief → recheck
 

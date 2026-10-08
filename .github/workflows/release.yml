@@ -47,6 +47,7 @@ jobs:
       - run: node scripts/test-installed-cli.mjs
       - run: node scripts/test-project-adoption.mjs
       - run: node scripts/test-running-app.mjs
+      - run: node scripts/test-dembrandt-tokens.mjs
       - run: node scripts/test-studio.mjs
       - run: node scripts/test-studio-setup.mjs
       - run: node scripts/test-ci-workflow.mjs
@@ -152,7 +153,7 @@ jobs:
           - MCP production smoke passed
           - Astro production build passed
           - Docker release build passed
-          - Dependency audit reported no known vulnerabilities
+          - Dependency audit passed the configured policy; see SECURITY.md for the documented advisory exception
           - Protected Release Gate completed successfully
 
           Approved candidate and publication commit: ${GITHUB_SHA}.

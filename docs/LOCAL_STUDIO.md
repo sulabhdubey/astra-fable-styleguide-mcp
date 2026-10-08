@@ -49,7 +49,7 @@ Validate the candidate, inspect its before/after diff and exact hash, then appro
 
 ## Agent briefs, history and team evaluation
 
-The development build adds selected-findings briefs, private history across restarts, and reviewed rule adoption. Follow the [individual and team walkthrough](INDIVIDUAL_AND_TEAM_WORKFLOWS.md) for exact steps, CLI commands, recovery and storage limits. Historical runs cannot restore repair permission or establish that today's source passed. These additions are not in the published v0.8.0 archive.
+The v0.9.0 archive adds selected-findings briefs, private history across restarts, and reviewed rule adoption. Follow the [individual and team walkthrough](INDIVIDUAL_AND_TEAM_WORKFLOWS.md) for exact steps, CLI commands, recovery and storage limits. Historical runs cannot restore repair permission or establish that today's source passed. These additions are absent from the older v0.8.0 archive.
 
 ## Local boundaries
 

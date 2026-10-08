@@ -74,7 +74,7 @@ test('a constitution pin binds generated tokens, all canonical documents and rep
     config.constitution={path:'constitution.json',sha256:pin.sha256}; await writeFile(configPath,JSON.stringify(config));
     const snapshot=await snapshotProject(await loadProject(configPath));
     assert.equal(snapshot.contract.constitution.sha256,pin.sha256);
-    assert.equal(snapshot.contract.constitution.version,'0.8.0');
+    assert.equal(snapshot.contract.constitution.version,'0.9.0');
     assert.match(snapshot.css,/--size-control-md/);
     const fresh=join(temp,'fresh');await cp(join(root,'examples/profile'),fresh,{recursive:true});await rm(join(fresh,'project.json'));
     await cp(target,join(fresh,'constitution.json'));

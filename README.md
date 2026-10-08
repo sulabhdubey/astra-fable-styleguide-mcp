@@ -4,7 +4,7 @@
 
 A versioned design contract, a read-only MCP server for coding agents, and a local UI checker with reviewed repairs. For developers who want their interfaces to follow the same rules as their code changes.
 
-[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.8.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.8.0)
+[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.9.0 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.9.0)
 
 ## See a check in action
 
@@ -38,7 +38,7 @@ flowchart LR
 | Inspect a supported interface and review corrections | [Local Studio](docs/LOCAL_STUDIO.md) · [React/Vite guide](docs/RUNNING_APP.md) |
 | Create and pin your team's design contract | [Constitution authoring](docs/CONSTITUTION_AUTHORING.md) |
 | See new, resolved and incomplete checks in a PR | [PR regression summaries](docs/PR_REGRESSIONS.md) |
-| Hand findings to an agent, revisit history, or adopt team rules | [Individual and team workflows](docs/INDIVIDUAL_AND_TEAM_WORKFLOWS.md) — development source; not in v0.8.0 |
+| Hand findings to an agent, revisit history, or adopt team rules | [Individual and team workflows](docs/INDIVIDUAL_AND_TEAM_WORKFLOWS.md) — included in v0.9.0 |
 
 ## Start locally
 
@@ -105,7 +105,7 @@ A changed candidate invalidates prior approvals. Unresolved requirements and pen
 
 ## Go deeper
 
-[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.8.0_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
+[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.9.0_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
 
 <details>
 <summary>Contributing and verification</summary>
