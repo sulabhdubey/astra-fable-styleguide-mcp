@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Declared color tokens — populated variables trial</title>
+  <style>
+    :root { --accent: #2563eb; --surface: #f8fafc; --ink: #0f172a; --reserve: #db2777; }
+    body { margin: 0; background: var(--surface); color: var(--ink); font: 16px/1.6 system-ui,sans-serif; }
+    main { max-width: 720px; margin: 72px auto; padding: 32px; }
+    h1 { font-size: 40px; line-height: 1.15; }
+    .label { color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    button { border: 0; border-radius: 8px; padding: 12px 20px; color: #fff; background: var(--accent); font: inherit; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="label">Style Constitution / local trial</p>
+    <h1>Four declared tokens. Three painted colors.</h1>
+    <p>The reserve token is declared for future use. It is not painted by this fixture, so Dembrandt retains it in cssVariables.</p>
+    <button type="button">Review the tokens</button>
+  </main>
+</body>
+</html>

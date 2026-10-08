@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Declared color tokens — local trial</title>
+  <style>
+    :root { --accent: #2563eb; --surface: #f8fafc; --ink: #0f172a; }
+    body { margin: 0; background: var(--surface); color: var(--ink); font: 16px/1.6 system-ui,sans-serif; }
+    main { max-width: 720px; margin: 72px auto; padding: 32px; }
+    h1 { font-size: 40px; line-height: 1.15; }
+    .label { color: var(--accent); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    button { border: 0; border-radius: 8px; padding: 12px 20px; color: #fff; background: var(--accent); font: inherit; }
+    button:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+    code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="label">Style Constitution / local trial</p>
+    <h1>Follow the declared color.</h1>
+    <p>This self-contained fixture declares <code>--accent</code>, <code>--surface</code> and <code>--ink</code>. The token checker compares their computed values with a pinned Dembrandt export.</p>
+    <p>Edit <code>--accent</code> to <code>#ef4444</code> in a copy, then recheck to see a mismatch. Remove its declaration to see an incomplete check.</p>
+    <button type="button">Example button</button>
+    <p>The white button text and gray code background are observed colors. They have no declared custom property in this fixture.</p>
+  </main>
+</body>
+</html>

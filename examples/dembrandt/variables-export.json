@@ -1,0 +1,135 @@
+{
+  "url": "http://127.0.0.1:56811/",
+  "extractedAt": "2026-10-04T10:30:53.433Z",
+  "meta": {
+    "snapshotId": "85ec0c01-8bd4-4a8f-bc18-a3f18eb15ba4",
+    "httpStatus": 200,
+    "dembrandtVersion": "0.38.0",
+    "schemaVersion": "1.18.0",
+    "viewport": {
+      "width": 900,
+      "height": 600
+    },
+    "fontsReady": true,
+    "requestedUrl": "http://127.0.0.1:56811/",
+    "contentLength": 242,
+    "flags": {
+      "screenSize": "900x600"
+    }
+  },
+  "colors": {
+    "semantic": {
+      "background": "rgb(248, 250, 252)",
+      "text": "rgb(15, 23, 42)",
+      "primary": "rgb(37, 99, 235)"
+    },
+    "palette": [
+      {
+        "color": "rgb(37, 99, 235)",
+        "normalized": "#2563eb",
+        "count": 2,
+        "confidence": "medium",
+        "sources": [],
+        "tokens": [
+          "--accent"
+        ],
+        "lch": "lch(44.789% 78.456 285.562)",
+        "oklch": "oklch(54.615% 0.21521 262.881)",
+        "role": "accent",
+        "onColor": "#ffffff",
+        "hover": "#2c77ff",
+        "variantOf": "primary"
+      },
+      {
+        "color": "rgb(15, 23, 42)",
+        "normalized": "#0f172a",
+        "count": 2,
+        "confidence": "medium",
+        "sources": [],
+        "tokens": [
+          "--ink"
+        ],
+        "lch": "lch(7.776% 14.378 276.351)",
+        "oklch": "oklch(20.7682% 0.03982 265.755)",
+        "role": "accent",
+        "onColor": "#ffffff",
+        "hover": "#121c32",
+        "variantOf": "primary"
+      },
+      {
+        "color": "rgb(248, 250, 252)",
+        "normalized": "#f8fafc",
+        "count": 1,
+        "confidence": "low",
+        "sources": [],
+        "tokens": [
+          "--surface"
+        ],
+        "lch": "lch(98.161% 1.25 251.165)",
+        "oklch": "oklch(98.4152% 0.00341 247.858)",
+        "role": "surface",
+        "onColor": "#000000",
+        "hover": "#d3d5d6"
+      },
+      {
+        "color": "rgb(16, 16, 16)",
+        "normalized": "#101010",
+        "count": 1,
+        "confidence": "medium",
+        "sources": [
+          "hover/focus"
+        ]
+      }
+    ],
+    "cssVariables": {
+      "--reserve": {
+        "value": "#db2777",
+        "hex": "#db2777",
+        "lch": "lch(49.901% 70.3 1.614)",
+        "oklch": "oklch(59.1646% 0.21798 0.584)"
+      }
+    },
+    "detected": [
+      {
+        "color": "rgb(37, 99, 235)",
+        "normalized": "#2563eb",
+        "count": 2,
+        "usageFrac": 0.3333333333333333,
+        "areaFrac": 0.024471950459641,
+        "confidence": "high",
+        "sources": [],
+        "isToken": true
+      },
+      {
+        "color": "rgb(15, 23, 42)",
+        "normalized": "#0f172a",
+        "count": 2,
+        "usageFrac": 0.3333333333333333,
+        "areaFrac": 0,
+        "confidence": "medium",
+        "sources": [],
+        "isToken": true
+      },
+      {
+        "color": "rgb(248, 250, 252)",
+        "normalized": "#f8fafc",
+        "count": 1,
+        "usageFrac": 0.16666666666666666,
+        "areaFrac": 0.975528049540359,
+        "confidence": "medium",
+        "sources": [],
+        "isToken": true
+      },
+      {
+        "color": "rgb(255, 255, 255)",
+        "normalized": "#ffffff",
+        "count": 1,
+        "usageFrac": 0.16666666666666666,
+        "areaFrac": 0,
+        "confidence": "high",
+        "sources": [],
+        "isToken": false
+      }
+    ]
+  }
+}

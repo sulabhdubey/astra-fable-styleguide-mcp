@@ -3,3 +3,9 @@ packages:
   - 'apps/*'
 allowBuilds:
   esbuild: true
+patchedDependencies:
+  http-cache-semantics@4.2.0: patches/http-cache-semantics@4.2.0.patch
+auditConfig:
+  # The pinned patch is exercised by tests/http-cache-security.test.mjs before CI audit.
+  ignoreGhsas:
+    - GHSA-ch52-4w7c-c8xp

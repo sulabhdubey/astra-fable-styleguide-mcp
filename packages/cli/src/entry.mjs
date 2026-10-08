@@ -11,6 +11,7 @@ import {pinConstitution} from './runtime/scripts/constitution.mjs';
 import {startStudio} from './runtime/scripts/studio.mjs';
 import {importCssSuggestions,createConstitutionCandidate,exportConstitutionCandidate} from './runtime/scripts/constitution-authoring.mjs';
 import {captureGitEvidence,compareGitEvidence,renderPrSummary} from './runtime/scripts/ci-report.mjs';
+import {tokenCheckCommand} from './runtime/scripts/dembrandt-browser.mjs';
 const args=process.argv.slice(2);
 const help=`stylecon validate [--root <spec-repository>]
 stylecon init <project-directory> [--files index.html,app.css --trigger '#open' --dialog '#dialog' --close '#close' --name 'Title' --yes]
@@ -18,6 +19,7 @@ stylecon constitution pin <spec-repository> <new-snapshot.json>
 stylecon constitution import <local.css>
 stylecon constitution propose <spec-repository> <changes.json> <new-candidate.json>
 stylecon constitution export <spec-repository> <candidate.json> <approved-sha256> <new-directory>
+stylecon tokens check <dembrandt-export.json> <self-contained-page.html> [--scope body|root] [--format text|json|html] [--output <new-private-file>]
 stylecon studio <workspace> --evidence <existing-private-directory>
 stylecon ci capture <project.json> <new-private-receipt.json>
 stylecon ci compare <base-receipt.json> <head-receipt.json> [--format markdown|json]
@@ -33,6 +35,7 @@ try {
   if(!args.length||args[0]==='--help'){console.log(help);}
   else if(args[0]==='validate'){await import('./validate.mjs');}
   else if(args[0]==='init'){console.log(JSON.stringify(await initCommand(args.slice(1)),null,2));}
+  else if(args[0]==='tokens'){process.exitCode=await tokenCheckCommand(args.slice(1));}
   else if(args[0]==='constitution'&&args[1]==='pin'&&args.length===4){console.log(JSON.stringify(await pinConstitution(resolve(args[2]),resolve(args[3])),null,2));}
   else if(args[0]==='constitution'&&args[1]==='import'&&args.length===3){const path=resolve(args[2]);if((await stat(path)).size>1_000_000)throw new Error('CSS file too large');console.log(JSON.stringify(importCssSuggestions(await readFile(path,'utf8')),null,2));}
   else if(args[0]==='constitution'&&args[1]==='propose'&&args.length===5){const candidate=await createConstitutionCandidate(resolve(args[2]),await readJson(resolve(args[3])));await writeFile(resolve(args[4]),JSON.stringify(candidate,null,2)+'\n',{flag:'wx',mode:0o600});console.log(candidate.candidateSha256);}
@@ -76,7 +79,7 @@ try {
     console.log(JSON.stringify(await projectCommand(commandArgs),null,2));
   } else throw new Error('Unknown command; use --help');
 } catch(error) {
-  if(args.includes('json'))console.error(JSON.stringify({status:'not_checked',error:error.message}));
+  if(args.includes('json'))console.error(JSON.stringify({status:args[0]==='tokens'?'incomplete':'not_checked',error:error.message}));
   else console.error(error.message);
   process.exitCode=2;
 }
