@@ -12,6 +12,9 @@ import {startStudio} from './runtime/scripts/studio.mjs';
 import {importCssSuggestions,createConstitutionCandidate,exportConstitutionCandidate} from './runtime/scripts/constitution-authoring.mjs';
 import {captureGitEvidence,compareGitEvidence,renderPrSummary} from './runtime/scripts/ci-report.mjs';
 import {tokenCheckCommand} from './runtime/scripts/dembrandt-browser.mjs';
+import {createAgentBrief,renderAgentBrief,findingId} from './runtime/scripts/agent-brief.mjs';
+import {assertCurrentReport} from './runtime/scripts/evidence-current.mjs';
+import {createReviewPacket,verifyReviewPacket,renderReviewPacket} from './runtime/scripts/review-packet.mjs';
 const args=process.argv.slice(2);
 const help=`stylecon validate [--root <spec-repository>]
 stylecon init <project-directory> [--files index.html,app.css --trigger '#open' --dialog '#dialog' --close '#close' --name 'Title' --yes]
@@ -28,12 +31,47 @@ stylecon doctor
 stylecon demo <new-absolute-directory>
 stylecon check|report <project-directory|project.json> [--format text|json|sarif|html] [--output <new-private-file>] [--compare <previous-report.json>]
 stylecon packet <project.json> <report.json> <new-private-packet.json>
+stylecon brief <project-directory|project.json> <report.json> --list
+stylecon brief <project-directory|project.json> <report.json> --select <finding-id,...> [--output <new-private-file>]
+stylecon review create <project-directory|project.json> <report.json> <new-private-file.html|.json>
+stylecon review verify <packet.json>
 stylecon repair preview|apply|undo <project.json> <arguments...>
 Repair arguments match the documented project workflow. Check never edits source.
 Exit codes: 0 recorded pass; 1 violations; 2 usage, runtime error or incomplete checks.`;
 try {
   if(!args.length||args[0]==='--help'){console.log(help);}
   else if(args[0]==='validate'){await import('./validate.mjs');}
+  else if(args[0]==='review') {
+    if(args[1]==='verify'&&args.length===3) {
+      const packet=verifyReviewPacket(await readJson(resolve(args[2])));
+      console.log(`Format and checksum valid: ${packet.packetSha256}. This is not author authentication, source freshness or a passing-check verdict.`);
+    } else if(args[1]==='create'&&args.length===5) {
+      let config=resolve(args[2]);if((await stat(config)).isDirectory())config=resolve(config,'project.json');
+      const result=await readJson(resolve(args[3])),report=result.report??result;
+      const {project}=await assertCurrentReport(config,report),output=resolve(args[4]),parent=await realpath(dirname(output)),rel=relative(project.root,parent);
+      if(!rel||(!isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('..'+sep)))throw new Error('Review output must be outside the checked project');
+      if(!/\.(html|json)$/.test(output))throw new Error('Use an .html or .json review output');
+      const packet=createReviewPacket(report),text=output.endsWith('.html')?renderReviewPacket(packet):JSON.stringify(packet,null,2)+'\n';
+      await writeFile(output,text,{flag:'wx',mode:0o600});console.log('Local review packet saved. Open and inspect the complete contents before sharing. Creation success is not a passing-check verdict.');
+    } else throw new Error('Use review create or review verify; see --help');
+  }
+  else if(args[0]==='brief') {
+    if(!args[1]||!args[2])throw new Error('A project and report are required; use --help');
+    let config=resolve(args[1]);if((await stat(config)).isDirectory())config=resolve(config,'project.json');
+    const result=await readJson(resolve(args[2])),report=result.report??result;
+    const {project}=await assertCurrentReport(config,report);
+    if(args.length===4&&args[3]==='--list')console.log(JSON.stringify(report.checks.filter(c=>c.status!=='pass').map(check=>({id:findingId(check),ruleId:check.ruleId,target:check.target,status:check.status,viewport:check.viewport})),null,2));
+    else {
+      if(![5,7].includes(args.length)||args[3]!=='--select'||(args.length===7&&args[5]!=='--output'))throw new Error('Select finding IDs from --list; use --help');
+      const brief=createAgentBrief({report,targetPaths:project.config.targetPaths,selectedIds:args[4].split(','),project:'.'});
+      const text=renderAgentBrief(brief)+'\n';
+      if(args[6]){
+        const output=resolve(args[6]),parent=await realpath(dirname(output)),rel=relative(project.root,parent);
+        if(!rel||(!isAbsolute(rel)&&rel!=='..'&&!rel.startsWith('..'+sep)))throw new Error('Brief output must be outside the checked project');
+        await writeFile(output,text,{flag:'wx',mode:0o600});console.log('Private brief saved. Review its project text before sharing.');
+      }else process.stdout.write(text);
+    }
+  }
   else if(args[0]==='init'){console.log(JSON.stringify(await initCommand(args.slice(1)),null,2));}
   else if(args[0]==='tokens'){process.exitCode=await tokenCheckCommand(args.slice(1));}
   else if(args[0]==='constitution'&&args[1]==='pin'&&args.length===4){console.log(JSON.stringify(await pinConstitution(resolve(args[2]),resolve(args[3])),null,2));}

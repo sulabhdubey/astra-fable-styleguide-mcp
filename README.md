@@ -38,6 +38,7 @@ flowchart LR
 | Inspect a supported interface and review corrections | [Local Studio](docs/LOCAL_STUDIO.md) · [React/Vite guide](docs/RUNNING_APP.md) |
 | Create and pin your team's design contract | [Constitution authoring](docs/CONSTITUTION_AUTHORING.md) |
 | See new, resolved and incomplete checks in a PR | [PR regression summaries](docs/PR_REGRESSIONS.md) |
+| Hand findings to an agent, revisit history, or adopt team rules | [Individual and team workflows](docs/INDIVIDUAL_AND_TEAM_WORKFLOWS.md) — development source; not in v0.8.0 |
 
 ## Start locally
 

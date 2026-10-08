@@ -9,6 +9,12 @@ import {previewRunningRepair,applyRunningRepair,undoRunningRepair} from './runni
 import {initProject} from './project-init.mjs';
 import {previewRunningSetup,saveRunningSetup} from './running-setup.mjs';
 import {importCssSuggestions,createConstitutionCandidate,exportConstitutionCandidate,getConstitutionAuthoringCatalog} from './constitution-authoring.mjs';
+import {createAgentBrief,renderAgentBrief,findingId} from './agent-brief.mjs';
+import {assertCurrentReport} from './evidence-current.mjs';
+import {createReviewPacket,renderReviewPacket} from './review-packet.mjs';
+import {openStudioHistory} from './studio-history.mjs';
+import {pinConstitution} from './constitution.mjs';
+import {previewConstitutionAdoption,applyConstitutionAdoption,recoverConstitutionAdoption,constitutionAdoptionStatus} from './constitution-adoption.mjs';
 
 const assets=fileURLToPath(new URL('../packages/cli/studio/',import.meta.url));
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -20,6 +26,7 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
   const root=await realpath(resolve(workspace)),evidence=await realpath(resolve(evidenceDirectory));
   if(!(await stat(root)).isDirectory()||!(await stat(evidence)).isDirectory()||inside(root,evidence))throw new Error('Evidence directory must exist outside the selected workspace');
   const token=randomBytes(32).toString('hex');const sessions=new Map();let busy=false,origin;
+  const history=await openStudioHistory({workspace:root,evidenceDirectory:evidence});
   async function pathWithin(value,{newPath=false}={}) {
     if(typeof value!=='string'||value.length>500||isAbsolute(value)||value.split(/[\\/]/).includes('..'))throw new Error('Use a relative path inside the selected workspace');
     const path=resolve(root,value);
@@ -57,6 +64,26 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
       const result=await exportConstitutionCandidate(state.source,state.candidate,body.candidateSha256,destination);sessions.delete('constitution');return result;
     }
     const projectDirectory=await pathWithin(body.project);const config=resolve(projectDirectory,'project.json');
+    const projectLabel=relative(root,projectDirectory).replaceAll('\\','/')||'.';
+    if(body.action==='adopt-recover') {
+      sessions.delete(projectDirectory);return recoverConstitutionAdoption(config,{evidenceDirectory:evidence});
+    }
+    if(body.action==='history')return history.list({project:projectLabel});
+    if(body.action==='history-read') {
+      sessions.set(projectDirectory,{receipt:sessions.get(projectDirectory)?.receipt});
+      return history.read({project:projectLabel,id:body.id});
+    }
+    if(body.action==='history-compare')return history.compare({project:projectLabel,baseId:body.baseId,headId:body.headId});
+    const adoptionStatus=await constitutionAdoptionStatus(config,{evidenceDirectory:evidence});
+    if(body.action==='adoption-status')return adoptionStatus;
+    if(adoptionStatus.pending)throw new Error('Pending constitution adoption requires recovery before continuing');
+    if(body.action==='snapshot') {
+      const source=await pathWithin(body.source);
+      await pathWithin(relative(root,resolve(source,'spec')));
+      if(typeof body.snapshotPath!=='string'||!(/^[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.json$/).test(body.snapshotPath))throw new Error('Use a relative JSON snapshot path inside the project');
+      const destination=await pathWithin(relative(root,resolve(projectDirectory,body.snapshotPath)),{newPath:true});
+      return pinConstitution(source,destination);
+    }
     if(body.action==='setup-preview') {
       sessions.delete(projectDirectory);
       const preview=await previewRunningSetup(projectDirectory,body.options);
@@ -73,13 +100,45 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
     await pathWithin(relative(root,config));
     if(body.action==='config') {const raw=await readFile(config,'utf8');if(raw.length>32_000)throw new Error('Configuration too large');return JSON.parse(raw);}
     const state=sessions.get(projectDirectory)??{};
+    if(body.action==='adopt-preview') {
+      delete state.adoption;
+      const options={snapshotPath:body.snapshotPath,evidenceDirectory:evidence};
+      const preview=await previewConstitutionAdoption(config,options);
+      state.adoption={options,previewSha256:preview.previewSha256};sessions.set(projectDirectory,state);return preview;
+    }
+    if(body.action==='adopt') {
+      if(!state.adoption||body.previewSha256!==state.adoption.previewSha256)throw new Error('Review the exact constitution adoption first');
+      const adoption=state.adoption;sessions.delete(projectDirectory);
+      return applyConstitutionAdoption(config,adoption.options,adoption.previewSha256);
+    }
+    if(body.action==='brief') {
+      if(!state.result?.report)throw new Error('Run checks in this session before preparing a brief');
+      await assertCurrentReport(config,state.result.report);
+      const brief=createAgentBrief({report:state.result.report,targetPaths:state.targetPaths,selectedIds:body.selectedIds,project:projectLabel});
+      return {brief,text:renderAgentBrief(brief)};
+    }
+    if(['review-preview','review-download'].includes(body.action)) {
+      if(!state.result?.report)throw new Error('Run checks in this session before preparing a review packet');
+      await assertCurrentReport(config,state.result.report);
+      const packet=createReviewPacket(state.result.report);
+      if(body.action==='review-preview') {
+        state.reviewSha256=packet.packetSha256;sessions.set(projectDirectory,state);return {packet};
+      }
+      if(!['html','json'].includes(body.format))throw new Error('Choose HTML or JSON');
+      if(body.packetSha256!==state.reviewSha256||body.packetSha256!==packet.packetSha256)throw new Error('Prepare and review this exact packet before downloading');
+      return {text:body.format==='html'?renderReviewPacket(packet):JSON.stringify(packet,null,2)+'\n',
+        filename:`stylecon-review-${packet.packetSha256.slice(0,12)}.${body.format}`,type:body.format==='html'?'text/html':'application/json'};
+    }
     const running=JSON.parse(await readFile(config,'utf8')).schemaVersion===2;
     if(body.action==='check') {
+      const saved=await history.list({project:projectLabel});
+      if(saved.entries.length>=saved.limit)throw new Error('History has reached 100 runs for this project. Keep this evidence and restart Studio with another private evidence directory.');
       const checked=await check(config);
       const id=randomBytes(10).toString('hex');
       await writeFile(resolve(evidence,id+'.json'),JSON.stringify(checked.result,null,2)+'\n',{flag:'wx',mode:0o600});
       await writeFile(resolve(evidence,id+'.html'),formatReport(checked.result,checked.targetPaths,'html'),{flag:'wx',mode:0o600});
-      sessions.set(projectDirectory,{...checked,receipt:state.receipt});return {...checked,reportFile:id+'.html'};
+      const historyEntry=await history.save({project:projectLabel,checked});
+      sessions.set(projectDirectory,{...checked,receipt:state.receipt});return {...checked,reportFile:id+'.html',historyEntry,findingIds:checked.result.report.checks.map(findingId)};
     }
     if(body.action==='undo') {
       if(!state.receipt)throw new Error('No correction from this session is available to undo');

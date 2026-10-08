@@ -6,6 +6,10 @@ The MCP endpoint should be placed behind TLS. Public deployments should validate
 
 Report security issues privately to the project maintainer rather than opening a public exploit issue.
 
+## Dependency minimums
+
+The development lockfile adopts upstream fixes for [source-map-js section-offset denial of service](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) (1.2.2), [sharp's librsvg dependency](https://github.com/advisories/GHSA-wq5f-xc86-pv6w) (0.35.5), [MCP client OAuth credential disclosure](https://github.com/advisories/GHSA-6qxp-vccf-f47h) (2.2.0), and [smol-toml parsing complexity](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) (1.9.0). Narrow pnpm overrides keep transitive installations above the affected ranges. These fixes are not additional audit suppressions.
+
 ## Pinned cache dependency repair
 
 Astro currently depends on `http-cache-semantics@4.2.0`, affected by [GHSA-ch52-4w7c-c8xp](https://github.com/advisories/GHSA-ch52-4w7c-c8xp). There is no patched upstream release at the time this repair was prepared.
