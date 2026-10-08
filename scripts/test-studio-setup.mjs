@@ -71,6 +71,16 @@ try{
   await page.getByRole('button',{name:'Run checks',exact:true}).click();await message('Review highlighted findings');
   assert.equal(await page.locator('#result-status').textContent(),'not_checked');
   assert.match(await page.locator('#coverage-reasons').textContent(),/missing or hidden/);
+  await page.locator('tr[data-status="not_checked"] input[type="checkbox"]').first().check();
+  await page.getByRole('button',{name:'Prepare selected findings',exact:true}).click();await message('Brief prepared');
+  assert.match(await page.getByLabel('Agent brief',{exact:true}).inputValue(),/not_checked/);
+  config.measurements[0].selector='#title';config.measurements[0].typography.fontSize='typography.fontSize.700';
+  await writeFile(configPath,JSON.stringify(config));
+  await page.getByRole('button',{name:'Run checks',exact:true}).click();await message('Review highlighted findings');
+  assert.equal(await page.locator('#result-status').textContent(),'fail');assert.equal(await page.locator('#correction').isHidden(),true,'observation-only Vite findings must not authorize repairs');
+  await page.locator('tr[data-status="fail"] input[type="checkbox"]').first().check();
+  await page.getByRole('button',{name:'Prepare selected findings',exact:true}).click();await message('Brief prepared');
+  const brief=await page.getByLabel('Agent brief',{exact:true}).inputValue();assert.match(brief,/src\/main.jsx/);assert.match(brief,/36px/);assert.doesNotMatch(brief,/receiptPath|repairStylesheets|sourceBody/);
   await page.screenshot({path:join(screenshots,'coverage-desktop.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
@@ -79,7 +89,7 @@ try{
   await page.getByRole('button',{name:'Refresh projects',exact:true}).click();await message('local projects found');
   assert.equal(await page.getByRole('button',{name:'Run checks',exact:true}).isDisabled(),true);
   assert.equal(await page.locator('#results').isHidden(),true);
-  const receipt={passed:true,runtime:process.argv[3]?'packaged':'source',cases:['guided configuration of real Vite build','resolved canonical rules','no write before review','form change invalidates preview','save and real browser pass','scope controls locked in flight','failed recheck clears old result and unlocks controls','keyboard focus retained','journey/measurement scope','missing target remains incomplete','mobile overflow','refresh clears old project state','no browser errors']};
+  const receipt={passed:true,runtime:process.argv[3]?'packaged':'source',cases:['guided configuration of real Vite build','resolved canonical rules','no write before review','form change invalidates preview','save and real browser pass','scope controls locked in flight','failed recheck clears old result and unlocks controls','keyboard focus retained','journey/measurement scope','missing target remains incomplete in brief','real observation-only typography failure brief without repair authority','mobile overflow','refresh clears old project state','no browser errors']};
   await writeFile(join(screenshots,'guided-setup-qa.json'),JSON.stringify(receipt,null,2)+'\n');console.log(JSON.stringify(receipt));
 }catch(error){console.error(await page.locator('body').ariaSnapshot());throw error;}
 finally{releaseRequest?.();await browser.close();await studio.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));if(process.argv[2])await rm(root,{recursive:true,force:true});}

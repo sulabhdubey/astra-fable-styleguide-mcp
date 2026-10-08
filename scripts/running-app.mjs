@@ -78,12 +78,12 @@ async function bundledConstitution() {
   const sha256 = digest(Buffer.from(`${canonicalize({ schemaVersion: 1, files })}\n`));
   return { contract: { ...base, specSha256: sha256, specHashScope: 'SHA-256 of the complete bundled canonical snapshot', constitution: { name: manifest.name, version: manifest.version, sha256, scope: 'complete bundled canonical snapshot' } }, tokens, rules };
 }
-function cssTokens(css) {
+export function cssTokens(css) {
   return Object.fromEntries([...css.matchAll(/--([A-Za-z0-9-]+):\s*([^;]+);/g)].map(([, name, value]) => {
     const token = value.trim(); return [name.replace(/-([A-Z])/g, '.$1').replaceAll('-', '.'), /^\d+(?:\.\d+)?$/.test(token) ? Number(token) : token];
   }));
 }
-function expectedMeasurement(value, tokens, rules) {
+export function expectedMeasurement(value, tokens, rules) {
   const expected = { typography: {}, spacing: {} };
   for (const group of ['typography', 'spacing']) for (const [property, path] of Object.entries(value[group] ?? {})) {
     if (!tokenPath(path) || !(path in tokens)) throw new Error('Measurement must reference a canonical token');

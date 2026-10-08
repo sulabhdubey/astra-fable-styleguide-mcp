@@ -60,7 +60,7 @@ try {
 
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 960 });
-    for (const route of ['', 'demo/', 'start/', 'feedback/', 'components/']) {
+    for (const route of ['', 'demo/', 'start/', 'workflows/', 'feedback/', 'components/']) {
       const response = await page.goto(new URL(route, base).href);
       assert.equal(response.status(), 200, route);
       const internalLinks = await page.locator('a[href]').evaluateAll(links => links.map(link => link.href).filter(href => href.startsWith(globalThis.location.origin) && !href.includes('#')));
@@ -69,7 +69,7 @@ try {
         assert.equal(linked.status(), 200, `broken link: ${href}`);
       }
       assert.equal(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth), true, `overflow: ${route} ${width}`);
-      if (process.env.PRODUCT_EVIDENCE_DIR && ['','demo/','start/'].includes(route)) {
+      if (process.env.PRODUCT_EVIDENCE_DIR && ['','demo/','start/','workflows/'].includes(route)) {
         await mkdir(process.env.PRODUCT_EVIDENCE_DIR, { recursive: true });
         await page.screenshot({ path: resolve(process.env.PRODUCT_EVIDENCE_DIR, `${route.replace('/','') || 'home'}-${width}.png`), fullPage: true });
       }

@@ -16,6 +16,8 @@ files.push('scripts/studio.mjs','scripts/running-app.mjs','scripts/design-observ
 files.push('scripts/running-repair.mjs','scripts/running-repair-map.mjs');
 files.push('scripts/running-setup.mjs','scripts/report-coverage.mjs');
 files.push('scripts/dembrandt-tokens.mjs','scripts/dembrandt-browser.mjs');
+files.push('scripts/agent-brief.mjs','scripts/evidence-current.mjs','scripts/studio-history.mjs','scripts/constitution-adoption.mjs');
+files.push('scripts/review-packet.mjs');
 for(const path of files){const destination=resolve(output,'runtime',path);await mkdir(dirname(destination),{recursive:true});await copyFile(resolve(root,path),destination);}
 await cp(resolve(root,'spec'),resolve(output,'runtime/spec'),{recursive:true});
 await build({entryPoints:[resolve(root,'scripts/constitution.mjs')],bundle:true,platform:'node',target:'node22',format:'esm',outfile:resolve(output,'runtime/scripts/constitution.mjs')});

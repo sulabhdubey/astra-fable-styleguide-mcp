@@ -15,7 +15,7 @@ flowchart LR
 
 ## Try the recorded example
 
-Use a checkout containing this feature. The released v0.8.0 CLI predates this command.
+Use the v0.9.0 CLI archive or a checkout containing this feature. The older v0.8.0 CLI predates this command.
 
 ```sh
 pnpm install --frozen-lockfile

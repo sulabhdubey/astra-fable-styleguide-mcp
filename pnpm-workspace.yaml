@@ -3,6 +3,10 @@ packages:
   - 'apps/*'
 allowBuilds:
   esbuild: true
+overrides:
+  'source-map-js@>=1.0.0 <1.2.2': 1.2.2
+  'smol-toml@<1.9.0': 1.9.0
+  'sharp@<0.35.5': 0.35.5
 patchedDependencies:
   http-cache-semantics@4.2.0: patches/http-cache-semantics@4.2.0.patch
 auditConfig:

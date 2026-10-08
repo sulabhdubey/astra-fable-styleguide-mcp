@@ -45,7 +45,11 @@ While an action runs, workspace controls are disabled to keep its project and in
 
 Choose a workspace containing the source constitution repository as a child directory, so the new export can be a sibling. In **Create rules**, load that child directory (for example `design-rules`), choose existing typography, spacing, color or button target rules, and add changes to review. CSS imports are suggestions: each requires an explicit selection. Exceptions retain a rule, target and reason; they never silently waive checks.
 
-Validate the candidate, inspect its before/after diff and exact hash, then approve and export to a new sibling directory. Original rules remain unchanged. A review record accompanies the exported `/spec`. Use `stylecon constitution pin` on the exported copy to adopt it in a project. Validation or export errors remain visible; a source mutation invalidates the candidate.
+Validate the candidate, inspect its before/after diff and exact hash, then approve and export to a new sibling directory. Original rules remain unchanged. A review record accompanies the exported `/spec`. In **Check & correct → Use your team's rules**, create a snapshot from that copy, review the pin and checked-rule changes, then adopt the exact hash. Run checks again after adoption. Validation or export errors remain visible; a source mutation invalidates the candidate.
+
+## Agent briefs, history and team evaluation
+
+The v0.9.0 archive adds selected-findings briefs, private history across restarts, and reviewed rule adoption. Follow the [individual and team walkthrough](INDIVIDUAL_AND_TEAM_WORKFLOWS.md) for exact steps, CLI commands, recovery and storage limits. Historical runs cannot restore repair permission or establish that today's source passed. These additions are absent from the older v0.8.0 archive.
 
 ## Local boundaries
 
