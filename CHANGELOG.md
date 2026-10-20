@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0
+
+- Compare two candidate repairs against one baseline in Studio and the CLI under matching recorded requirements.
+- Preserve regressions, incomplete checks and ties; reject incompatible scope and conflicting identical-source outcomes.
+- Verify comparisons across private history restart without restoring repair authority.
+- Upgrade affected Hono versions to 4.13.11 without an additional audit exception.
+
 ## 0.9.0
 
 - Add versioned Dembrandt token import and controlled browser comparison with match, mismatch, unverified and incomplete outcomes.

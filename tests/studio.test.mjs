@@ -87,7 +87,16 @@ test('studio rejects wrong preview hashes and stale source without applying corr
     failCheck=true;assert.equal((await post({action:'check'})).status,400);
     assert.equal((await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}})).status,400,'failed recheck must invalidate earlier repair evidence');
     failCheck=false;assert.equal((await post({action:'check'})).status,200);
-    const renewed=await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}});assert.equal(renewed.status,200);
+    let renewed=await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}});assert.equal(renewed.status,200);
+    assert.equal((await post({action:'check'})).status,200);
+    renewed=await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}});assert.equal(renewed.status,200);
+    const ids=(await post({action:'history'})).data.entries.map(entry=>entry.id);
+    const compared=await post({action:'history-candidates',baseId:ids[0],candidateAId:ids[1],candidateBId:ids[2]});
+    assert.equal(compared.status,200);assert.equal(compared.data.preference,null);
+    assert.equal((await post({action:'apply',previewSha256:renewed.data.previewSha256})).status,400,'historical comparison invalidates the live repair preview');
+    assert.equal((await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}})).status,400,'comparison never grants repair authority');
+    assert.equal((await post({action:'check'})).status,200);
+    renewed=await post({action:'preview',change:{path:'index.html',before:'OLD',after:'NEW'}});assert.equal(renewed.status,200);
     await writeFile(join(workspace,'index.html'),'<button>CHANGED</button>');
     assert.equal((await post({action:'apply',previewSha256:renewed.data.previewSha256})).status,400);
     assert.equal(await readFile(join(workspace,'index.html'),'utf8'),'<button>CHANGED</button>');

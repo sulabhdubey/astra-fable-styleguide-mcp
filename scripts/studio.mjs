@@ -74,6 +74,10 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
       return history.read({project:projectLabel,id:body.id});
     }
     if(body.action==='history-compare')return history.compare({project:projectLabel,baseId:body.baseId,headId:body.headId});
+    if(body.action==='history-candidates') {
+      sessions.set(projectDirectory,{receipt:sessions.get(projectDirectory)?.receipt});
+      return history.compareCandidates({project:projectLabel,baseId:body.baseId,candidateAId:body.candidateAId,candidateBId:body.candidateBId});
+    }
     const adoptionStatus=await constitutionAdoptionStatus(config,{evidenceDirectory:evidence});
     if(body.action==='adoption-status')return adoptionStatus;
     if(adoptionStatus.pending)throw new Error('Pending constitution adoption requires recovery before continuing');

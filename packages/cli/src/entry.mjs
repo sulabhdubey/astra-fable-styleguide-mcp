@@ -15,6 +15,7 @@ import {tokenCheckCommand} from './runtime/scripts/dembrandt-browser.mjs';
 import {createAgentBrief,renderAgentBrief,findingId} from './runtime/scripts/agent-brief.mjs';
 import {assertCurrentReport} from './runtime/scripts/evidence-current.mjs';
 import {createReviewPacket,verifyReviewPacket,renderReviewPacket} from './runtime/scripts/review-packet.mjs';
+import {compareCandidates} from './runtime/scripts/candidate-comparison.mjs';
 const args=process.argv.slice(2);
 const help=`stylecon validate [--root <spec-repository>]
 stylecon init <project-directory> [--files index.html,app.css --trigger '#open' --dialog '#dialog' --close '#close' --name 'Title' --yes]
@@ -26,6 +27,7 @@ stylecon tokens check <dembrandt-export.json> <self-contained-page.html> [--scop
 stylecon studio <workspace> --evidence <existing-private-directory>
 stylecon ci capture <project.json> <new-private-receipt.json>
 stylecon ci compare <base-receipt.json> <head-receipt.json> [--format markdown|json]
+stylecon candidates compare <baseline.json> <candidate-a.json> <candidate-b.json>
 stylecon browser-install
 stylecon doctor
 stylecon demo <new-absolute-directory>
@@ -37,9 +39,19 @@ stylecon review create <project-directory|project.json> <report.json> <new-priva
 stylecon review verify <packet.json>
 stylecon repair preview|apply|undo <project.json> <arguments...>
 Repair arguments match the documented project workflow. Check never edits source.
-Exit codes: 0 recorded pass; 1 violations; 2 usage, runtime error or incomplete checks.`;
+Exit codes: 0 recorded pass; 1 violations; 2 usage, runtime error or incomplete checks.
+Candidate comparison: 0 means complete comparison (including no preference), not a passing candidate. Inspect preference and reason.`;
 try {
   if(!args.length||args[0]==='--help'){console.log(help);}
+  else if(args[0]==='candidates'&&args[1]==='compare'&&args.length===5) {
+    const reports=[];
+    for(const path of args.slice(2)) {
+      const info=await stat(resolve(path));
+      if(!info.isFile()||info.size>2_000_000)throw new Error('Candidate reports must be files of at most 2 MB');
+      reports.push(await readJson(resolve(path)));
+    }
+    const result=compareCandidates(...reports);console.log(JSON.stringify(result,null,2));process.exitCode=result.exitCode;
+  }
   else if(args[0]==='validate'){await import('./validate.mjs');}
   else if(args[0]==='review') {
     if(args[1]==='verify'&&args.length===3) {

@@ -53,4 +53,8 @@ The v0.9.0 archive adds selected-findings briefs, private history across restart
 
 ## Local boundaries
 
+The v0.10.0 archive also supports [comparing two candidate repairs](CANDIDATE_COMPARISON.md)
+against one saved baseline. It reports a preference only for a unique complete
+improvement under matching requirements; ties and incomplete evidence remain explicit.
+
 Only packaged interface assets are served. Workspace files are accessed through bounded operations, never exposed by a file server. API requests require the local origin and session credential; symlinks, traversal and oversized requests are rejected. Evidence must be outside the selected workspace. Checks run serially; changed-source errors require a fresh check. The API is a same-machine session boundary, not protection against another malicious process running as your OS user.
