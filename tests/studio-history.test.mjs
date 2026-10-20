@@ -27,6 +27,24 @@ async function storedFiles(root) {
   return result;
 }
 
+test('candidate comparison survives restart, rejects duplicate runs, mappings and corrupted evidence',async t=>{
+  const f=await fixture(t),save=(statuses,hashValue)=>f.history.save({project:'app',
+    checked:checked(statuses.map((status,i)=>check('#'+i,status)),{artifactSha256:hashValue.repeat(64)})});
+  const base=await save(['fail','pass'],'a'),a=await save(['pass','pass'],'b'),b=await save(['pass','fail'],'c');
+  const args={project:'app',baseId:base.id,candidateAId:a.id,candidateBId:b.id};
+  const before=await f.history.compareCandidates(args);assert.equal(before.preference,'A');
+  const reopened=await openStudioHistory(f);assert.deepEqual(await reopened.compareCandidates(args),before);
+  assert.doesNotMatch(JSON.stringify(before),/receiptPath|replacement|sourceBody/);
+  await assert.rejects(reopened.compareCandidates({...args,candidateBId:a.id}),/distinct/);
+  const changed=checked([check('#0','pass'),check('#1','pass')],{artifactSha256:'d'.repeat(64)});
+  changed.targetPaths['#0']='other.html';
+  const mapped=await f.history.save({project:'app',checked:changed});
+  assert.equal((await reopened.compareCandidates({...args,candidateBId:mapped.id})).exitCode,2);
+  const files=await storedFiles(f.evidenceDirectory),path=files.find(file=>file.endsWith(b.id+'.report.json'));
+  await writeFile(path,'{}');
+  await assert.rejects(reopened.compareCandidates(args),/integrity mismatch/);
+});
+
 test('history survives restart with compact metadata and a report without write authority',async t=>{
   const f=await fixture(t),value=checked();
   value.result.repair={original:'PRIVATE SOURCE BODY',replacement:'PRIVATE REPLACEMENT'};

@@ -3,6 +3,7 @@ import {constants} from 'node:fs';
 import {lstat,mkdir,open,opendir,realpath} from 'node:fs/promises';
 import {resolve,relative,isAbsolute,parse,sep,win32} from 'node:path';
 import {compareReports} from './html-report.mjs';
+import {compareCandidates} from './candidate-comparison.mjs';
 
 const LIMIT=100,REPORT_BYTES=2_000_000,ENTRY_BYTES=16_000;
 const statuses=['pass','fail','not_checked','unsupported'];
@@ -200,6 +201,16 @@ export async function openStudioHistory({workspace,evidenceDirectory}) {
       return {project:ctx.project,entries,limit:LIMIT,unavailableCount:entries.filter(entry=>!entry.available).length};
     },
     async read({project,id}) {assertId(id);return load(await context(project),id);},
+    async compareCandidates({project,baseId,candidateAId,candidateBId}) {
+      const ids=[baseId,candidateAId,candidateBId];ids.forEach(assertId);
+      if(new Set(ids).size!==3)throw new Error('Select three distinct saved runs');
+      const ctx=await context(project),runs=[];
+      for(const id of ids)runs.push(await load(ctx,id));
+      const binding={baseId,candidateAId,candidateBId,historyOnly:true};
+      const paths=run=>json(Object.entries(run.checked.targetPaths).sort(([a],[b])=>a.localeCompare(b)));
+      if(runs.some(run=>paths(run)!==paths(runs[0])))return {...binding,compatible:false,preference:null,exitCode:2,reason:'Recorded target mappings differ.'};
+      return {...compareCandidates(...runs.map(run=>run.checked.result.report)),...binding};
+    },
     async compare({project,baseId,headId}) {
       assertId(baseId);assertId(headId);
       const ctx=await context(project),base=await load(ctx,baseId),head=await load(ctx,headId);

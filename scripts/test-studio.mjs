@@ -61,9 +61,22 @@ try {
   await page.getByLabel('Current text',{exact:true}).fill(change.before);await page.getByLabel('Replacement text',{exact:true}).fill(change.after);
   await page.getByRole('button',{name:'Preview correction',exact:true}).click();await message('Review the exact change');
   await page.getByRole('button',{name:'Apply this correction',exact:true}).click();await message('Correction applied and rechecked');assert.equal(await page.locator('#result-status').textContent(),'pass');
-  await page.locator('#run-history summary').click();await page.getByRole('button',{name:'Compare these runs',exact:true}).click();await message('Historical comparison ready');
+  await page.locator('#run-history > details > summary').click();await page.getByRole('button',{name:'Compare these runs',exact:true}).click();await message('Historical comparison ready');
   const comparison=JSON.parse(await page.locator('#comparison-details').textContent());assert.equal(comparison.resolved.length,1);assert.equal(comparison.incomplete.length,0);
   await page.getByRole('button',{name:'Undo last correction',exact:true}).click();await message('Original source restored and rechecked');assert.equal(await page.locator('#result-status').textContent(),'fail');
+  const candidateIds=await page.locator('#candidate-base option').evaluateAll(options=>options.map(option=>option.value));
+  const compareSavedCandidates=async()=>{
+    await page.getByLabel('Baseline run',{exact:true}).selectOption(candidateIds[2]);
+    await page.getByLabel('Candidate A run',{exact:true}).selectOption(candidateIds[1]);
+    await page.getByLabel('Candidate B run',{exact:true}).selectOption(candidateIds[0]);
+    await page.getByRole('button',{name:'Compare candidates',exact:true}).click();await message('Candidate comparison ready');
+    const result=JSON.parse(await page.locator('#candidate-details').textContent());
+    assert.equal(result.preference,'A');assert.equal(result.historyOnly,true);
+    assert.equal(await page.locator('#correction').isHidden(),true);
+    return result;
+  };
+  const candidateComparison=await compareSavedCandidates();
+  await page.screenshot({path:join(screenshots,'studio-candidates.png'),fullPage:true});
   await page.getByRole('button',{name:'02 · Create rules',exact:true}).click();await page.getByLabel('Constitution repository, relative to workspace').fill('rules');await page.getByRole('button',{name:'Load canonical rules'}).click();await message('Canonical rules loaded');
   await page.getByLabel('Rule',{exact:true}).selectOption('tokens.space.4.$value');await page.getByLabel('New value',{exact:true}).fill('20px');await page.getByRole('button',{name:'Add to review',exact:true}).click();
   await page.getByLabel('Rule',{exact:true}).selectOption('components.button.accessibility.minimumTarget');await page.getByLabel('New value',{exact:true}).fill('48px');await page.getByRole('button',{name:'Add to review',exact:true}).click();
@@ -81,13 +94,15 @@ try {
   // Restart with the same private directory: historical views are available without live authority.
   await studio.close();studio=await startStudio({workspace,evidenceDirectory:evidence});await page.goto(studio.url);await message('local projects found');
   await page.getByLabel('Project',{exact:true}).selectOption('demo/project');await message('Project ready');
-  assert.equal(await page.locator('#history-head option').count(),4);await page.locator('#run-history summary').click();
+  assert.equal(await page.locator('#history-head option').count(),4);await page.locator('#run-history > details > summary').click();
+  await page.getByRole('button',{name:'Open selected later run',exact:true}).click();await message('Historical evidence opened');
+  assert.deepEqual(await compareSavedCandidates(),candidateComparison);
   await page.getByRole('button',{name:'Open selected later run',exact:true}).click();await message('Historical evidence opened');
   assert.match(await page.locator('#result-title').textContent(),/Historical observation/);assert.equal(await page.locator('#correction').isHidden(),true);assert.equal(await page.locator('#agent-handoff').isHidden(),true);assert.equal(await page.locator('#review-handoff').isHidden(),true);
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:join(screenshots,'studio-mobile.png'),fullPage:true});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
   await page.keyboard.press('Tab');assert.notEqual(await page.evaluate(()=>document.activeElement.tagName),'BODY');
   assert.deepEqual(errors,[]);
-  const receipt={passed:true,cases:['render desktop/mobile','configured targets','real browser failure','offline HTML download with every result and private markers absent','desktop/mobile recipient view with JavaScript disabled and zero network requests','changed source blocks download and clears preview','finding details','selected private agent brief and copy','exact preview','apply and real recheck','same-scope resolved comparison','undo and real recheck','canonical authoring and approved export','snapshot creation and reviewed 48px rule adoption','different-rules comparison refused','restart and historical evidence without repair or review authority','no horizontal overflow','keyboard focus','no runtime console errors'],privateEvidence:evidence,screenshots};
+  const receipt={passed:true,cases:['render desktop/mobile','configured targets','real browser failure','offline HTML download with every result and private markers absent','desktop/mobile recipient view with JavaScript disabled and zero network requests','changed source blocks download and clears preview','finding details','selected private agent brief and copy','exact preview','apply and real recheck','same-scope resolved comparison','three real saved runs select the passing repair and preserve the decision across restart','undo and real recheck','canonical authoring and approved export','snapshot creation and reviewed 48px rule adoption','different-rules comparison refused','restart and historical evidence without repair or review authority','no horizontal overflow','keyboard focus','no runtime console errors'],privateEvidence:evidence,screenshots};
   await writeFile(join(evidence,'studio-qa.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt));
 }catch(error){console.error('Studio visible state:',await page.locator('#message').textContent());console.error('Browser errors:',JSON.stringify(errors));throw error;}finally{await browser.close();await studio.close();}

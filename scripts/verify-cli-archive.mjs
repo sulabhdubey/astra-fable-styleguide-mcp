@@ -61,6 +61,7 @@ export async function verifyCliArchive(directory,{browser=false}={}) {
       cli(['report',project,'--format','html','--compare',before,'--output',report]);
       assert.match(await readFile(report,'utf8'),/0 findings resolved/);
       run(process.execPath,[join(root,'scripts/test-installed-cli.mjs'),command]);
+      run(process.execPath,[join(root,'scripts/test-candidate-comparison.mjs'),command]);
       run(process.execPath,[join(root,'scripts/test-studio.mjs'),consumer,join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/studio.mjs')]);
       run(process.execPath,[join(root,'scripts/test-studio-setup.mjs'),consumer,join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/studio.mjs')]);
       run(process.execPath,[join(root,'scripts/test-running-app.mjs'),join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/running-app.mjs')]);

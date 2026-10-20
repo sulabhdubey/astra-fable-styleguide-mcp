@@ -4,7 +4,7 @@
 Enable Pages with **GitHub Actions** as the source. `.github/workflows/pages.yml` deploys only through a manual dispatch on `main` with a published, stable release tag such as `v0.2.0`. It verifies that the tag commit is reachable from `main` and that the attached release evidence names that exact commit with completed checks. It then builds the Astro site from the tag's `/spec` and deploys `apps/docs/dist`. A merge to `main` does not change the public documentation site.
 
 ## MCP service
-The public MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. At the time this guide was updated (2026-09-20), production served v0.2.0 from commit `7c1f77ecbf880f59d33e94759ff9976a32c975b1` on `release/v0.2.0`, using the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset. Check `/version` and the Vercel deployment source for the current version and commit.
+The public MCP service runs at `https://astra-fable-styleguide-mcp.vercel.app/mcp`. Health and version are available at `/health` and `/version` on the same host. The project uses the repository's `Dockerfile.vercel` with Vercel's **Container** framework preset. Check `/version` and the Vercel deployment source for the current version and commit.
 
 Set these production environment variables:
 

@@ -54,13 +54,16 @@ async function refreshHistory(){
   const options=()=>history.entries.map(entry=>option(entry.id,`${entry.createdAt} · ${entry.available?entry.status:'unavailable'}`));
   $('history-base').replaceChildren(...options());$('history-head').replaceChildren(...options());
   if(history.entries.length>1)$('history-base').selectedIndex=1;
+  for(const id of ['candidate-base','candidate-a','candidate-b'])$(id).replaceChildren(...options());
+  if(history.entries.length>=3){$('candidate-base').selectedIndex=2;$('candidate-a').selectedIndex=1;}
+  $('compare-candidates').disabled=history.entries.length<3;$('candidate-result').hidden=true;
   $('open-history').disabled=!history.entries.length;$('compare-history').disabled=history.entries.length<2;
   $('history-note').textContent=`${history.entries.length} saved runs · ${history.unavailableCount} unavailable. Up to ${history.limit} runs per project. Evidence stays private.`;
   $('run-history').hidden=false;
 }
 async function selectProject(){
   clearSetupReview();clearCheckEvidence();clearAdoption();
-  for(const id of ['setup-choice','vite-setup','undo','targets','setup','project-rules','run-history','history-comparison'])$(id).hidden=true;
+  for(const id of ['setup-choice','vite-setup','undo','targets','setup','project-rules','run-history','history-comparison','candidate-result'])$(id).hidden=true;
   project=$('project').value;invalidate();$('run').disabled=!project;$('adoption-recovery').hidden=true;if(!project)return;
   const adoption=await api('adoption-status',{project});
   if(adoption.pending){$('adoption-recovery').hidden=false;$('adoption-recovery').open=true;$('run').disabled=true;await refreshHistory();message('Pending rule adoption requires recovery before continuing.',true);return;}
@@ -164,6 +167,20 @@ $('compare-history').onclick=()=>perform(async()=>{
   $('comparison-details').textContent=JSON.stringify(result,null,2);$('history-comparison').hidden=false;
   message(result.compatible?'Historical comparison ready. This is not a new check of current source.':'These runs cannot establish resolution. Review their different scope or rules.');
 });
+$('compare-candidates').onclick=()=>perform(async()=>{
+  $('candidate-result').hidden=true;clearCheckEvidence();clearAdoption();$('undo').hidden=true;
+  const result=await api('history-candidates',{project,baseId:$('candidate-base').value,candidateAId:$('candidate-a').value,candidateBId:$('candidate-b').value});
+  $('candidate-summary').textContent=result.reason;
+  $('candidate-counts').replaceChildren();
+  for(const candidate of result.candidates??[]) {
+    const row=document.createElement('li');
+    row.textContent=`Candidate ${candidate.candidate}: ${candidate.resolved.length} resolved, ${candidate.regressed.length} regressed, ${candidate.remaining.length} still failing, ${candidate.incomplete.length} incomplete.`;
+    $('candidate-counts').append(row);
+  }
+  $('candidate-details').textContent=JSON.stringify(result,null,2);$('candidate-result').hidden=false;
+  message('Candidate comparison ready. Historical evidence does not authorize a correction.');
+});
+for(const id of ['candidate-base','candidate-a','candidate-b'])$(id).onchange=()=>{$('candidate-result').hidden=true;};
 $('adopt-path').oninput=clearAdoption;
 $('create-snapshot').onclick=()=>perform(async()=>{
   clearAdoption();await api('snapshot',{project,source:$('snapshot-source').value,snapshotPath:$('adopt-path').value});
