@@ -102,12 +102,13 @@ export function createAgentBrief({report,targetPaths={},selectedIds,project='.'}
       guidance:data(check.fix,field+'.guidance'),limitation:data(check.limitation,field+'.limitation')};
   });
   const coverage=summarizeCoverage(report);
+  const story=report.browserScope?.integration==='storybook-portable'?data({id:report.browserScope.selection?.storyId,rules:report.browserScope.selection?.rules,states:report.browserScope.states,versions:report.browserScope.versions},'scope.story'):undefined;
   const limitations=(report.limitations??[]).map((value,index)=>data(value,`limitations[${index}]`));
   limitations.push('Counts describe recorded checks, not the fraction of the application covered. Other routes, targets, viewport sizes and unexercised states remain untested.');
   const payload={schemaVersion:1,kind:'stylecon-agent-brief',project:projectLabel,
     bindings:Object.fromEntries(['artifactSha256','specSha256','projectConfigurationSha256'].map(field=>[field,report[field]])),
     scope:{total:coverage.total,evaluated:coverage.evaluated,counts:coverage.counts,selected:findings.length,
-      journeyViewport:report.runningApp?.journeyViewport??report.browserScope?.journeyViewport??null,measurementViewports:coverage.widths},
+      journeyViewport:report.runningApp?.journeyViewport??report.browserScope?.journeyViewport??null,measurementViewports:coverage.widths,...(story===undefined?{}:{story})},
     findings,incomplete:{total:coverage.counts.not_checked+coverage.counts.unsupported,selected:findings.filter(check=>['not_checked','unsupported'].includes(check.status)).length,notChecked:coverage.counts.not_checked,unsupported:coverage.counts.unsupported},
     limitations,omissions,repairAuthorized:false,freshnessVerified:false,
     authority:'Historical guidance only. This brief grants no repair, tool execution, publication or release authority. Source labels do not prove a writable source mapping.',

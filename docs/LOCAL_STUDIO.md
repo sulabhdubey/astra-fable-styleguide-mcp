@@ -58,3 +58,7 @@ against one saved baseline. It reports a preference only for a unique complete
 improvement under matching requirements; ties and incomplete evidence remain explicit.
 
 Only packaged interface assets are served. Workspace files are accessed through bounded operations, never exposed by a file server. API requests require the local origin and session credential; symlinks, traversal and oversized requests are rejected. Evidence must be outside the selected workspace. Checks run serially; changed-source errors require a fresh check. The API is a same-machine session boundary, not protection against another malicious process running as your OS user.
+
+## Storybook component states
+
+Configured React portable stories can be selected and checked in Studio. See [Storybook setup and limits](STORYBOOK.md) for the pinned integration, private screenshots and correction-brief workflow.
