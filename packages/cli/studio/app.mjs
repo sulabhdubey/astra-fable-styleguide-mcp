@@ -5,6 +5,15 @@ const token=location.hash.slice(1);history.replaceState(null,'','/');
 let project='',previewHash='',candidateHash='',catalog=[],changes=[],busy=false,runningCandidates=[];
 let setupHash='',adoptionHash='',briefHash='',reviewHash='';
 let selectedFindings=new Set();
+let storyOptions=[];
+function storySelection(){return storyOptions.length?{storyId:$('story-id').value,rules:[...$('story-rules').querySelectorAll('input:checked')].map(input=>input.value)}:undefined;}
+function showStoryRules(selected){
+  const story=storyOptions.find(item=>item.id===$('story-id').value);$('story-rules').replaceChildren();
+  const legend=document.createElement('legend');legend.textContent='Rules to check';$('story-rules').append(legend);
+  for(const rule of story?.rules??[]){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=rule;input.checked=!selected||selected.includes(rule);input.onchange=()=>{clearCheckEvidence();$('run').disabled=!storySelection().rules.length;};label.className='filter';label.append(input,document.createTextNode(rule));$('story-rules').append(label);}
+  $('run').disabled=!storySelection()?.rules.length;
+}
+$('story-id').onchange=()=>{clearCheckEvidence();showStoryRules();};
 const message=(text,error=false)=>{$('message').textContent=text;$('message').dataset.error=String(error);};
 async function api(action,fields={}){const response=await fetch('/api',{method:'POST',headers:{'content-type':'application/json','x-stylecon-session':token},body:JSON.stringify({action,...fields})});const data=await response.json();if(!response.ok)throw new Error(data.error);return data;}
 async function perform(work){
@@ -63,6 +72,7 @@ async function refreshHistory(){
 }
 async function selectProject(){
   clearSetupReview();clearCheckEvidence();clearAdoption();
+  storyOptions=[];$('story-selection').hidden=true;
   for(const id of ['setup-choice','vite-setup','undo','targets','setup','project-rules','run-history','history-comparison','candidate-result'])$(id).hidden=true;
   project=$('project').value;invalidate();$('run').disabled=!project;$('adoption-recovery').hidden=true;if(!project)return;
   const adoption=await api('adoption-status',{project});
@@ -74,12 +84,15 @@ async function selectProject(){
   const config=await api('config',{project});
   $('target-content').textContent=JSON.stringify({integration:config.integration??'static HTML',journey:config.journey,targetPaths:config.targetPaths,measurements:config.measurements,constitution:config.constitution??'Bundled rules'},null,2);
   $('targets').hidden=false;$('project-rules').hidden=false;
+  if(config.schemaVersion===3){const options=await api('story-options',{project});storyOptions=options.stories;$('story-id').replaceChildren(...storyOptions.map(item=>option(item.id,item.name)));if(options.selection)$('story-id').value=options.selection.storyId;showStoryRules(options.selection?.rules);$('story-selection').hidden=false;$('project-rules').hidden=true;message('Storybook project ready. Start its trusted portable-story production preview, then select a state and rules.');return;}
   message(config.schemaVersion===2?'Running application selected. Start its trusted Vite production preview before checking. Verified stylesheet corrections require a rebuild.':'Project ready. Its configured dialog and controls will be exercised.');
 }
 function showResult(data,{historical=false}={}){
   clearBrief();clearReview();$('review-handoff').hidden=historical;selectedFindings=new Set();$('results').hidden=false;
   $('result-status').textContent=data.summary.status;$('result-status').dataset.status=data.summary.status;
   const report=data.result.report;showCoverage(report);$('finding-detail').hidden=true;
+  $('story-images').replaceChildren();$('story-previews').hidden=!data.result.previews?.length;
+  for(const preview of data.result.previews??[]){const figure=document.createElement('figure'),image=document.createElement('img'),caption=document.createElement('figcaption');image.src='data:image/png;base64,'+preview.png;image.alt=`Recorded story viewport excerpt at ${preview.width}px with failing elements outlined`;caption.textContent=`${preview.width}px · ${historical?'historical':'recorded'} state`;figure.append(image,caption);$('story-images').append(figure);}
   $('result-title').textContent=`${historical?'Historical observation · ':''}${report.checks.length} configured checks`;
   $('binding').textContent=`Source ${report.artifactSha256}\nConstitution ${report.specSha256}`;
   $('report-file').textContent=historical?'Stored observation only. Run checks to obtain current evidence.':`Private evidence saved: ${data.reportFile}`;
@@ -109,7 +122,7 @@ function showResult(data,{historical=false}={}){
 }
 $('refresh').onclick=()=>perform(projects);$('project').onchange=()=>perform(selectProject);
 function clearCheckEvidence(){previewHash='';clearBrief();clearReview();selectedFindings=new Set();for(const id of ['results','finding-detail','correction','preview','agent-handoff','review-handoff'])$(id).hidden=true;}
-async function checkProject(){clearCheckEvidence();clearAdoption();$('history-comparison').hidden=true;const result=await api('check',{project});await refreshHistory();showResult(result);}
+async function checkProject(){clearCheckEvidence();clearAdoption();$('history-comparison').hidden=true;const result=await api('check',{project,selection:storySelection()});await refreshHistory();showResult(result);}
 $('run').onclick=()=>perform(checkProject);
 $('setup').onsubmit=event=>{event.preventDefault();perform(async()=>{const options={};for(const input of $('setup').querySelectorAll('input'))options[input.name]=input.value;await api('init',{project,options});await selectProject();});};
 $('correction').onsubmit=event=>{event.preventDefault();perform(async()=>{const preview=await api('preview',{project,change:runningCandidates.length?{candidateId:$('repair-path').value}:{path:$('repair-path').value,before:$('before').value,after:$('after').value}});previewHash=preview.previewSha256;$('diff').textContent=typeof preview.diff==='string'?preview.diff:JSON.stringify(preview.diff,null,2);$('preview-hash').textContent=previewHash;$('preview').hidden=false;message('Review the exact change. Apply only if this is the correction you intend.');});};

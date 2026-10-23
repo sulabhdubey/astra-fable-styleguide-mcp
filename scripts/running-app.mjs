@@ -68,7 +68,7 @@ async function canonicalFiles(root, prefix = '') {
   }
   return files;
 }
-async function bundledConstitution() {
+export async function bundledConstitution() {
   const files = await canonicalFiles(resolve(repository, 'spec'));
   const [button, dialog, rules, manifest] = ['components/button.json', 'components/dialog.json', 'accessibility/rules.json', 'manifest.json'].map(path => files[path]);
   const rawTokens = {};
@@ -170,7 +170,7 @@ export function allowedRunningRequest(origin, url, method, buildPaths) {
     return method === 'GET' && target.origin === origin && !target.username && !target.password && target.search === '' && buildPaths instanceof Set && buildPaths.has(path);
   } catch { return false; }
 }
-async function collectMeasurements(page, measurements) {
+export async function collectMeasurements(page, measurements) {
   return page.evaluate(items => items.map(item => {
     const matches = [...document.querySelectorAll(item.selector)]; const viewport = { width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth };
     if (matches.length > 1) throw new Error(`Configured measurement selector must match exactly one element: ${item.selector}`);

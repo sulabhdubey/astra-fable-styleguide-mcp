@@ -66,8 +66,9 @@ export async function verifyCliArchive(directory,{browser=false}={}) {
       run(process.execPath,[join(root,'scripts/test-studio-setup.mjs'),consumer,join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/studio.mjs')]);
       run(process.execPath,[join(root,'scripts/test-running-app.mjs'),join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/running-app.mjs')]);
       run(process.execPath,[join(root,'scripts/test-dembrandt-tokens.mjs'),join(installed,'node_modules/@styleconstitution/cli/dist/runtime/scripts/dembrandt-browser.mjs'),command]);
+      run(process.execPath,[join(root,'scripts/test-storybook.mjs'),'--studio-only','--cli',command]);
     }
-    const receipt={schemaVersion:2,archive:{filename,sha256},source:evidence.source,cleanConsumer:true,offlineDependencySeed:true,offlineInstall:false,distributedInstallerVerified:true,installation,checks:['distributed installer with real npm','help','validate','constitution pin','init',...(browser?['doctor','browser check','HTML report comparison','repair recheck stale refusal undo','Studio complete UI flow','running React/Vite and network identity boundaries','Dembrandt token comparison and CLI output boundaries']:[])],browserVerified:browser,published:false};
+    const receipt={schemaVersion:2,archive:{filename,sha256},source:evidence.source,cleanConsumer:true,offlineDependencySeed:true,offlineInstall:false,distributedInstallerVerified:true,installation,checks:['distributed installer with real npm','help','validate','constitution pin','init',...(browser?['doctor','browser check','HTML report comparison','repair recheck stale refusal undo','Studio complete UI flow','running React/Vite and network identity boundaries','Dembrandt token comparison and CLI output boundaries','portable Storybook CLI selection and Studio correction recheck history']:[])],browserVerified:browser,published:false};
     await writeFile(join(directory,'archive-verification.json'),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});
     return receipt;
   } finally {await rm(workspace,{recursive:true,force:true});}

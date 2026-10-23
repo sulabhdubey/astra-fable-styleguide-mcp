@@ -9,7 +9,8 @@ UI defects with less manual intervention, while preserving the intended design?
 
 Recruit 3–5 consenting repository owners after internal verification and release
 review. Start with static interfaces or trusted React/Vite production previews
-compatible with the documented verifier. A development pilot must identify its
+compatible with the documented verifier, or the pinned [portable Storybook
+integration](STORYBOOK.md). A development pilot must identify its
 exact PR commit and verified development archive; it must not be presented as a
 released version. Include different layouts and interaction paths. Use synthetic inputs. Keep raw
 source, screenshots, local paths and any personal data private unless an owner
@@ -17,7 +18,9 @@ explicitly authorizes sharing. Do not treat internal fixtures as external users.
 
 ## First session
 
-Choose one small, non-sensitive page with a supported dialog journey. Follow
+Choose one small, non-sensitive page with a supported dialog journey, or one
+configured button, input, card or dialog story. Ordinary portable stories do not
+require a dialog journey. Follow
 [installation](INSTALLATION.md), then [Local Studio](LOCAL_STUDIO.md) for setup.
 For React/Vite, review and run the project's build and production preview yourself;
 the checker does not start package scripts. Begin with observation only and stop
@@ -27,6 +30,13 @@ and actual result; source uploads and repository access are not required.
 Before a repair trial, review the supported source mapping and exact correction.
 The guided React/Vite setup does not grant repair authorization. Record consent
 separately for participation and any public quotation or screenshot.
+
+For Storybook, use the exact versions and separate production entry documented in
+[the integration guide](STORYBOOK.md). Select a story and rules in Studio, inspect
+the rendered evidence, prepare a correction brief, make a reviewed source edit,
+rebuild, and recheck the same story. There is no automatic JSX repair. Record the
+selected story, args/globals, viewport, source hash and constitution hash with the
+trial. Skipped, errored, unfinished or mismatched-build execution is incomplete.
 
 ## Per-repository trial
 
