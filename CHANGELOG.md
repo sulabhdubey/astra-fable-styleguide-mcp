@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.1
+
+- Upgrade affected MCP, Vite, Zod and Undici dependencies without new advisory suppressions.
+- Add dependency audits and dedicated redacted Git-history secret scanning to PR and release gates, plus daily security checks.
+- Reject tracked private environment files, local deployment state, private-key containers and SQLite databases.
+- Verify scanner rejection controls and document exact historical checksum exclusions.
+
 ## 0.10.0
 
 - Compare two candidate repairs against one baseline in Studio and the CLI under matching recorded requirements.
