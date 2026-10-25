@@ -65,6 +65,12 @@
       "path": "0.10.0-style-spec.json",
       "sha256": "a393b0260aa3c5d4ee4f5c9fbcef3658d70ca9fd584c929c7e97c8bbd8ccde06",
       "sourceCommit": "a75605c3efe20fd9e8d35d20a62bd1ca0efe4847"
+    },
+    {
+      "version": "0.10.1",
+      "path": "0.10.1-style-spec.json",
+      "sha256": "3594f89f4300a584dc1320471f10205deaddd304e875c524bcfb1f00a7624bed",
+      "sourceCommit": "c3144c554f1552763a2123856412233e865fe2d8"
     }
   ]
 }
