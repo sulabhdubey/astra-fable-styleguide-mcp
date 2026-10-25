@@ -15,6 +15,36 @@ The development lockfile also pins affected Hono versions to 4.13.11 for
 The upstream fix prevents double decoding in `serveStatic` from bypassing
 middleware mounted on static path prefixes. This adds no audit exception.
 
+## Continuous checks and their scope
+
+Pull requests and the release gate run `pnpm audit` after dependency regression
+tests. A daily scheduled workflow rechecks the default branch against new
+advisories. An unavailable registry is a failed check, not a clean audit. Registry
+results describe known affected packages; they do not prove exploitability or
+formal compliance. The cache exception below remains explicit.
+
+CI, release and scheduled checks run Gitleaks 8.30.1, downloaded from its official
+release and verified against a pinned SHA-256. The scanner checks all fetched
+refs with full history, including merge diffs. It disables inline allow comments
+and retains the default detection rules. Closed PR refs, GitHub caches, external
+forks and deployment artifacts are not covered by this CI checkout. Local edits
+must be committed before this history scan covers them. Tracked environment
+files (except reviewed `.env.example` templates), private-key containers, local
+Vercel/brain state and SQLite databases are separately blocked by filename.
+Ignore rules alone do not remove previously committed files.
+
+`.gitleaksignore` contains six exact historical fingerprints for three generated
+artifact checksums in `releases/0.1.0-build-evidence.json`. At each named commit,
+the flagged SHA-256 was recomputed from its referenced generated file and matched.
+The exclusions apply only to those immutable commits and lines; a new secret in
+the same file remains blocking. Review scanner configuration and ignore-file
+changes as security-sensitive. Scanner failures must not be treated as passes.
+
+The lockfile additionally adopts Vite 8.3.3, MCP Node 2.1.2 / Server 2.4.0 /
+Client 2.3.0, Zod 4.6.6 and Undici 8.12.2. These address the affected prior
+versions without new audit suppressions. Recheck advisory data at release time;
+a green historical run is not evidence of current dependency status.
+
 ## Pinned cache dependency repair
 
 Astro currently depends on `http-cache-semantics@4.2.0`, affected by [GHSA-ch52-4w7c-c8xp](https://github.com/advisories/GHSA-ch52-4w7c-c8xp). There is no patched upstream release at the time this repair was prepared.

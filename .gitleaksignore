@@ -1,0 +1,8 @@
+# Verified generated-file SHA-256 values, not credentials. See SECURITY.md.
+# Exact immutable commit + file + rule + line; never ignore the entire evidence file.
+e39dcc44723c096a267953c4267d6686f58855bd:releases/0.1.0-build-evidence.json:generic-api-key:16
+e39dcc44723c096a267953c4267d6686f58855bd:releases/0.1.0-build-evidence.json:generic-api-key:17
+e39dcc44723c096a267953c4267d6686f58855bd:releases/0.1.0-build-evidence.json:generic-api-key:19
+7e192ae0b28e563167ee0b344310380165ba7664:releases/0.1.0-build-evidence.json:generic-api-key:16
+7e192ae0b28e563167ee0b344310380165ba7664:releases/0.1.0-build-evidence.json:generic-api-key:17
+7e192ae0b28e563167ee0b344310380165ba7664:releases/0.1.0-build-evidence.json:generic-api-key:19

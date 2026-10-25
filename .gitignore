@@ -1,6 +1,13 @@
 node_modules/
 .pnpm-store/
 .rta-smriti/
+.vercel/
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
 dist/
 coverage/
 .env

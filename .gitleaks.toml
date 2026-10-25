@@ -1,0 +1,3 @@
+title = "Style Constitution secret scanning"
+[extend]
+useDefault = true

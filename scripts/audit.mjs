@@ -38,4 +38,4 @@ const tokenFiles=(await readdir('spec/tokens')).filter(f=>f.endsWith('.json'));
 if(tokenFiles.length<8) failures.push(`expected at least 8 token domain files, found ${tokenFiles.length}`);
 const official=await readFile('apps/mcp-server/src/official-server.ts','utf8');
 for(const needle of ['createMcpHandler','get_style_manifest','check_style_compliance','MCP_ENABLE_WRITES']) if(!official.includes(needle)) failures.push(`production MCP adapter missing ${needle}`);
-if(failures.length){console.error(failures.join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,componentFiles:componentFiles.length,tokenFiles:tokenFiles.length,secretScan:'pass',requiredFiles:'pass'},null,2));
+if(failures.length){console.error(failures.join('\n'));process.exit(1);}console.log(JSON.stringify({ok:true,componentFiles:componentFiles.length,tokenFiles:tokenFiles.length,credentialPatternScreen:'pass',credentialPatternScope:'three credential patterns in current files; not Git history or a comprehensive secret scan',requiredFiles:'pass'},null,2));
