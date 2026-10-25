@@ -19,6 +19,7 @@ jobs:
       version: ${{ steps.release_version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - name: Verify approved candidate commit
         env:
           APPROVED_SHA: ${{ github.event.inputs.candidate_sha || '' }}
@@ -34,6 +35,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - uses: ./.github/actions/secret-scan
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm lint:eslint

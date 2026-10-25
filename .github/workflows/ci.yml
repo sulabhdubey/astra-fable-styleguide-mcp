@@ -10,14 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - uses: ./.github/actions/secret-scan
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm lint:eslint
       - run: pnpm typecheck:full
       - run: pnpm test
+      - run: pnpm audit
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
@@ -39,6 +42,7 @@ jobs:
       - run: pnpm build:docs
       - run: pnpm test:product
       - run: pnpm smoke:mcp
+      - run: pnpm run audit
       - name: Package the development CLI
         run: |
           mkdir "$RUNNER_TEMP/stylecon-package"

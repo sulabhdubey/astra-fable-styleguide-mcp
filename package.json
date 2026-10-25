@@ -1,6 +1,6 @@
 {
   "name": "astra-fable-styleguide-mcp",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.34.5",
@@ -37,7 +37,7 @@
   "dependencies": {
     "@modelcontextprotocol/node": "2.1.2",
     "@modelcontextprotocol/server": "2.4.0",
-    "zod": "^4.2.0"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
