@@ -6,6 +6,7 @@ import {createRequire} from 'node:module';
 import {runCheck,formatReport} from './runtime/scripts/standalone-check.mjs';
 import {main as projectCommand,readJson} from './runtime/scripts/project-cli.mjs';
 import {prepareDemo} from './runtime/scripts/prepare-demo.mjs';
+import {prepareStorybookDemo,doctor} from './runtime/scripts/storybook-onboarding.mjs';
 import {initCommand} from './runtime/scripts/project-init.mjs';
 import {pinConstitution} from './runtime/scripts/constitution.mjs';
 import {startStudio} from './runtime/scripts/studio.mjs';
@@ -29,8 +30,8 @@ stylecon ci capture <project.json> <new-private-receipt.json>
 stylecon ci compare <base-receipt.json> <head-receipt.json> [--format markdown|json]
 stylecon candidates compare <baseline.json> <candidate-a.json> <candidate-b.json>
 stylecon browser-install
-stylecon doctor
-stylecon demo <new-absolute-directory>
+stylecon doctor [storybook-project-directory|project.json]
+stylecon demo <new-absolute-directory> [--storybook]
 stylecon check|report <project-directory|project.json> [--format text|json|sarif|html] [--output <new-private-file>] [--compare <previous-report.json>] [--story <id> --rules typography,spacing]
 stylecon packet <project.json> <report.json> <new-private-packet.json>
 stylecon brief <project-directory|project.json> <report.json> --list
@@ -104,10 +105,10 @@ try {
     const require=createRequire(import.meta.url);
     const result=spawnSync(process.execPath,[resolve(dirname(require.resolve('playwright/package.json')),'cli.js'),'install','chromium'],{stdio:'inherit'});
     if(result.error)throw result.error;process.exitCode=result.status??2;
-  } else if(args[0]==='doctor'&&args.length===1){
-    const {chromium}=await import('playwright');
-    let installed=false;try{installed=(await stat(chromium.executablePath())).isFile();}catch{}
-    console.log(JSON.stringify({browserInstalled:installed,node:process.version,next:installed?'stylecon check <project>':'stylecon browser-install'}));process.exitCode=installed?0:2;
+  } else if(args[0]==='doctor'&&[1,2].includes(args.length)){
+    const result=await doctor(args[1]);console.log(JSON.stringify(result,null,2));process.exitCode=result.exitCode;
+  } else if(args[0]==='demo'&&args.length===3&&args[2]==='--storybook'){
+    console.log(JSON.stringify(await prepareStorybookDemo(args[1]),null,2));
   } else if(args[0]==='demo'&&args.length===2){console.log(JSON.stringify(await prepareDemo(resolve(args[1])),null,2));}
   else if(['check','report'].includes(args[0])) {
     if(!args[1])throw new Error('A project directory or project.json is required');

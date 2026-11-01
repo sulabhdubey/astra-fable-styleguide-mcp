@@ -21,6 +21,9 @@ jobs:
       - run: pnpm typecheck:full
       - run: pnpm test
       - run: pnpm audit
+      - name: Audit the standalone starter dependency lock
+        working-directory: packages/cli/storybook/starter/project
+        run: npm audit --package-lock-only --ignore-scripts
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/test-dialog-boundaries.mjs
       - run: node scripts/test-installed-cli.mjs
@@ -57,7 +60,7 @@ jobs:
             ${{ runner.temp }}/stylecon-package/SHA256SUMS
             ${{ runner.temp }}/stylecon-package/package-evidence.json
             ${{ runner.temp }}/stylecon-package/archive-verification.json
-          retention-days: 7
+          retention-days: 30
       - run: docker build -t style-constitution:ci .
       - run: docker build -f Dockerfile.vercel -t style-constitution:ci-vercel .
       - run: git diff --exit-code -- generated

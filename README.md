@@ -43,7 +43,7 @@ flowchart LR
 
 ## Start locally
 
-Use **Node 22.12+** and **pnpm 10.34.5** in this repository:
+Use **Node 22.13+** and **pnpm 10.34.5** in this repository:
 
 ```sh
 pnpm install --frozen-lockfile
