@@ -17,6 +17,21 @@ middleware mounted on static path prefixes. This adds no audit exception.
 
 ## Continuous checks and their scope
 
+The trial candidate adopts `@hono/node-server@2.1.3` for
+[GHSA-rmxm-3fg6-px4f](https://github.com/advisories/GHSA-rmxm-3fg6-px4f).
+The MCP Node SDK explicitly accepts this adapter version. The application uses
+its request listener, not protected static serving; a dependency regression also
+checks public-file access and refusal of the second-decoding middleware bypass.
+
+Development linting uses ESLint 10.14.0 with minimatch 11.0.1 for
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+ESLint 9's older callable minimatch API is not compatible with a blind major
+override. The new linter and its config-array dependency use the supported named
+API; tests verify matching, bounded preprocessing, ignored files and rejection
+of undefined identifiers. Repository development now requires Node 22.13+;
+the distributed CLI's Node requirement is unchanged. No new audit exception is
+added. Revisit these narrow overrides when upstream dependency ranges catch up.
+
 Pull requests and the release gate run `pnpm audit` after dependency regression
 tests. A daily scheduled workflow rechecks the default branch against new
 advisories. An unavailable registry is a failed check, not a clean audit. Registry

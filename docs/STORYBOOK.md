@@ -9,7 +9,35 @@ Supported combination: Storybook **10.6.3**, React and ReactDOM **19.3.0**, Vite
 **8.3.3**. Other combinations are rejected until verified. Chromium is supplied by
 the CLI's pinned Playwright runtime. No model call or cloud account is required.
 
-## Try the included fixture
+## Generate an isolated starter
+
+In a CLI package containing the onboarding commands, create a new absolute folder:
+
+```sh
+stylecon demo /absolute/new-storybook-trial --storybook
+```
+
+On Windows, use a new path such as `C:\Trials\storybook-trial` with an existing
+parent. The command refuses an existing destination. It copies a standalone
+project, pinned npm lockfile, setup instructions, private evidence folder and
+optional `PILOT_FEEDBACK.md`; it does not install packages or run project code.
+Follow the generated README to install, build and preview the sample, then run
+`stylecon doctor <trial>/project` before checking a story. No source checkout,
+account or paid model is required. This requires the new candidate package;
+earlier trial archives do not gain these commands automatically.
+
+Doctor reports Node, actual Chromium launch, installed dependency versions,
+configuration/source/build identity and matching loopback index bytes separately.
+It rejects redirects and uses bounded preview requests. Exit 0 means prerequisites
+are ready, **not** story compliance. Run the story checks for measured results.
+Exit 2 names the failed prerequisite and a manual recovery step. Doctor never
+installs dependencies, executes package scripts or changes source.
+
+The optional form records setup help, useful/incorrect findings, missed defects,
+manual correction and recheck, persistence, privacy concerns and a second task.
+Nothing is sent automatically; participation and public quotation are separate.
+
+## Try the repository fixture
 
 From a reviewed source checkout:
 
@@ -40,7 +68,7 @@ story and one or more rule groups, then run checks.
 - Inspect observed and expected values, with viewport excerpts highlighting failing elements.
 - Select findings and prepare a correction brief for review before sharing.
 - Make the intended change in your trusted project, rebuild, then check the same story and rules.
-- Reopen the complete Studio link after restarting or refreshing authentication.
+- Open the complete Studio link in a new tab after restarting or refreshing authentication.
   Selecting the project restores the last checked story/rules; previous checks,
   screenshots and values remain in private history. They are historical evidence,
   and cannot restore correction or brief authority.
@@ -95,4 +123,8 @@ The browser test checks all eight fixture states, changed served bytes, Studio
 selection, highlighted evidence, brief creation, narrow layout, restart/history
 and stale-source refusal.
 The archive verifier also exercises the installed CLI and installed Studio path.
+It generates the starter from the installed archive, installs its own locked
+dependencies without lifecycle scripts, builds and previews it, checks all eight
+states, and rehearses manual correction, reload and saved history. It does not
+borrow source files or dependency links from the repository for that starter.
 These are local fixtures, not independent developer adoption evidence.

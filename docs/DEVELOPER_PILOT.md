@@ -38,6 +38,13 @@ rebuild, and recheck the same story. There is no automatic JSX repair. Record th
 selected story, args/globals, viewport, source hash and constitution hash with the
 trial. Skipped, errored, unfinished or mismatched-build execution is incomplete.
 
+Where the candidate includes `demo --storybook`, its isolated starter and
+`doctor <project>` can be used for setup rehearsal. The generated optional
+`PILOT_FEEDBACK.md` stays outside the checked project and is never transmitted
+automatically. Distinguish starter practice, assisted sessions, agent rehearsals
+and completed owner-repository trials; starter practice alone does not meet the
+repository-trial thresholds below. Preserve the exact package used for each trial.
+
 ## Per-repository trial
 
 1. Record the exact source revision, supported scope and developer's intended outcome.

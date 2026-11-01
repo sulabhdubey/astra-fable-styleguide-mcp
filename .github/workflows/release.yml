@@ -61,6 +61,9 @@ jobs:
       - run: pnpm smoke:mcp
       - run: pnpm run audit
       - run: pnpm audit
+      - name: Audit the standalone starter dependency lock
+        working-directory: packages/cli/storybook/starter/project
+        run: npm audit --package-lock-only --ignore-scripts
       - run: docker build -t style-constitution:release .
       - run: docker build -f Dockerfile.vercel -t style-constitution:release-vercel .
       - name: Package exact-source CLI

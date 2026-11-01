@@ -1,0 +1,8 @@
+# Private feedback and rendered evidence are opt-in disclosures.
+/PILOT_FEEDBACK.md
+/evidence/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example

@@ -3,6 +3,7 @@ import {mkdir,copyFile,writeFile,rm,cp} from 'node:fs/promises';
 import {cliInputFingerprint,cliOutputFingerprint} from '../../scripts/cli-inputs.mjs';
 import {dirname,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {copyStarterFiles} from './storybook/assets.mjs';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const output=resolve(root,'packages/cli/dist');
 // This fixed build-owned directory is recreated so obsolete runtime files cannot ship.
@@ -19,9 +20,10 @@ files.push('scripts/dembrandt-tokens.mjs','scripts/dembrandt-browser.mjs');
 files.push('scripts/agent-brief.mjs','scripts/evidence-current.mjs','scripts/studio-history.mjs','scripts/constitution-adoption.mjs');
 files.push('scripts/review-packet.mjs');
 files.push('scripts/candidate-comparison.mjs');
-files.push('scripts/storybook-check.mjs','packages/cli/storybook/harness.mjs');
+files.push('scripts/storybook-check.mjs','scripts/storybook-onboarding.mjs','packages/cli/storybook/harness.mjs','packages/cli/storybook/assets.mjs');
 for(const path of files){const destination=resolve(output,'runtime',path);await mkdir(dirname(destination),{recursive:true});await copyFile(resolve(root,path),destination);}
 await cp(resolve(root,'spec'),resolve(output,'runtime/spec'),{recursive:true});
+await copyStarterFiles(resolve(root,'packages/cli/storybook/starter'),resolve(output,'runtime/packages/cli/storybook/starter'));
 await build({entryPoints:[resolve(root,'scripts/constitution.mjs')],bundle:true,platform:'node',target:'node22',format:'esm',outfile:resolve(output,'runtime/scripts/constitution.mjs')});
 await build({entryPoints:[resolve(root,'scripts/constitution-authoring.mjs')],bundle:true,platform:'node',target:'node22',format:'esm',outfile:resolve(output,'runtime/scripts/constitution-authoring.mjs')});
 await build({entryPoints:[resolve(root,'scripts/running-app.mjs')],bundle:true,platform:'node',target:'node22',format:'esm',external:['playwright'],outfile:resolve(output,'runtime/scripts/running-app.mjs')});
