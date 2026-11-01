@@ -60,10 +60,15 @@ Client 2.3.0, Zod 4.6.6 and Undici 8.12.2. These address the affected prior
 versions without new audit suppressions. Recheck advisory data at release time;
 a green historical run is not evidence of current dependency status.
 
-## Pinned cache dependency repair
+## Pinned cache dependency hardening
 
-Astro currently depends on `http-cache-semantics@4.2.0`, affected by [GHSA-ch52-4w7c-c8xp](https://github.com/advisories/GHSA-ch52-4w7c-c8xp). There is no patched upstream release at the time this repair was prepared.
+Astro currently depends on `http-cache-semantics@4.2.0`. The earlier
+[GHSA-ch52-4w7c-c8xp](https://github.com/advisories/GHSA-ch52-4w7c-c8xp)
+was withdrawn on 28 October 2026 as not a valid vulnerability. A remaining
+Dependabot alert for that advisory does not establish a current vulnerability.
+The existing conservative cache policy and its regression tests remain in place;
+this trial does not silently remove previously verified behavior.
 
 The pnpm patch in `patches/http-cache-semantics@4.2.0.patch` requires synchronous revalidation whenever the policy's effective maximum age is zero. This prevents client `max-stale` and `stale-while-revalidate` from reviving security-zeroed entries. It conservatively disables stale reuse of all zero-age policies; normal fresh caching and positive-age stale allowances remain supported.
 
-The audit exception names only this advisory, because registry audits identify the original package version rather than the locally patched behavior. `tests/http-cache-security.test.mjs` exercises the actual Astro-resolved dependency with cookie-bearing, no-cache and no-store responses plus public-cache controls. CI runs those regressions before dependency audit. Remove the patch and exception when a verified upstream replacement is adopted; other advisories remain blocking.
+The historical audit exception names only this withdrawn advisory; registry audits identify package versions rather than locally patched behavior. `tests/http-cache-security.test.mjs` exercises the actual Astro-resolved dependency with cookie-bearing, no-cache and no-store responses plus public-cache controls. CI runs those regressions before dependency audit. Reassess removal of the patch and exception together against the intended cache policy and current registry data; other advisories remain blocking.
