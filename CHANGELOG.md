@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.2
+
+- Upgrade the MCP Node adapter's `@hono/node-server` dependency to 2.1.3 for GHSA-rmxm-3fg6-px4f. The dependency audit policy is unchanged.
+- Update the getting-started guide with separate paths for hosted rules, local rendered checks and the optional collaboration workflow.
+
 ## 0.10.1
 
 - Upgrade affected MCP, Vite, Zod and Undici dependencies without new advisory suppressions.

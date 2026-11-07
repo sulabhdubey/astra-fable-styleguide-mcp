@@ -6,7 +6,7 @@ Style Constitution helps developers check whether an AI-built interface follows 
 
 Use it when a screen works but its design has drifted: a button is too small, a heading uses the wrong size, or a configured dialog does not return focus as expected. The rules live in a versioned `/spec` directory. You can use the rules or local checker with one coding agent, or without an AI model for local checks.
 
-[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.10.1 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.1)
+[**Try the demo →**](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/demo/) · [Connect your agent](https://sulabhdubey.github.io/astra-fable-styleguide-mcp/start/) · [Install locally](docs/INSTALLATION.md) · [v0.10.2 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.2)
 
 ## Choose how to use it
 
@@ -131,7 +131,7 @@ A changed candidate invalidates prior approvals. Unresolved requirements and pen
 
 ## Go deeper
 
-[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.10.1_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
+[Quickstart](docs/START_HERE.md) · [Repair walkthrough](docs/DEMO.md) · [Release notes](docs/V0.10.2_RELEASE_NOTES.md) · [Changelog](CHANGELOG.md) · [Deployment](docs/DEPLOYMENT.md)
 
 <details>
 <summary>Common questions: models, existing design systems, evidence and costs</summary>
@@ -140,7 +140,7 @@ A changed candidate invalidates prior approvals. Unresolved requirements and pen
 
 **Can I use my team's design rules?** Yes: [create a reviewed constitution](docs/CONSTITUTION_AUTHORING.md), then [pin and adopt it locally](docs/INDIVIDUAL_AND_TEAM_WORKFLOWS.md). The public MCP serves this project's published constitution; local rule adoption does not change that shared endpoint.
 
-**Does it replace Storybook or a full accessibility audit?** No. It measures selected, explicitly configured rules and journeys. The [Storybook development trial](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/pull/56) is separate from the v0.10.1 release. Unsupported checks remain incomplete; arbitrary JSX repair is not supported.
+**Does it replace Storybook or a full accessibility audit?** No. It measures selected, explicitly configured rules and journeys. The [Storybook development trial](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/pull/56) is separate from the v0.10.2 release. Unsupported checks remain incomplete; arbitrary JSX repair is not supported.
 
 **What has been demonstrated?** [Internal client trials](docs/CLIENT_TRIALS.md) show coding agents retrieving rules and reacting to findings, with failures recorded. The [repair demo](docs/DEMO.md) demonstrates a bounded browser-check and correction workflow. These are engineering examples, not evidence of widespread customer adoption. The [developer pilot](docs/DEVELOPER_PILOT.md) defines the repeat-use evidence still needed.
 
