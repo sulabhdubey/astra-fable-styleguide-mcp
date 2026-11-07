@@ -15,6 +15,13 @@ The development lockfile also pins affected Hono versions to 4.13.11 for
 The upstream fix prevents double decoding in `serveStatic` from bypassing
 middleware mounted on static path prefixes. This adds no audit exception.
 
+The separate Node adapter `@hono/node-server` is pinned to 2.1.3 for
+[GHSA-rmxm-3fg6-px4f](https://github.com/advisories/GHSA-rmxm-3fg6-px4f),
+which addresses the same class of double-decoding issue in its `serveStatic`
+implementation. This version is within the declared dependency range of
+`@modelcontextprotocol/node@2.1.2`. The Hono core fix alone does not fix the
+separate adapter; no additional audit exception is used.
+
 ## Continuous checks and their scope
 
 Pull requests and the release gate run `pnpm audit` after dependency regression
