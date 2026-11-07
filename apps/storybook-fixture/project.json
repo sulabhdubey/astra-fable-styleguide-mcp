@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 3,
+  "integration": "storybook-portable",
+  "url": "http://127.0.0.1:4193/",
+  "sourceDirectory": "src",
+  "buildDirectory": "dist",
+  "identityFiles": [
+    "package.json",
+    "vite.config.mjs",
+    "index.html"
+  ],
+  "versions": {
+    "react": "19.3.0",
+    "reactDom": "19.3.0",
+    "storybook": "10.6.3",
+    "vite": "8.3.3"
+  },
+  "stories": [
+    {
+      "id": "constitution-components--button",
+      "name": "Button",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--input",
+      "name": "Input",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--card",
+      "name": "Card",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--dialog",
+      "name": "Dialog",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--broken",
+      "name": "Broken",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--skipped",
+      "name": "Skipped",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--failed",
+      "name": "Failed",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "constitution-components--unfinished",
+      "name": "Unfinished",
+      "source": "src/Components.stories.mjs",
+      "measurements": [
+        {
+          "selector": "#sample",
+          "target": "#sample",
+          "typography": {
+            "fontSize": "typography.fontSize.300"
+          },
+          "spacing": {
+            "paddingTop": "space.4"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -23,7 +23,9 @@ function connectedTab(page) {
   };
 }
 
-export async function runCheck(configPath,{launch}={}) {
+export async function runCheck(configPath,{launch,selection}={}) {
+  if(selection&&(await readJson(configPath)).schemaVersion!==3)throw new Error('Story selection requires a portable-story project');
+  if((await readJson(configPath)).schemaVersion===3){const {runStorybookCheck}=await import('./storybook-check.mjs');return runStorybookCheck(configPath,{launch,selection});}
   if((await readJson(configPath)).schemaVersion===2){const {runRunningCheck}=await import('./running-app.mjs');return runRunningCheck(configPath,{launch});}
   const project=await loadProject(configPath);
   const start=launch??(async()=>{const {chromium}=await import('playwright');return chromium.launch({headless:true});});

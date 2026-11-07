@@ -76,7 +76,9 @@ function cleanChecked(checked) {
   const summary={status:report.status,artifactSha256:report.artifactSha256,specSha256:report.specSha256,
     checks:report.checks.length,findings:report.checks.filter(check=>check.status!=='pass'),
     exitCode:report.checks.some(check=>['unsupported','not_checked'].includes(check.status))?2:report.status==='fail'?1:0};
-  return {result:{report},summary,targetPaths};
+  const previews=checked.result.previews;
+  if(previews!==undefined&&(!Array.isArray(previews)||previews.length>2||previews.some(item=>!plain(item)||![390,1280].includes(item.width)||typeof item.png!=='string'||item.png.length>670_000||!/^iVBORw0KGgo[A-Za-z0-9+/]*={0,2}$/.test(item.png))))throw new Error('Invalid private story screenshot');
+  return {result:{report,...(previews===undefined?{}:{previews:previews.map(({width,png})=>({width,png}))})},summary,targetPaths};
 }
 function metadata(binding,checked,reportSha256) {
   const report=checked.result.report;

@@ -13,6 +13,7 @@ import {createAgentBrief,renderAgentBrief,findingId} from './agent-brief.mjs';
 import {assertCurrentReport} from './evidence-current.mjs';
 import {createReviewPacket,renderReviewPacket} from './review-packet.mjs';
 import {openStudioHistory} from './studio-history.mjs';
+import {loadStorybookProject,validateStorySelection} from './storybook-check.mjs';
 import {pinConstitution} from './constitution.mjs';
 import {previewConstitutionAdoption,applyConstitutionAdoption,recoverConstitutionAdoption,constitutionAdoptionStatus} from './constitution-adoption.mjs';
 
@@ -103,6 +104,13 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
     if(body.action==='check')sessions.set(projectDirectory,{receipt:sessions.get(projectDirectory)?.receipt});
     await pathWithin(relative(root,config));
     if(body.action==='config') {const raw=await readFile(config,'utf8');if(raw.length>32_000)throw new Error('Configuration too large');return JSON.parse(raw);}
+    if(body.action==='story-options') {
+      const loaded=await loadStorybookProject(config);
+      const saved=await history.list({project:projectLabel});let selection=null;
+      const latest=saved.entries.find(entry=>entry.available);
+      if(latest){const previous=await history.read({project:projectLabel,id:latest.id});const scope=previous.checked.result.report.browserScope;if(scope?.configurationSha256===loaded.configHash)selection=validateStorySelection(loaded.config,scope.selection);}
+      return {stories:loaded.config.stories.map(story=>({id:story.id,name:story.name,rules:['typography','spacing','contrast'].filter(group=>story.measurements.some(item=>item[group]))})),selection};
+    }
     const state=sessions.get(projectDirectory)??{};
     if(body.action==='adopt-preview') {
       delete state.adoption;
@@ -137,7 +145,7 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
     if(body.action==='check') {
       const saved=await history.list({project:projectLabel});
       if(saved.entries.length>=saved.limit)throw new Error('History has reached 100 runs for this project. Keep this evidence and restart Studio with another private evidence directory.');
-      const checked=await check(config);
+      const checked=await check(config,{selection:body.selection});
       const id=randomBytes(10).toString('hex');
       await writeFile(resolve(evidence,id+'.json'),JSON.stringify(checked.result,null,2)+'\n',{flag:'wx',mode:0o600});
       await writeFile(resolve(evidence,id+'.html'),formatReport(checked.result,checked.targetPaths,'html'),{flag:'wx',mode:0o600});
@@ -163,7 +171,7 @@ export async function startStudio({workspace,evidenceDirectory,port=0,check=runC
     throw new Error('Unknown action');
   }
   const server=createServer(async(req,res)=>{
-    const send=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','content-security-policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"});res.end(typeof value==='string'?value:JSON.stringify(value));};
+    const send=(status,value,type='application/json; charset=utf-8')=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store','x-content-type-options':'nosniff','referrer-policy':'no-referrer','content-security-policy':"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"});res.end(typeof value==='string'?value:JSON.stringify(value));};
     if(req.headers.host!==new URL(origin).host||(req.headers.origin&&req.headers.origin!==origin)||['cross-site','same-site'].includes(req.headers['sec-fetch-site']))return send(403,{error:'Local origin required'});
     if(req.method==='GET'&&Object.hasOwn(assetTypes,req.url)){try{return send(200,await readFile(req.url==='/coverage.mjs'?fileURLToPath(new URL('./report-coverage.mjs',import.meta.url)):resolve(assets,req.url==='/'?'index.html':req.url.slice(1)),'utf8'),assetTypes[req.url]);}catch{return send(500,{error:'Studio assets unavailable'});}}
     if(req.url!=='/api')return send(404,{error:'Not found'});
