@@ -8,7 +8,7 @@ Choose one first task. You do not need two AI models or every part of the projec
 | Give a coding agent approved design rules | [Connect the public MCP](#1-connect-the-public-design-rule-mcp) | Your agent retrieves and cites the rules it will use. |
 | Measure a supported interface on your machine | [Install and try one repair](#3-install-and-try-one-repair) | A browser report identifies the checked element, expected rule and observed value. |
 
-The released baseline for this guide is [v0.10.1](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.1).
+The released baseline for this guide is [v0.10.2](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.2).
 The local CLI includes Studio, guided React/Vite setup, reviewed team-rule adoption,
 private history and candidate comparison. The hosted MCP and local checker are
 separate: connecting the server does not install or start the checker.
@@ -48,7 +48,7 @@ connection or AI provider is required. Choose a supported integration:
 | --- | --- |
 | Trusted static HTML/CSS/JavaScript | Configure files and plain `#id` targets for a button/dialog journey. Native input, textarea and select error journeys are also supported. Start with the [repair demo](DEMO.md) and [configuration guide](PROJECT_WORKFLOW.md). |
 | Trusted React/Vite production preview | Build and start the preview yourself. Use [Studio's guided setup](LOCAL_STUDIO.md#guided-reactvite-setup) for a root preview URL, dialog journey and selected measurements. [Running-app configuration](RUNNING_APP.md) documents source labels and the narrow CSS repair adapter. |
-| Storybook component states | A [separate development trial](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/pull/56), not part of v0.10.1. It requires its pinned integration and verified candidate package. |
+| Storybook component states | A [separate development trial](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/pull/56), not part of v0.10.2. It requires its pinned integration and verified candidate package. |
 
 Next.js, Vue, Svelte and arbitrary applications are not supported integrations.
 Custom comboboxes, shadow DOM and complete accessibility coverage are outside the
@@ -58,8 +58,8 @@ restricted, and errors or blocked resources make verification incomplete.
 ## 3. Install and try one repair
 
 For installation from an archive, use Node 22.12 or newer. Download
-`styleconstitution-cli-0.10.1.tgz`, `install-cli.mjs` and `SHA256SUMS` from the same
-[v0.10.1 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.1).
+`styleconstitution-cli-0.10.2.tgz`, `install-cli.mjs` and `SHA256SUMS` from the same
+[v0.10.2 release](https://github.com/sulabhdubey/astra-fable-styleguide-mcp/releases/tag/v0.10.2).
 Follow [verified installation](INSTALLATION.md), including the installer checksum
 check and the command that verifies the archive before installing it. The CLI is
 not on the npm registry; do not substitute a similarly named package.
